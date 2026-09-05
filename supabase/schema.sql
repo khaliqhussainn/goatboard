@@ -1,0 +1,257 @@
+-- GOATBOARD database schema
+-- Run this against a fresh Supabase Postgres project (SQL editor or `supabase db push`).
+
+create extension if not exists pgcrypto;
+
+-- ---------------------------------------------------------------------------
+-- campaigns
+-- ---------------------------------------------------------------------------
+create table if not exists public.campaigns (
+  id uuid primary key default gen_random_uuid(),
+  slug text unique not null,
+  name text not null check (char_length(name) between 1 and 60),
+  description text not null check (char_length(description) between 1 and 280),
+  destination_url text not null,
+  image_url text,
+  category text not null default 'other',
+  status text not null default 'active' check (status in ('active', 'suspended', 'removed')),
+  vote_power integer not null default 0 check (vote_power >= 0),
+  paid_power integer not null default 0 check (paid_power >= 0),
+  total_power integer generated always as (vote_power + paid_power) stored,
+  created_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- The ranking query: order by power desc, then by who got there first.
+create index if not exists campaigns_ranking_idx
+  on public.campaigns (total_power desc, updated_at asc)
+  where status = 'active';
+
+create index if not exists campaigns_slug_idx on public.campaigns (slug);
+create index if not exists campaigns_category_idx on public.campaigns (category) where status = 'active';
+create index if not exists campaigns_created_by_idx on public.campaigns (created_by);
+
+-- ---------------------------------------------------------------------------
+-- votes  (one free vote per campaign per user per UTC day)
+-- ---------------------------------------------------------------------------
+create table if not exists public.votes (
+  id uuid primary key default gen_random_uuid(),
+  campaign_id uuid not null references public.campaigns(id) on delete cascade,
+  voter_id uuid not null references auth.users(id) on delete cascade,
+  vote_date date not null default (timezone('utc', now()))::date,
+  created_at timestamptz not null default now(),
+  unique (campaign_id, voter_id, vote_date)
+);
+
+create index if not exists votes_campaign_idx on public.votes (campaign_id);
+create index if not exists votes_voter_date_idx on public.votes (voter_id, vote_date);
+
+-- ---------------------------------------------------------------------------
+-- purchases  (paid Power, $1 = 3 Power)
+-- ---------------------------------------------------------------------------
+create table if not exists public.purchases (
+  id uuid primary key default gen_random_uuid(),
+  campaign_id uuid not null references public.campaigns(id) on delete cascade,
+  lemon_squeezy_order_id text unique,
+  amount numeric(10, 2) not null check (amount > 0),
+  currency text not null default 'USD',
+  power_granted integer not null check (power_granted > 0),
+  status text not null default 'pending' check (status in ('pending', 'paid', 'refunded', 'failed')),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists purchases_campaign_idx on public.purchases (campaign_id);
+create index if not exists purchases_status_idx on public.purchases (status);
+
+-- ---------------------------------------------------------------------------
+-- reports  (lightweight moderation queue)
+-- ---------------------------------------------------------------------------
+create table if not exists public.reports (
+  id uuid primary key default gen_random_uuid(),
+  campaign_id uuid not null references public.campaigns(id) on delete cascade,
+  reason text not null check (char_length(reason) between 1 and 500),
+  status text not null default 'open' check (status in ('open', 'resolved', 'dismissed')),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists reports_campaign_idx on public.reports (campaign_id);
+create index if not exists reports_status_idx on public.reports (status);
+
+-- ---------------------------------------------------------------------------
+-- updated_at bookkeeping
+-- ---------------------------------------------------------------------------
+create or replace function public.touch_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+drop trigger if exists campaigns_touch_updated_at on public.campaigns;
+create trigger campaigns_touch_updated_at
+  before update on public.campaigns
+  for each row
+  when (old.vote_power is distinct from new.vote_power or old.paid_power is distinct from new.paid_power)
+  execute function public.touch_updated_at();
+
+-- ---------------------------------------------------------------------------
+-- cast_vote(campaign_id, voter_id)
+-- Atomically records a daily vote and bumps vote_power. All ranking-affecting
+-- writes go through this function (or grant_purchase_power below) so the
+-- client can never set power directly.
+-- ---------------------------------------------------------------------------
+create or replace function public.cast_vote(p_campaign_id uuid, p_voter_id uuid)
+returns table(success boolean, message text, total_power integer)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_status text;
+  v_total integer;
+begin
+  select status into v_status from public.campaigns where id = p_campaign_id for update;
+
+  if v_status is null then
+    return query select false, 'campaign_not_found', null::integer;
+    return;
+  end if;
+
+  if v_status <> 'active' then
+    return query select false, 'campaign_not_active', null::integer;
+    return;
+  end if;
+
+  begin
+    insert into public.votes (campaign_id, voter_id, vote_date)
+    values (p_campaign_id, p_voter_id, (timezone('utc', now()))::date);
+  exception when unique_violation then
+    return query select false, 'already_voted', null::integer;
+    return;
+  end;
+
+  update public.campaigns
+    set vote_power = vote_power + 1
+    where id = p_campaign_id
+    returning total_power into v_total;
+
+  return query select true, 'ok', v_total;
+end;
+$$;
+
+revoke all on function public.cast_vote(uuid, uuid) from public;
+grant execute on function public.cast_vote(uuid, uuid) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- grant_purchase_power(order_id, campaign_id, amount, currency, power)
+-- Idempotent: relies on the unique constraint on lemon_squeezy_order_id.
+-- Only ever called from the trusted webhook handler with the service role.
+-- ---------------------------------------------------------------------------
+create or replace function public.grant_purchase_power(
+  p_order_id text,
+  p_campaign_id uuid,
+  p_amount numeric,
+  p_currency text,
+  p_power integer
+)
+returns table(success boolean, message text, total_power integer)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_total integer;
+begin
+  begin
+    insert into public.purchases (campaign_id, lemon_squeezy_order_id, amount, currency, power_granted, status)
+    values (p_campaign_id, p_order_id, p_amount, p_currency, p_power, 'paid');
+  exception when unique_violation then
+    return query select false, 'already_processed', null::integer;
+    return;
+  end;
+
+  update public.campaigns
+    set paid_power = paid_power + p_power
+    where id = p_campaign_id
+    returning total_power into v_total;
+
+  return query select true, 'ok', v_total;
+end;
+$$;
+
+revoke all on function public.grant_purchase_power(text, uuid, numeric, text, integer) from public;
+
+-- ---------------------------------------------------------------------------
+-- Row Level Security
+-- ---------------------------------------------------------------------------
+alter table public.campaigns enable row level security;
+alter table public.votes enable row level security;
+alter table public.purchases enable row level security;
+alter table public.reports enable row level security;
+
+-- Anyone can read active campaigns; the service role (admin) can read everything.
+drop policy if exists "campaigns are publicly readable" on public.campaigns;
+create policy "campaigns are publicly readable"
+  on public.campaigns for select
+  using (status = 'active' or auth.role() = 'service_role');
+
+drop policy if exists "authenticated users can create campaigns" on public.campaigns;
+create policy "authenticated users can create campaigns"
+  on public.campaigns for insert
+  to authenticated
+  with check (created_by = auth.uid());
+
+-- No direct client updates/deletes: power changes go through the RPCs above,
+-- moderation goes through the service role from the admin API.
+
+-- Votes: users can see their own vote history (used to render "voted today").
+drop policy if exists "users can view their own votes" on public.votes;
+create policy "users can view their own votes"
+  on public.votes for select
+  to authenticated
+  using (voter_id = auth.uid());
+
+-- Purchases: publicly readable in aggregate (needed for the $ breakdown), but
+-- only paid rows, and never writable from the client.
+drop policy if exists "paid purchases are publicly readable" on public.purchases;
+create policy "paid purchases are publicly readable"
+  on public.purchases for select
+  using (status = 'paid' or auth.role() = 'service_role');
+
+-- Reports: anyone can file one, nobody can read them back except the service role.
+drop policy if exists "anyone can file a report" on public.reports;
+create policy "anyone can file a report"
+  on public.reports for insert
+  with check (true);
+
+drop policy if exists "only admins read reports" on public.reports;
+create policy "only admins read reports"
+  on public.reports for select
+  using (auth.role() = 'service_role');
+
+-- ---------------------------------------------------------------------------
+-- Realtime
+-- ---------------------------------------------------------------------------
+alter publication supabase_realtime add table public.campaigns;
+
+-- ---------------------------------------------------------------------------
+-- Storage: campaign images
+-- ---------------------------------------------------------------------------
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('campaign-images', 'campaign-images', true, 5242880, array['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
+on conflict (id) do nothing;
+
+drop policy if exists "campaign images are publicly readable" on storage.objects;
+create policy "campaign images are publicly readable"
+  on storage.objects for select
+  using (bucket_id = 'campaign-images');
+
+drop policy if exists "authenticated users can upload campaign images" on storage.objects;
+create policy "authenticated users can upload campaign images"
+  on storage.objects for insert
+  to authenticated
+  with check (bucket_id = 'campaign-images' and (storage.foldername(name))[1] = auth.uid()::text);
