@@ -4,8 +4,8 @@ import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn, formatMoney } from "@/lib/utils";
-import { BOOST_PRESETS, POWER_PER_DOLLAR } from "@/lib/validation";
+import { formatMoney } from "@/lib/utils";
+import { POWER_PER_DOLLAR } from "@/lib/validation";
 
 export function BoostSelector({
   campaignId,
@@ -19,11 +19,6 @@ export function BoostSelector({
   const [loading, setLoading] = React.useState(false);
 
   const power = amount * POWER_PER_DOLLAR;
-
-  function selectPreset(value: number) {
-    setAmount(value);
-    setCustom("");
-  }
 
   function handleCustomChange(value: string) {
     setCustom(value);
@@ -60,32 +55,6 @@ export function BoostSelector({
         Boosting <span className="font-semibold text-foreground">{campaignName}</span>. $1 = 3
         Power, permanently.
       </p>
-
-      <div className="grid grid-cols-4 gap-2">
-        {BOOST_PRESETS.map((preset) => (
-          <button
-            key={preset}
-            type="button"
-            onClick={() => selectPreset(preset)}
-            className={cn(
-              "flex flex-col items-center gap-0.5 rounded-xl border px-2 py-3 text-sm transition-colors",
-              amount === preset && custom === ""
-                ? "border-foreground bg-foreground text-background"
-                : "border-border hover:bg-muted",
-            )}
-          >
-            <span className="font-bold">${preset}</span>
-            <span
-              className={cn(
-                "text-[11px]",
-                amount === preset && custom === "" ? "opacity-80" : "text-muted-foreground",
-              )}
-            >
-              {preset * POWER_PER_DOLLAR} Power
-            </span>
-          </button>
-        ))}
-      </div>
 
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">Custom</span>
