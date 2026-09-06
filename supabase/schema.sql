@@ -251,8 +251,20 @@ alter publication supabase_realtime add table public.campaigns;
 -- rate-limited server-side) — there is no client-side insert policy.
 -- ---------------------------------------------------------------------------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('campaign-images', 'campaign-images', true, 5242880, array['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
-on conflict (id) do nothing;
+values (
+  'campaign-images',
+  'campaign-images',
+  true,
+  5242880,
+  array[
+    'image/png', 'image/jpeg', 'image/webp', 'image/gif',
+    -- favicons fetched from a campaign's own site are frequently .ico/.svg
+    'image/x-icon', 'image/vnd.microsoft.icon', 'image/svg+xml'
+  ]
+)
+on conflict (id) do update
+  set file_size_limit = excluded.file_size_limit,
+      allowed_mime_types = excluded.allowed_mime_types;
 
 drop policy if exists "campaign images are publicly readable" on storage.objects;
 create policy "campaign images are publicly readable"

@@ -45,18 +45,18 @@ export default async function MinePage() {
           </p>
         </div>
         <Link href="/create" className="shrink-0">
-          <Button variant="accent">New campaign</Button>
+          <Button variant="abstract">New campaign</Button>
         </Link>
       </div>
 
       {!campaigns || campaigns.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-3xl border border-dashed border-border py-20 text-center">
+        <div className="billboard-surface-lg flex flex-col items-center gap-4 rounded-[2rem] py-20 text-center">
           <p className="text-xl font-black tracking-tight">Nothing here yet.</p>
           <p className="text-sm text-muted-foreground">
             Campaigns you create in this browser will show up here.
           </p>
           <Link href="/create">
-            <Button size="lg" variant="accent">
+            <Button size="lg" variant="abstract">
               Create Campaign
             </Button>
           </Link>

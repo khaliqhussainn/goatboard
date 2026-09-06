@@ -3,9 +3,10 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ImagePlus, Loader2 } from "lucide-react";
-import { campaignSchema } from "@/lib/validation";
+import { ImagePlus, Loader2, Sparkles, X } from "lucide-react";
+import { campaignSchema, isSafeUrl } from "@/lib/validation";
 import { CampaignPreview } from "@/components/campaign/campaign-preview";
+import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
 import { CATEGORIES } from "@/lib/categories";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,9 +29,43 @@ export function CampaignCreationForm() {
   const [destinationUrl, setDestinationUrl] = React.useState("");
   const [category, setCategory] = React.useState<Category>("product");
   const [imageUrl, setImageUrl] = React.useState<string | null>(null);
+  const [imageSource, setImageSource] = React.useState<"upload" | "site" | null>(null);
   const [uploading, setUploading] = React.useState(false);
+  const [fetchingLogo, setFetchingLogo] = React.useState(false);
+  const [logoNotFound, setLogoNotFound] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const lastAutoFetchedUrl = React.useRef<string | null>(null);
+
+  async function handleDestinationBlur() {
+    const url = destinationUrl.trim();
+    if (!url || !isSafeUrl(url)) return;
+    // Don't clobber an image the visitor already chose, and don't re-fetch
+    // the same URL twice in a row.
+    if (imageSource === "upload" || lastAutoFetchedUrl.current === url) return;
+
+    lastAutoFetchedUrl.current = url;
+    setFetchingLogo(true);
+    setLogoNotFound(false);
+    try {
+      const res = await fetch("/api/fetch-logo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setImageUrl(data.url);
+        setImageSource("site");
+      } else {
+        setLogoNotFound(true);
+      }
+    } catch {
+      setLogoNotFound(true);
+    } finally {
+      setFetchingLogo(false);
+    }
+  }
 
   async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -54,11 +89,18 @@ export function CampaignCreationForm() {
         return;
       }
       setImageUrl(data.url);
+      setImageSource("upload");
     } catch {
       toast.error("Couldn't upload image. Try again.");
     } finally {
       setUploading(false);
     }
+  }
+
+  function clearImage() {
+    setImageUrl(null);
+    setImageSource(null);
+    lastAutoFetchedUrl.current = null;
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -139,6 +181,7 @@ export function CampaignCreationForm() {
             type="url"
             value={destinationUrl}
             onChange={(e) => setDestinationUrl(e.target.value)}
+            onBlur={handleDestinationBlur}
             placeholder="https://yourthing.com"
           />
           {errors.destination_url && (
@@ -164,21 +207,56 @@ export function CampaignCreationForm() {
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="image">Image / logo</Label>
-          <label
-            htmlFor="image"
-            className="flex h-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-muted-foreground transition-colors hover:bg-muted"
-          >
-            {uploading ? (
-              <Loader2 className="size-5 animate-spin" />
-            ) : (
-              <>
-                <ImagePlus className="size-5" />
-                <span className="text-xs">
-                  {imageUrl ? "Replace image" : "Upload an image (optional)"}
-                </span>
-              </>
-            )}
-          </label>
+
+          {imageUrl ? (
+            <div className="flex items-center gap-3">
+              <CampaignAvatar src={imageUrl} name={name || "?"} className="size-14 shrink-0" />
+              <div className="min-w-0 flex-1 text-xs text-muted-foreground">
+                {imageSource === "site" ? "Fetched from your website" : "Uploaded"}
+              </div>
+              <label
+                htmlFor="image"
+                className="cursor-pointer rounded-lg px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                Replace
+              </label>
+              <button
+                type="button"
+                onClick={clearImage}
+                aria-label="Remove image"
+                className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          ) : (
+            <label
+              htmlFor="image"
+              className="flex h-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-muted-foreground transition-colors hover:bg-muted"
+            >
+              {uploading || fetchingLogo ? (
+                <>
+                  <Loader2 className="size-5 animate-spin" />
+                  {fetchingLogo && (
+                    <span className="text-xs">Looking for a logo on your site…</span>
+                  )}
+                </>
+              ) : (
+                <>
+                  <ImagePlus className="size-5" />
+                  <span className="text-xs">Upload an image (optional)</span>
+                </>
+              )}
+            </label>
+          )}
+
+          {logoNotFound && !imageUrl && (
+            <p className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Sparkles className="size-3" /> Couldn&apos;t find a logo on that site — upload one
+              above.
+            </p>
+          )}
+
           <input
             id="image"
             type="file"
@@ -188,7 +266,7 @@ export function CampaignCreationForm() {
           />
         </div>
 
-        <Button type="submit" size="lg" disabled={submitting || uploading}>
+        <Button type="submit" size="lg" variant="abstract" disabled={submitting || uploading}>
           {submitting ? "Publishing…" : "Publish campaign"}
         </Button>
       </form>

@@ -7,7 +7,7 @@ export function EmptyBoard() {
       <p className="text-2xl font-black tracking-tight">Nobody&apos;s the GOAT yet.</p>
       <p className="text-sm text-muted-foreground">Put something on the board.</p>
       <Link href="/create">
-        <Button size="lg" variant="accent">
+        <Button size="lg" variant="abstract">
           Create Campaign
         </Button>
       </Link>

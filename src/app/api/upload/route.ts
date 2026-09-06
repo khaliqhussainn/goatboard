@@ -1,16 +1,10 @@
 import { NextResponse } from "next/server";
-import { nanoid } from "nanoid";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, SupabaseConfigError } from "@/lib/supabase/admin";
+import { uploadCampaignImage, extensionForImageType } from "@/lib/storage";
 import { getVisitorId } from "@/lib/visitor";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const MAX_SIZE = 5 * 1024 * 1024;
-const ALLOWED_TYPES: Record<string, string> = {
-  "image/png": "png",
-  "image/jpeg": "jpg",
-  "image/webp": "webp",
-  "image/gif": "gif",
-};
 
 export async function POST(request: Request) {
   const visitorId = await getVisitorId();
@@ -33,8 +27,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "No file provided." }, { status: 400 });
   }
 
-  const ext = ALLOWED_TYPES[file.type];
-  if (!ext) {
+  if (!extensionForImageType(file.type)) {
     return NextResponse.json({ message: "Unsupported image type." }, { status: 400 });
   }
 
@@ -42,17 +35,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Image must be under 5MB." }, { status: 400 });
   }
 
-  const admin = createAdminClient();
-  const path = `${visitorId}/${nanoid()}.${ext}`;
-
-  const { error } = await admin.storage
-    .from("campaign-images")
-    .upload(path, await file.arrayBuffer(), { contentType: file.type });
-
-  if (error) {
+  try {
+    const admin = createAdminClient();
+    const url = await uploadCampaignImage(admin, visitorId, await file.arrayBuffer(), file.type);
+    return NextResponse.json({ url });
+  } catch (error) {
+    if (error instanceof SupabaseConfigError) {
+      console.error(error.message);
+      return NextResponse.json({ message: error.message }, { status: 500 });
+    }
+    console.error("upload crashed", error);
     return NextResponse.json({ message: "Upload failed." }, { status: 500 });
   }
-
-  const { data } = admin.storage.from("campaign-images").getPublicUrl(path);
-  return NextResponse.json({ url: data.publicUrl });
 }

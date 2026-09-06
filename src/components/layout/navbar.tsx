@@ -23,7 +23,7 @@ export function Navbar() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Link href="/create">
-            <Button size="sm" variant="accent">
+            <Button size="sm" variant="abstract">
               Create Campaign
             </Button>
           </Link>

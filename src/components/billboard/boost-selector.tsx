@@ -110,7 +110,7 @@ export function BoostSelector({
         <span className="text-sm font-bold">→ +{power.toLocaleString("en-US")} Power</span>
       </div>
 
-      <Button size="lg" onClick={handleBoost} disabled={loading || amount < 1}>
+      <Button size="lg" variant="abstract" onClick={handleBoost} disabled={loading || amount < 1}>
         {loading ? "Redirecting…" : `Boost for ${formatMoney(amount)}`}
       </Button>
     </div>

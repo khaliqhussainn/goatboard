@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, SupabaseConfigError } from "@/lib/supabase/admin";
 import { campaignSchema } from "@/lib/validation";
 import { slugify } from "@/lib/utils";
 import { getVisitorId } from "@/lib/visitor";
@@ -39,37 +39,47 @@ export async function POST(request: Request) {
     );
   }
 
-  const admin = createAdminClient();
-  const base = slugify(parsed.data.name) || "campaign";
+  try {
+    const admin = createAdminClient();
+    const base = slugify(parsed.data.name) || "campaign";
 
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const slug = attempt === 0 ? base : `${base}-${Math.random().toString(36).slice(2, 6)}`;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const slug = attempt === 0 ? base : `${base}-${Math.random().toString(36).slice(2, 6)}`;
 
-    const { data, error } = await admin
-      .from("campaigns")
-      .insert({
-        slug,
-        name: parsed.data.name,
-        description: parsed.data.description,
-        destination_url: parsed.data.destination_url,
-        image_url: parsed.data.image_url || null,
-        category: parsed.data.category,
-        created_by: visitorId,
-      })
-      .select("slug")
-      .single();
+      const { data, error } = await admin
+        .from("campaigns")
+        .insert({
+          slug,
+          name: parsed.data.name,
+          description: parsed.data.description,
+          destination_url: parsed.data.destination_url,
+          image_url: parsed.data.image_url || null,
+          category: parsed.data.category,
+          created_by: visitorId,
+        })
+        .select("slug")
+        .single();
 
-    if (!error && data) {
-      return NextResponse.json({ slug: data.slug }, { status: 201 });
+      if (!error && data) {
+        return NextResponse.json({ slug: data.slug }, { status: 201 });
+      }
+
+      if (error && error.code !== "23505") {
+        console.error("campaign insert failed", error);
+        return NextResponse.json({ message: "Couldn't publish your campaign." }, { status: 500 });
+      }
     }
 
-    if (error && error.code !== "23505") {
-      return NextResponse.json({ message: "Couldn't publish your campaign." }, { status: 500 });
+    return NextResponse.json(
+      { message: "Couldn't find a free slug. Try a different name." },
+      { status: 409 },
+    );
+  } catch (error) {
+    if (error instanceof SupabaseConfigError) {
+      console.error(error.message);
+      return NextResponse.json({ message: error.message }, { status: 500 });
     }
+    console.error("campaign creation crashed", error);
+    return NextResponse.json({ message: "Couldn't publish your campaign." }, { status: 500 });
   }
-
-  return NextResponse.json(
-    { message: "Couldn't find a free slug. Try a different name." },
-    { status: 409 },
-  );
 }
