@@ -42,6 +42,21 @@ create index if not exists campaigns_slug_idx on public.campaigns (slug);
 create index if not exists campaigns_category_idx on public.campaigns (category) where status = 'active';
 create index if not exists campaigns_created_by_idx on public.campaigns (created_by);
 
+-- Permanent bragging rights: once a campaign reaches #1 this flips to true
+-- and never resets, even after it's overtaken. See the campaigns_mark_goat
+-- trigger below for how it gets set.
+alter table public.campaigns add column if not exists has_been_goat boolean not null default false;
+
+-- `create table if not exists` above is a full no-op on a table that
+-- already exists — it does NOT drop old columns/constraints. Early
+-- versions of this schema had voter_id/created_by reference auth.users(id);
+-- that FK was removed when GOATBOARD dropped Supabase Auth in favor of an
+-- anonymous cookie, but a table created under the old schema still has it,
+-- which rejects every vote/campaign insert since anonymous visitor ids
+-- don't exist in auth.users. Drop it unconditionally so this file
+-- converges to the current schema no matter which version ran first.
+alter table public.campaigns drop constraint if exists campaigns_created_by_fkey;
+
 -- ---------------------------------------------------------------------------
 -- votes  (one free vote per campaign per anonymous visitor per UTC day)
 -- ---------------------------------------------------------------------------
@@ -56,6 +71,10 @@ create table if not exists public.votes (
 
 create index if not exists votes_campaign_idx on public.votes (campaign_id);
 create index if not exists votes_voter_date_idx on public.votes (voter_id, vote_date);
+
+-- Same convergence fix as campaigns_created_by_fkey above, for the other
+-- column that used to reference auth.users(id).
+alter table public.votes drop constraint if exists votes_voter_id_fkey;
 
 -- ---------------------------------------------------------------------------
 -- purchases  (paid Power, $1 = 3 Power)
@@ -107,6 +126,39 @@ create trigger campaigns_touch_updated_at
   for each row
   when (old.vote_power is distinct from new.vote_power or old.paid_power is distinct from new.paid_power)
   execute function public.touch_updated_at();
+
+-- ---------------------------------------------------------------------------
+-- "Once a GOAT, always a GOAT": the instant a campaign's power makes it the
+-- highest among active campaigns, has_been_goat flips to true and stays
+-- true forever, even after it's overtaken. total_power is a generated
+-- column and isn't materialized yet inside a BEFORE trigger, so this
+-- computes the same sum manually from vote_power + paid_power.
+-- ---------------------------------------------------------------------------
+create or replace function public.mark_goat()
+returns trigger
+language plpgsql
+as $$
+declare
+  v_new_total integer := new.vote_power + new.paid_power;
+begin
+  if not new.has_been_goat and not exists (
+    select 1 from public.campaigns
+    where status = 'active'
+      and id <> new.id
+      and (vote_power + paid_power) > v_new_total
+  ) then
+    new.has_been_goat := true;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists campaigns_mark_goat on public.campaigns;
+create trigger campaigns_mark_goat
+  before update on public.campaigns
+  for each row
+  when (old.vote_power is distinct from new.vote_power or old.paid_power is distinct from new.paid_power)
+  execute function public.mark_goat();
 
 -- ---------------------------------------------------------------------------
 -- cast_vote(campaign_id, voter_id)

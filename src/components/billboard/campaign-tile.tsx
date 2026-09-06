@@ -3,6 +3,7 @@ import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
 import { PowerDisplay } from "@/components/billboard/power-display";
 import { VoteButton } from "@/components/billboard/vote-button";
 import { Badge } from "@/components/ui/badge";
+import { GoatBadge } from "@/components/billboard/goat-badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
 import type { Campaign } from "@/lib/types";
 
@@ -29,9 +30,12 @@ export function CampaignTile({
           >
             {campaign.name}
           </Link>
-          <Badge variant={categoryAccent(campaign.category)} className="mt-0.5">
-            {categoryLabel(campaign.category)}
-          </Badge>
+          <div className="mt-0.5 flex flex-wrap items-center gap-1">
+            <Badge variant={categoryAccent(campaign.category)}>
+              {categoryLabel(campaign.category)}
+            </Badge>
+            {campaign.has_been_goat && <GoatBadge size="xs" />}
+          </div>
         </div>
       </div>
 

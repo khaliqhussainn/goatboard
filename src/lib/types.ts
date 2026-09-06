@@ -29,6 +29,7 @@ export type Campaign = {
   vote_power: number;
   paid_power: number;
   total_power: number;
+  has_been_goat: boolean;
   created_by: string | null;
   created_at: string;
   updated_at: string;

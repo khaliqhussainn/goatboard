@@ -38,6 +38,7 @@ export function VoteButton({
             description: "Come back tomorrow to vote again.",
           });
         } else {
+          if (data.detail) console.error("vote failed:", data.detail);
           toast.error("Couldn't cast your vote. Try again.");
         }
         return;

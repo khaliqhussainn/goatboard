@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
 import { VoteButton } from "@/components/billboard/vote-button";
+import { GoatBadge } from "@/components/billboard/goat-badge";
 import { formatPower, cn } from "@/lib/utils";
 import type { Campaign } from "@/lib/types";
 
@@ -31,6 +32,7 @@ export function RankingRow({
       >
         {campaign.name}
       </Link>
+      {campaign.has_been_goat && <GoatBadge size="xs" className="shrink-0" />}
       <span className="shrink-0 text-sm font-bold tabular-nums">
         {formatPower(campaign.total_power)}
       </span>

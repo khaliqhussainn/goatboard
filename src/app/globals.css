@@ -26,6 +26,9 @@
   --color-blob-yellow: var(--blob-yellow);
   --color-blob-purple: var(--blob-purple);
 
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -53,6 +56,11 @@
   --blob-coral: #f2a0bd;
   --blob-yellow: #ffd35c;
   --blob-purple: #b79cf0;
+
+  /* The permanent "once a GOAT" badge — distinct from every other accent
+     so it always reads as a special, earned status, not a category tag. */
+  --gold: #d4af37;
+  --gold-foreground: #1a1400;
 }
 
 :root[data-theme="dark"] {
@@ -76,6 +84,9 @@
   --blob-coral: #7a3e56;
   --blob-yellow: #a17a1f;
   --blob-purple: #5a49a3;
+
+  --gold: #e0bb4a;
+  --gold-foreground: #1a1400;
 }
 
 * {

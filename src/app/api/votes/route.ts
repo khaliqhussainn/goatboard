@@ -33,7 +33,10 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("cast_vote failed", error);
-      return NextResponse.json({ success: false, message: "server_error" }, { status: 500 });
+      return NextResponse.json(
+        { success: false, message: "server_error", detail: error.message },
+        { status: 500 },
+      );
     }
 
     const result = data?.[0];
