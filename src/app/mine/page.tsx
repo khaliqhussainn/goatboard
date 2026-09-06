@@ -41,7 +41,7 @@ export default async function MinePage() {
         <div>
           <h1 className="text-3xl font-black tracking-tight sm:text-4xl">My Campaigns</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Every startup, product, or idea you&apos;ve put on the board — no account required,
+            Every startup, product, or idea you&apos;ve put on the board - no account required,
             this browser is your key.
           </p>
         </div>

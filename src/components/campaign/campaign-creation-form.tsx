@@ -252,7 +252,7 @@ export function CampaignCreationForm() {
 
           {logoNotFound && !imageUrl && (
             <p className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Sparkles className="size-3" /> Couldn&apos;t find a logo on that site — upload one
+              <Sparkles className="size-3" /> Couldn&apos;t find a logo on that site - upload one
               above.
             </p>
           )}

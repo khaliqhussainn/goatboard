@@ -3,6 +3,7 @@ import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
 import { VoteButton } from "@/components/billboard/vote-button";
 import { BoostButton } from "@/components/billboard/boost-button";
 import { GoatBadge } from "@/components/billboard/goat-badge";
+import { ClickCount } from "@/components/campaign/click-count";
 import { formatPower, cn } from "@/lib/utils";
 import type { Campaign } from "@/lib/types";
 
@@ -34,6 +35,7 @@ export function RankingRow({
         {campaign.name}
       </Link>
       {campaign.has_been_goat && <GoatBadge size="xs" className="shrink-0" />}
+      <ClickCount count={campaign.click_count} className="hidden shrink-0 text-xs sm:inline-flex" />
       <span className="shrink-0 text-sm font-bold tabular-nums">
         {formatPower(campaign.total_power)}
       </span>

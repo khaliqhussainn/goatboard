@@ -12,7 +12,7 @@ export function PaymentConfirmation() {
 
   React.useEffect(() => {
     if (!boosted) return;
-    toast.success(`Boost successful — +${boosted} Power`);
+    toast.success(`Boost successful - +${boosted} Power`);
     router.replace(pathname);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boosted]);

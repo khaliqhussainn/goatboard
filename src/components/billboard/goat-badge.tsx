@@ -1,4 +1,3 @@
-import { Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -10,14 +9,14 @@ export function GoatBadge({ size = "sm", className }: { size?: "sm" | "xs"; clas
   return (
     <span
       title="Once reached #1 on GOATBOARD"
-      className={cn(
-        "inline-flex shrink-0 items-center gap-1 rounded-full bg-gold font-bold text-gold-foreground",
-        size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-1.5 py-0.5 text-[10px]",
-        className,
-      )}
+      className={cn("inline-flex shrink-0 items-center", className)}
     >
-      <Crown className={size === "sm" ? "size-3" : "size-2.5"} />
-      GOAT
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/pregoat.png"
+        alt="Once reached #1"
+        className={size === "sm" ? "h-5 w-auto" : "h-4 w-auto"}
+      />
     </span>
   );
 }

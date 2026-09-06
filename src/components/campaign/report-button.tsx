@@ -28,7 +28,7 @@ export function ReportButton({ campaignId }: { campaignId: string }) {
         body: JSON.stringify({ campaignId, reason }),
       });
       if (!res.ok) throw new Error();
-      toast.success("Thanks — we'll take a look.");
+      toast.success("Thanks - we'll take a look.");
       setOpen(false);
       setReason("");
     } catch {

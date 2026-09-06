@@ -18,13 +18,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "GOATBOARD — Take the board.",
-    template: "%s · GOATBOARD",
+    default: "Goatboard",
+    template: "%s · Goatboard",
   },
   description:
-    "GOATBOARD is a public competitive billboard. Vote or boost anything — products, startups, ideas, memes — to the #1 spot. There's only one spotlight. Who's the GOAT?",
+    "GOATBOARD is a public competitive billboard. Vote or boost anything - products, startups, ideas, memes - to the #1 spot. There's only one spotlight. Who's the GOAT?",
+  icons: { icon: "/icon.png" },
   openGraph: {
-    title: "GOATBOARD — Take the board.",
+    title: "GOATBOARD - Take the board.",
     description:
       "One #1 spotlight. Everyone's fighting for it. Vote for free or boost with Power to climb the leaderboard.",
     siteName: "GOATBOARD",
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "GOATBOARD — Take the board.",
+    title: "GOATBOARD - Take the board.",
     description: "One #1 spotlight. Everyone's fighting for it.",
   },
 };
@@ -47,7 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Navbar />
         <main className="flex-1">{children}</main>
         <footer className="py-6 text-center text-xs text-muted-foreground">
-          GOATBOARD — there is one spot everyone wants.
+          GOATBOARD - there is one spot everyone wants.
         </footer>
         <Toaster position="bottom-center" richColors closeButton />
       </body>

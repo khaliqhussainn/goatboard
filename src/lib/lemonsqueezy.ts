@@ -50,7 +50,7 @@ export async function createCheckout({
             custom_price: Math.round(amountUsd * 100),
           },
           product_options: {
-            name: `Boost — ${campaignName}`,
+            name: `Boost - ${campaignName}`,
             description: `+${power} Power on GOATBOARD`,
             redirect_url: redirectUrl,
           },

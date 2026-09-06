@@ -49,7 +49,7 @@ export async function generateMetadata({
   const campaign = await getCampaign(slug);
   if (!campaign) return {};
 
-  const title = `${campaign.name} — #${await getRank(campaign)} on GOATBOARD`;
+  const title = `${campaign.name} - #${await getRank(campaign)} on GOATBOARD`;
   const description = campaign.description;
 
   return {
@@ -135,7 +135,7 @@ export default async function CampaignPage({
           <ShareButton
             url={url}
             title={`${campaign.name} on GOATBOARD`}
-            text={`#${rank} on GOATBOARD — ${campaign.name} has ${campaign.total_power} Power.`}
+            text={`#${rank} on GOATBOARD - ${campaign.name} has ${campaign.total_power} Power.`}
           />
         </div>
 
