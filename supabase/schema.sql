@@ -200,7 +200,10 @@ begin
   update public.campaigns
     set vote_power = vote_power + 1
     where id = p_campaign_id
-    returning total_power into v_total;
+    -- Qualified with the table name: cast_vote's own RETURNS TABLE column
+    -- is also named total_power, and PL/pgSQL treats that as ambiguous
+    -- with the campaigns.total_power column otherwise.
+    returning campaigns.total_power into v_total;
 
   return query select true, 'ok', v_total;
 end;
@@ -240,7 +243,8 @@ begin
   update public.campaigns
     set paid_power = paid_power + p_power
     where id = p_campaign_id
-    returning total_power into v_total;
+    -- Same ambiguity fix as cast_vote above.
+    returning campaigns.total_power into v_total;
 
   return query select true, 'ok', v_total;
 end;
