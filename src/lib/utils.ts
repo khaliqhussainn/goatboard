@@ -47,6 +47,28 @@ export function powerBreakdown(paidPower: number, votePower: number): string {
   return `${formatMoney(dollars)} · ${votes} ${votesLabel}`;
 }
 
+const DEFAULT_SITE_URL = "http://localhost:3000";
+
+/**
+ * The site's canonical base URL, used for metadataBase, OG/canonical URLs,
+ * the sitemap, and Lemon Squeezy redirect URLs. Guards against
+ * NEXT_PUBLIC_SITE_URL being unset OR set to an empty string (a bare `??`
+ * only catches the former — `new URL("")` throws and takes the whole build
+ * down with it) and strips any trailing slash so callers can safely do
+ * `${getSiteUrl()}/campaign/...` without risking a double slash.
+ */
+export function getSiteUrl(fallback: string = DEFAULT_SITE_URL): string {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (!raw) return fallback.replace(/\/$/, "");
+
+  try {
+    const url = new URL(raw);
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return fallback.replace(/\/$/, "");
+  }
+}
+
 export function slugify(input: string): string {
   return input
     .toLowerCase()

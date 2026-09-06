@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createCheckout } from "@/lib/lemonsqueezy";
 import { boostSchema, POWER_PER_DOLLAR } from "@/lib/validation";
+import { getSiteUrl } from "@/lib/utils";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Campaign not found." }, { status: 404 });
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
+  const siteUrl = getSiteUrl(new URL(request.url).origin);
   const power = parsed.data.amount * POWER_PER_DOLLAR;
 
   try {

@@ -12,7 +12,7 @@ import { ReportButton } from "@/components/campaign/report-button";
 import { PaymentConfirmation } from "@/components/campaign/payment-confirmation";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
-import { formatMoney, ordinal } from "@/lib/utils";
+import { formatMoney, ordinal, getSiteUrl } from "@/lib/utils";
 import type { Campaign } from "@/lib/types";
 
 async function getCampaign(slug: string): Promise<Campaign | null> {
@@ -70,7 +70,7 @@ export default async function CampaignPage({
 
   const rank = await getRank(campaign);
   const dollars = Math.round(campaign.paid_power / 3);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = getSiteUrl();
   const url = `${siteUrl}/campaign/${campaign.slug}`;
 
   const jsonLd = {
