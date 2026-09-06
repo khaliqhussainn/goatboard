@@ -47,6 +47,15 @@ export function powerBreakdown(paidPower: number, votePower: number): string {
   return `${formatMoney(dollars)} · ${votes} ${votesLabel}`;
 }
 
+/** "https://www.example.com/path" -> "example.com" */
+export function hostnameOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
 const DEFAULT_SITE_URL = "http://localhost:3000";
 
 /**

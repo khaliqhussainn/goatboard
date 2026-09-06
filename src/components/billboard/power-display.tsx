@@ -1,3 +1,4 @@
+import { Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AnimatedNumber } from "@/components/billboard/animated-number";
 
@@ -25,10 +26,11 @@ export function PowerDisplay({
       />
       <span
         className={cn(
-          "font-semibold text-muted-foreground",
+          "inline-flex items-center gap-1 font-semibold text-muted-foreground",
           size === "xl" ? "text-lg" : size === "lg" ? "text-sm" : "text-[11px] uppercase",
         )}
       >
+        <Zap className={cn("fill-current", size === "xl" || size === "lg" ? "size-4" : "size-3")} />
         Power
       </span>
     </div>

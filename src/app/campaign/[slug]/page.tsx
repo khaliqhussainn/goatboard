@@ -12,7 +12,7 @@ import { ReportButton } from "@/components/campaign/report-button";
 import { PaymentConfirmation } from "@/components/campaign/payment-confirmation";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
-import { formatMoney, ordinal, getSiteUrl } from "@/lib/utils";
+import { formatMoney, ordinal, getSiteUrl, hostnameOf } from "@/lib/utils";
 import type { Campaign } from "@/lib/types";
 
 async function getCampaign(slug: string): Promise<Campaign | null> {
@@ -124,7 +124,7 @@ export default async function CampaignPage({
           rel="noopener noreferrer nofollow"
           className="text-sm font-semibold underline underline-offset-4"
         >
-          {new URL(campaign.destination_url).hostname.replace(/^www\./, "")}
+          {hostnameOf(campaign.destination_url)}
         </a>
 
         <div className="flex flex-wrap items-center justify-center gap-3">
