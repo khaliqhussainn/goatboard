@@ -28,6 +28,15 @@
   --color-gold: var(--gold);
   --color-gold-foreground: var(--gold-foreground);
 
+  --color-hero-red: var(--hero-red);
+  --color-hero-yellow: var(--hero-yellow);
+  --color-hero-blue: var(--hero-blue);
+  --color-hero-green: var(--hero-green);
+  --color-hero-purple: var(--hero-purple);
+  --color-hero-orange: var(--hero-orange);
+  --color-hero-teal: var(--hero-teal);
+  --color-hero-pink: var(--hero-pink);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -61,6 +70,18 @@
      so it always reads as a special, earned status, not a category tag. */
   --gold: #d4af37;
   --gold-foreground: #1a1400;
+
+  /* Bright flat colors behind the big mascot on the spotlight/#2/#3 tiles.
+     Rotate per campaign+rank so a card's look changes when its occupant
+     changes rank (see CampaignHeroMascot). */
+  --hero-red: #ff3b30;
+  --hero-yellow: #ffd400;
+  --hero-blue: #2f6feb;
+  --hero-green: #2ecc71;
+  --hero-purple: #a259ff;
+  --hero-orange: #ff7a00;
+  --hero-teal: #00c2a8;
+  --hero-pink: #ff2d78;
 }
 
 * {
@@ -98,12 +119,12 @@ body {
    never a stroke. Used by every campaign card. */
 @layer components {
   .billboard-surface-lg {
-    @apply bg-card/85 backdrop-blur-2xl backdrop-saturate-150 shadow-[0_30px_90px_-20px_rgba(0,0,0,0.45)];
+    @apply bg-card shadow-[0_30px_90px_-20px_rgba(0,0,0,0.45)];
   }
   .billboard-surface {
-    @apply bg-card/80 backdrop-blur-xl backdrop-saturate-150 shadow-[0_20px_60px_-18px_rgba(0,0,0,0.35)];
+    @apply bg-card shadow-[0_20px_60px_-18px_rgba(0,0,0,0.35)];
   }
   .billboard-surface-sm {
-    @apply bg-card/75 backdrop-blur-lg backdrop-saturate-150 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.3)];
+    @apply bg-card shadow-[0_10px_30px_-12px_rgba(0,0,0,0.3)];
   }
 }

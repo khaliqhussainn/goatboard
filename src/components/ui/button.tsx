@@ -9,14 +9,11 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-foreground text-background hover:opacity-85 active:opacity-75",
-        outline:
-          "border border-border bg-transparent hover:bg-muted active:bg-muted/70",
-        ghost: "hover:bg-muted active:bg-muted/70",
-        // The primary CTA: a small abstract multi-color blend echoing the
-        // page backdrop. Never plain yellow — that color stays reserved
-        // for the one small accent shape in the backdrop and category tags.
-        abstract:
-          "text-white bg-[radial-gradient(circle_at_15%_25%,var(--blob-navy)_0%,transparent_55%),radial-gradient(circle_at_88%_20%,var(--blob-orange)_0%,transparent_60%),radial-gradient(circle_at_80%_88%,var(--blob-coral)_0%,transparent_60%),radial-gradient(circle_at_12%_85%,var(--blob-teal)_0%,transparent_60%),linear-gradient(135deg,var(--blob-purple),var(--blob-navy))] shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)] hover:brightness-110 hover:scale-[1.02] active:brightness-95 active:scale-[0.98]",
+        // Every button variant renders the same solid black/white look —
+        // only "link" (a plain text action, not a filled button) differs.
+        outline: "bg-foreground text-background hover:opacity-85 active:opacity-75",
+        ghost: "bg-foreground text-background hover:opacity-85 active:opacity-75",
+        abstract: "bg-foreground text-background hover:opacity-85 active:opacity-75",
         link: "underline-offset-4 hover:underline p-0 h-auto font-medium",
       },
       size: {

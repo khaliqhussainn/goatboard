@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
-import { CampaignHeroImage } from "@/components/campaign/campaign-hero-image";
+import { CampaignHeroMascot } from "@/components/billboard/campaign-hero-mascot";
 import { DestinationLink } from "@/components/campaign/destination-link";
 import { ClickCount } from "@/components/campaign/click-count";
 import { RankChip } from "@/components/billboard/rank-chip";
-import { GoatMascot } from "@/components/billboard/goat-mascot";
 import { GoatBadge } from "@/components/billboard/goat-badge";
 import { PowerDisplay } from "@/components/billboard/power-display";
 import { VoteButton } from "@/components/billboard/vote-button";
@@ -29,12 +28,8 @@ export function CampaignTile({
         href={`/campaign/${campaign.slug}`}
         className="relative block aspect-[16/9] w-full shrink-0 sm:aspect-auto sm:w-[38%]"
       >
-        <CampaignHeroImage src={campaign.image_url} name={campaign.name} className="size-full" />
+        <CampaignHeroMascot campaignId={campaign.id} rank={rank} className="size-full" />
         <RankChip rank={rank} className="absolute left-2 top-2 px-2 py-0.5 text-xs" />
-        <GoatMascot
-          seed={campaign.id}
-          className="absolute -bottom-2 -right-2 size-20 rotate-3 sm:size-24"
-        />
       </Link>
 
       <div className="flex flex-1 flex-col gap-1.5 p-4">

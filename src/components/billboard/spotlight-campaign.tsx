@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
-import { CampaignHeroImage } from "@/components/campaign/campaign-hero-image";
+import { CampaignHeroMascot } from "@/components/billboard/campaign-hero-mascot";
 import { DestinationLink } from "@/components/campaign/destination-link";
 import { ClickCount } from "@/components/campaign/click-count";
 import { RankChip } from "@/components/billboard/rank-chip";
-import { GoatMascot } from "@/components/billboard/goat-mascot";
 import { PowerDisplay } from "@/components/billboard/power-display";
 import { VoteButton } from "@/components/billboard/vote-button";
 import { BoostButton } from "@/components/billboard/boost-button";
@@ -26,12 +25,8 @@ export function SpotlightCampaign({
         href={`/campaign/${campaign.slug}`}
         className="relative block aspect-[16/10] w-full shrink-0 sm:aspect-auto sm:w-[42%]"
       >
-        <CampaignHeroImage src={campaign.image_url} name={campaign.name} className="size-full" />
+        <CampaignHeroMascot campaignId={campaign.id} rank={1} className="size-full" />
         <RankChip rank={1} className="absolute left-3 top-3" />
-        <GoatMascot
-          seed={campaign.id}
-          className="absolute -bottom-4 -right-4 size-32 rotate-3 sm:size-44"
-        />
       </Link>
 
       <div className="flex flex-1 flex-col gap-2.5 p-5 sm:p-7">

@@ -29,7 +29,7 @@ export function CampaignAvatar({
 }) {
   if (src) {
     return (
-      <div className={cn("relative overflow-hidden rounded-xl bg-muted", className)}>
+      <div className={cn("relative aspect-square overflow-hidden bg-muted", className)}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt="" loading="lazy" className="size-full object-cover" />
       </div>
@@ -39,7 +39,7 @@ export function CampaignAvatar({
   return (
     <div
       className={cn(
-        "flex items-center justify-center rounded-xl font-black text-black",
+        "flex aspect-square items-center justify-center font-black text-black",
         fallbackColor(name || "?"),
         className,
       )}
