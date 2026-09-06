@@ -1,8 +1,14 @@
+import { cn } from "@/lib/utils";
+
+/**
+ * Permanent bragging rights: shown on any campaign that has ever reached
+ * #1, even long after it's been overtaken.
+ */
 export function GoatBadge({
   size = "s",
   className,
 }: {
-  size?: "sm" | "xs";
+  size?: "s" | "xs";
   className?: string;
 }) {
   return (
@@ -14,7 +20,7 @@ export function GoatBadge({
       <img
         src="/pregoat.png"
         alt="Once reached #1"
-        className={size === "sm" ? "h-7 w-auto" : "h-6 w-auto"}
+        className={size === "s" ? "h-7 w-auto" : "h-6 w-auto"}
       />
     </span>
   );
