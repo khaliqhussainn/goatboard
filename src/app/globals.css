@@ -48,13 +48,14 @@
   --accent-green: #c9e9d4;
 
   /* Bold, flat abstract-backdrop colors — deliberately more saturated than
-     the pastel badge accents above. Decorative only, never behind text. */
-  --blob-navy: #232a5c;
-  --blob-orange: #ff8a4a;
-  --blob-teal: #1f9e8a;
-  --blob-coral: #f2a0bd;
-  --blob-yellow: #ffd35c;
-  --blob-purple: #b79cf0;
+     the pastel badge accents above. Decorative only, never behind text.
+     Sampled directly from the reference backdrop image. */
+  --blob-navy: #1c3c81;
+  --blob-orange: #fb5923;
+  --blob-teal: #26ab99;
+  --blob-coral: #ff7a9c;
+  --blob-yellow: #febd2d;
+  --blob-purple: #d5a5ea;
 
   /* The permanent "once a GOAT" badge — distinct from every other accent
      so it always reads as a special, earned status, not a category tag. */

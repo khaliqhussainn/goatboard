@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
 import { CampaignHeroImage } from "@/components/campaign/campaign-hero-image";
 import { DestinationLink } from "@/components/campaign/destination-link";
 import { ClickCount } from "@/components/campaign/click-count";
@@ -44,9 +45,16 @@ export function SpotlightCampaign({
 
         <Link
           href={`/campaign/${campaign.slug}`}
-          className="text-2xl font-black tracking-tight hover:underline sm:text-3xl"
+          className="flex items-center gap-2 hover:underline"
         >
-          {campaign.name}
+          <CampaignAvatar
+            src={campaign.image_url}
+            name={campaign.name}
+            className="size-7 shrink-0 text-xs sm:size-8"
+          />
+          <span className="text-2xl font-black tracking-tight sm:text-3xl">
+            {campaign.name}
+          </span>
         </Link>
 
         <p className="line-clamp-1 text-sm text-muted-foreground">{campaign.description}</p>

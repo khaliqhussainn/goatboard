@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
 import { CampaignHeroImage } from "@/components/campaign/campaign-hero-image";
 import { DestinationLink } from "@/components/campaign/destination-link";
 import { ClickCount } from "@/components/campaign/click-count";
@@ -7,6 +8,7 @@ import { GoatMascot } from "@/components/billboard/goat-mascot";
 import { GoatBadge } from "@/components/billboard/goat-badge";
 import { PowerDisplay } from "@/components/billboard/power-display";
 import { VoteButton } from "@/components/billboard/vote-button";
+import { BoostButton } from "@/components/billboard/boost-button";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
 import { powerBreakdown } from "@/lib/utils";
@@ -45,9 +47,14 @@ export function CampaignTile({
 
         <Link
           href={`/campaign/${campaign.slug}`}
-          className="truncate font-bold hover:underline"
+          className="flex min-w-0 items-center gap-1.5 hover:underline"
         >
-          {campaign.name}
+          <CampaignAvatar
+            src={campaign.image_url}
+            name={campaign.name}
+            className="size-5 shrink-0 text-[10px]"
+          />
+          <span className="truncate font-bold">{campaign.name}</span>
         </Link>
 
         <p className="line-clamp-1 text-xs text-muted-foreground">{campaign.description}</p>
@@ -64,6 +71,12 @@ export function CampaignTile({
 
         <div className="mt-auto flex items-center gap-2 pt-2">
           <VoteButton campaignId={campaign.id} onVoted={onVoted} size="sm" />
+          <BoostButton
+            campaignId={campaign.id}
+            campaignName={campaign.name}
+            size="sm"
+            variant="outline"
+          />
         </div>
       </div>
     </div>
