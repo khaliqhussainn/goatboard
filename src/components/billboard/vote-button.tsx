@@ -4,7 +4,6 @@ import * as React from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowUp } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/components/auth/auth-provider";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -19,15 +18,10 @@ export function VoteButton({
   size?: ButtonProps["size"];
   className?: string;
 }) {
-  const { user, openAuthModal } = useAuth();
   const [pending, setPending] = React.useState(false);
   const [showBump, setShowBump] = React.useState(false);
 
   async function handleVote() {
-    if (!user) {
-      openAuthModal();
-      return;
-    }
     if (pending) return;
     setPending(true);
     try {

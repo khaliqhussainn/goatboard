@@ -1,22 +1,19 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getVisitorId } from "@/lib/visitor";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const voteSchema = z.object({ campaignId: z.string().uuid() });
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ success: false, message: "unauthenticated" }, { status: 401 });
+  const visitorId = await getVisitorId();
+  if (!visitorId) {
+    return NextResponse.json({ success: false, message: "no_visitor_id" }, { status: 400 });
   }
 
   const ip = getClientIp(request.headers);
-  const limited = rateLimit(`vote:${user.id}:${ip}`, { limit: 30, windowMs: 60 * 1000 });
+  const limited = rateLimit(`vote:${visitorId}:${ip}`, { limit: 30, windowMs: 60 * 1000 });
   if (!limited.success) {
     return NextResponse.json({ success: false, message: "rate_limited" }, { status: 429 });
   }
@@ -27,9 +24,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: "invalid_input" }, { status: 400 });
   }
 
-  const { data, error } = await supabase.rpc("cast_vote", {
+  const admin = createAdminClient();
+  const { data, error } = await admin.rpc("cast_vote", {
     p_campaign_id: parsed.data.campaignId,
-    p_voter_id: user.id,
+    p_voter_id: visitorId,
   });
 
   if (error) {

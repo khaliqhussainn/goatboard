@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { AbstractBackdrop } from "@/components/layout/abstract-backdrop";
 import { CampaignCard } from "@/components/campaign/campaign-card";
 import { EmptyBoard } from "@/components/billboard/empty-board";
 import { CATEGORIES } from "@/lib/categories";
@@ -35,6 +36,7 @@ export default async function ExplorePage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <AbstractBackdrop />
       <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Explore</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Everything currently fighting for the board.

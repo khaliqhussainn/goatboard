@@ -1,20 +1,17 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { campaignSchema } from "@/lib/validation";
 import { slugify } from "@/lib/utils";
+import { getVisitorId } from "@/lib/visitor";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ message: "Sign in to publish a campaign." }, { status: 401 });
+  const visitorId = await getVisitorId();
+  if (!visitorId) {
+    return NextResponse.json({ message: "Missing visitor id." }, { status: 400 });
   }
 
-  const { success } = rateLimit(`create-campaign:${user.id}`, {
+  const { success } = rateLimit(`create-campaign:${visitorId}`, {
     limit: 5,
     windowMs: 60 * 60 * 1000,
   });
@@ -42,12 +39,13 @@ export async function POST(request: Request) {
     );
   }
 
+  const admin = createAdminClient();
   const base = slugify(parsed.data.name) || "campaign";
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const slug = attempt === 0 ? base : `${base}-${Math.random().toString(36).slice(2, 6)}`;
 
-    const { data, error } = await supabase
+    const { data, error } = await admin
       .from("campaigns")
       .insert({
         slug,
@@ -56,7 +54,7 @@ export async function POST(request: Request) {
         destination_url: parsed.data.destination_url,
         image_url: parsed.data.image_url || null,
         category: parsed.data.category,
-        created_by: user.id,
+        created_by: visitorId,
       })
       .select("slug")
       .single();

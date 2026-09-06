@@ -9,7 +9,7 @@ export function CampaignCard({ campaign, rank }: { campaign: Campaign; rank: num
   return (
     <Link
       href={`/campaign/${campaign.slug}`}
-      className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-muted"
+      className="billboard-surface flex flex-col gap-3 rounded-2xl p-4 transition-transform hover:-translate-y-1"
     >
       <div className="flex items-center gap-3">
         <CampaignAvatar src={campaign.image_url} name={campaign.name} className="size-11" />

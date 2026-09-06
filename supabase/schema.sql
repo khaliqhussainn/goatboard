@@ -1,5 +1,13 @@
 -- GOATBOARD database schema
 -- Run this against a fresh Supabase Postgres project (SQL editor or `supabase db push`).
+--
+-- There is no Supabase Auth in this product — no login, no email
+-- confirmation. Every visitor gets an anonymous `goatboard_uid` cookie
+-- (assigned in middleware.ts) that identifies them for vote-limiting and
+-- campaign ownership ("my campaigns"). It's a bare uuid with no FK into
+-- auth.users. This is a deliberate tradeoff: zero signup friction, at the
+-- cost of identity being only as durable as a cookie (clearing cookies
+-- resets it). Abuse is bounded server-side by rate limiting instead.
 
 create extension if not exists pgcrypto;
 
@@ -18,7 +26,9 @@ create table if not exists public.campaigns (
   vote_power integer not null default 0 check (vote_power >= 0),
   paid_power integer not null default 0 check (paid_power >= 0),
   total_power integer generated always as (vote_power + paid_power) stored,
-  created_by uuid references auth.users(id) on delete set null,
+  -- Anonymous visitor id (goatboard_uid cookie), not a Supabase Auth user.
+  -- Lets one visitor list multiple campaigns ("my campaigns") without login.
+  created_by uuid,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -33,12 +43,12 @@ create index if not exists campaigns_category_idx on public.campaigns (category)
 create index if not exists campaigns_created_by_idx on public.campaigns (created_by);
 
 -- ---------------------------------------------------------------------------
--- votes  (one free vote per campaign per user per UTC day)
+-- votes  (one free vote per campaign per anonymous visitor per UTC day)
 -- ---------------------------------------------------------------------------
 create table if not exists public.votes (
   id uuid primary key default gen_random_uuid(),
   campaign_id uuid not null references public.campaigns(id) on delete cascade,
-  voter_id uuid not null references auth.users(id) on delete cascade,
+  voter_id uuid not null,
   vote_date date not null default (timezone('utc', now()))::date,
   created_at timestamptz not null default now(),
   unique (campaign_id, voter_id, vote_date)
@@ -102,7 +112,8 @@ create trigger campaigns_touch_updated_at
 -- cast_vote(campaign_id, voter_id)
 -- Atomically records a daily vote and bumps vote_power. All ranking-affecting
 -- writes go through this function (or grant_purchase_power below) so the
--- client can never set power directly.
+-- client can never set power directly. voter_id is the caller's anonymous
+-- goatboard_uid, passed in from the trusted API route (never from the body).
 -- ---------------------------------------------------------------------------
 create or replace function public.cast_vote(p_campaign_id uuid, p_voter_id uuid)
 returns table(success boolean, message text, total_power integer)
@@ -144,7 +155,7 @@ end;
 $$;
 
 revoke all on function public.cast_vote(uuid, uuid) from public;
-grant execute on function public.cast_vote(uuid, uuid) to authenticated;
+grant execute on function public.cast_vote(uuid, uuid) to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- grant_purchase_power(order_id, campaign_id, amount, currency, power)
@@ -187,6 +198,13 @@ revoke all on function public.grant_purchase_power(text, uuid, numeric, text, in
 
 -- ---------------------------------------------------------------------------
 -- Row Level Security
+--
+-- There's no Supabase Auth session, so there's no authenticated role to
+-- scope policies by. All writes (campaign creation, votes, image uploads)
+-- go through server API routes using the service-role client, which
+-- bypasses RLS after its own validation/rate-limiting. RLS here exists to
+-- keep reads correctly scoped for the public anon key and to make sure the
+-- anon/authenticated roles have no write access at all.
 -- ---------------------------------------------------------------------------
 alter table public.campaigns enable row level security;
 alter table public.votes enable row level security;
@@ -200,20 +218,9 @@ create policy "campaigns are publicly readable"
   using (status = 'active' or auth.role() = 'service_role');
 
 drop policy if exists "authenticated users can create campaigns" on public.campaigns;
-create policy "authenticated users can create campaigns"
-  on public.campaigns for insert
-  to authenticated
-  with check (created_by = auth.uid());
 
--- No direct client updates/deletes: power changes go through the RPCs above,
--- moderation goes through the service role from the admin API.
-
--- Votes: users can see their own vote history (used to render "voted today").
-drop policy if exists "users can view their own votes" on public.votes;
-create policy "users can view their own votes"
-  on public.votes for select
-  to authenticated
-  using (voter_id = auth.uid());
+-- No client-side insert/update/delete policy: campaign creation and every
+-- power-changing update happens server-side with the service role.
 
 -- Purchases: publicly readable in aggregate (needed for the $ breakdown), but
 -- only paid rows, and never writable from the client.
@@ -240,6 +247,8 @@ alter publication supabase_realtime add table public.campaigns;
 
 -- ---------------------------------------------------------------------------
 -- Storage: campaign images
+-- Uploads always go through /api/upload with the service role (validated,
+-- rate-limited server-side) — there is no client-side insert policy.
 -- ---------------------------------------------------------------------------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('campaign-images', 'campaign-images', true, 5242880, array['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
@@ -251,7 +260,3 @@ create policy "campaign images are publicly readable"
   using (bucket_id = 'campaign-images');
 
 drop policy if exists "authenticated users can upload campaign images" on storage.objects;
-create policy "authenticated users can upload campaign images"
-  on storage.objects for insert
-  to authenticated
-  with check (bucket_id = 'campaign-images' and (storage.foldername(name))[1] = auth.uid()::text);

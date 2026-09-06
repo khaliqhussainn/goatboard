@@ -16,7 +16,7 @@ export function RankingRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 sm:px-4",
+        "billboard-surface-sm flex items-center gap-3 rounded-xl px-3 py-2.5 sm:px-4",
       )}
     >
       <span className="w-7 shrink-0 text-sm font-bold tabular-nums text-muted-foreground">

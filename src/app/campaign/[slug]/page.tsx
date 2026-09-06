@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { AbstractBackdrop } from "@/components/layout/abstract-backdrop";
 import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
 import { PowerDisplay } from "@/components/billboard/power-display";
 import { VoteButton } from "@/components/billboard/vote-button";
@@ -83,6 +84,7 @@ export default async function CampaignPage({
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+      <AbstractBackdrop />
       <Suspense fallback={null}>
         <PaymentConfirmation />
       </Suspense>
@@ -91,7 +93,7 @@ export default async function CampaignPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="flex flex-col items-center gap-6 text-center">
+      <div className="billboard-surface flex flex-col items-center gap-6 p-6 text-center sm:p-10">
         <span className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
           {ordinal(rank)} on GOATBOARD
         </span>

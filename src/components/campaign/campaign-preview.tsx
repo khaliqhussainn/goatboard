@@ -14,7 +14,7 @@ export function CampaignPreview({
   category: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card p-8 text-center">
+    <div className="billboard-surface-lg flex flex-col items-center gap-4 rounded-[2rem] p-8 text-center">
       <span className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
         #1 right now
       </span>

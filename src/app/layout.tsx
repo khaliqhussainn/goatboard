@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
-import { AuthProvider } from "@/components/auth/auth-provider";
 import { Navbar } from "@/components/layout/navbar";
 import "./globals.css";
 
@@ -49,14 +48,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider>
-          <AuthProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
-              GOATBOARD — there is one spot everyone wants.
-            </footer>
-            <Toaster position="bottom-center" richColors closeButton />
-          </AuthProvider>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <footer className="py-6 text-center text-xs text-muted-foreground">
+            GOATBOARD — there is one spot everyone wants.
+          </footer>
+          <Toaster position="bottom-center" richColors closeButton />
         </ThemeProvider>
       </body>
     </html>

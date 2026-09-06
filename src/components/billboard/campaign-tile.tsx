@@ -16,7 +16,7 @@ export function CampaignTile({
   onVoted?: (totalPower: number) => void;
 }) {
   return (
-    <div className="flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
+    <div className="billboard-surface flex h-full flex-col gap-3 rounded-2xl p-4 sm:p-5">
       <div className="flex items-center gap-3">
         <span className="text-lg font-black text-muted-foreground">#{rank}</span>
         <Link href={`/campaign/${campaign.slug}`}>

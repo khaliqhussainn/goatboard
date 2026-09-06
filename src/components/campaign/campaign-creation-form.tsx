@@ -2,11 +2,8 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { nanoid } from "nanoid";
 import { toast } from "sonner";
 import { ImagePlus, Loader2 } from "lucide-react";
-import { useAuth } from "@/components/auth/auth-provider";
-import { createClient } from "@/lib/supabase/client";
 import { campaignSchema } from "@/lib/validation";
 import { CampaignPreview } from "@/components/campaign/campaign-preview";
 import { CATEGORIES } from "@/lib/categories";
@@ -25,8 +22,6 @@ import type { Category } from "@/lib/types";
 
 export function CampaignCreationForm() {
   const router = useRouter();
-  const { user, openAuthModal } = useAuth();
-  const supabase = React.useMemo(() => createClient(), []);
 
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
@@ -42,40 +37,32 @@ export function CampaignCreationForm() {
     e.target.value = "";
     if (!file) return;
 
-    if (!user) {
-      openAuthModal();
-      return;
-    }
-
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image must be under 5MB.");
       return;
     }
 
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `${user.id}/${nanoid()}.${ext}`;
+    const formData = new FormData();
+    formData.append("file", file);
 
-    const { error } = await supabase.storage.from("campaign-images").upload(path, file);
-    if (error) {
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.message ?? "Couldn't upload image. Try again.");
+        return;
+      }
+      setImageUrl(data.url);
+    } catch {
       toast.error("Couldn't upload image. Try again.");
+    } finally {
       setUploading(false);
-      return;
     }
-
-    const { data } = supabase.storage.from("campaign-images").getPublicUrl(path);
-    setImageUrl(data.publicUrl);
-    setUploading(false);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
-    if (!user) {
-      openAuthModal();
-      toast("Sign in to publish your campaign.");
-      return;
-    }
 
     const parsed = campaignSchema.safeParse({
       name,

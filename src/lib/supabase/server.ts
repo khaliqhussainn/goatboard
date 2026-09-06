@@ -1,33 +1,15 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types";
 
 /**
- * Server-side Supabase client bound to the current request's cookies.
- * Use this in Server Components, Server Actions, and Route Handlers.
+ * Plain anon-key Supabase client for Server Components and Route Handlers.
+ * There's no Supabase Auth session in this product, so there's no cookie
+ * plumbing to do here — this just makes public, RLS-scoped reads.
  */
 export async function createClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient<Database>(
+  return createSupabaseClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          } catch {
-            // Called from a Server Component with no response to write to.
-            // Middleware handles session refresh in that case.
-          }
-        },
-      },
-    },
+    { auth: { persistSession: false } },
   );
 }

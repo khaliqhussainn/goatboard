@@ -16,7 +16,7 @@ export function SpotlightCampaign({
   onVoted?: (totalPower: number) => void;
 }) {
   return (
-    <div className="flex flex-col items-center gap-6 rounded-3xl border border-border bg-card p-6 text-center sm:p-10">
+    <div className="billboard-surface-lg flex flex-col items-center gap-6 rounded-[2rem] p-6 text-center sm:p-12">
       <span className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
         #1 right now
       </span>

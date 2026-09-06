@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { AbstractBackdrop } from "@/components/layout/abstract-backdrop";
 import { Leaderboard } from "@/components/billboard/leaderboard";
 import type { Campaign } from "@/lib/types";
 
@@ -21,16 +22,19 @@ export default async function Home() {
   const campaigns = await getCampaigns();
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-      <div className="mb-6 flex items-center justify-center gap-2 sm:mb-8">
-        <span className="h-px w-8 bg-border" />
-        <span className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground">
-          The board
-        </span>
-        <span className="h-px w-8 bg-border" />
-      </div>
+    <>
+      <AbstractBackdrop />
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+        <div className="mb-6 flex items-center justify-center gap-2 sm:mb-8">
+          <span className="h-px w-8 bg-foreground/20" />
+          <span className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground">
+            The board
+          </span>
+          <span className="h-px w-8 bg-foreground/20" />
+        </div>
 
-      <Leaderboard initialCampaigns={campaigns} />
-    </div>
+        <Leaderboard initialCampaigns={campaigns} />
+      </div>
+    </>
   );
 }
