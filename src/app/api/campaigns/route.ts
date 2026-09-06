@@ -66,7 +66,10 @@ export async function POST(request: Request) {
 
       if (error && error.code !== "23505") {
         console.error("campaign insert failed", error);
-        return NextResponse.json({ message: "Couldn't publish your campaign." }, { status: 500 });
+        return NextResponse.json(
+          { message: `Couldn't publish your campaign: ${error.message}` },
+          { status: 500 },
+        );
       }
     }
 
@@ -80,6 +83,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: error.message }, { status: 500 });
     }
     console.error("campaign creation crashed", error);
-    return NextResponse.json({ message: "Couldn't publish your campaign." }, { status: 500 });
+    const detail = error instanceof Error ? error.message : String(error);
+    return NextResponse.json(
+      { message: `Couldn't publish your campaign: ${detail}` },
+      { status: 500 },
+    );
   }
 }

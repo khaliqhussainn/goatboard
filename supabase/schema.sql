@@ -242,8 +242,24 @@ create policy "only admins read reports"
 
 -- ---------------------------------------------------------------------------
 -- Realtime
+-- `alter publication ... add table` errors if the table is already a
+-- member — unlike everything else in this file, that's NOT a no-op on a
+-- second run. Since the Supabase SQL editor aborts the whole script on the
+-- first error, re-running this file used to silently skip every statement
+-- below this line (including the entire storage bucket setup). Guarded so
+-- this file is safe to run any number of times.
 -- ---------------------------------------------------------------------------
-alter publication supabase_realtime add table public.campaigns;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'campaigns'
+  ) then
+    alter publication supabase_realtime add table public.campaigns;
+  end if;
+end $$;
 
 -- ---------------------------------------------------------------------------
 -- Storage: campaign images

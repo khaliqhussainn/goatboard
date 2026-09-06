@@ -45,6 +45,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: error.message }, { status: 500 });
     }
     console.error("upload crashed", error);
-    return NextResponse.json({ message: "Upload failed." }, { status: 500 });
+    // Surface the underlying Supabase error text (e.g. "Bucket not found",
+    // "new row violates row-level security policy") instead of a generic
+    // message — it's the fastest way to tell what's actually misconfigured.
+    const detail = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ message: `Upload failed: ${detail}` }, { status: 500 });
   }
 }
