@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme inline {
   --color-background: var(--background);
@@ -63,32 +62,6 @@
   --gold-foreground: #1a1400;
 }
 
-:root[data-theme="dark"] {
-  --background: #0a0a0a;
-  --foreground: #f5f5f5;
-  --card: #131313;
-  --popover: #131313;
-  --border: #262626;
-  --muted: #1a1a1a;
-  --muted-foreground: #9a9a9a;
-
-  --accent-pink: #5c3244;
-  --accent-yellow: #4e4423;
-  --accent-purple: #3a3155;
-  --accent-blue: #23384d;
-  --accent-green: #244233;
-
-  --blob-navy: #161b3e;
-  --blob-orange: #b8582c;
-  --blob-teal: #146b5e;
-  --blob-coral: #7a3e56;
-  --blob-yellow: #a17a1f;
-  --blob-purple: #5a49a3;
-
-  --gold: #e0bb4a;
-  --gold-foreground: #1a1400;
-}
-
 * {
   border-color: var(--border);
 }
@@ -119,18 +92,17 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* The billboard surface: frosted glass over the abstract backdrop — white
-   in light mode, near-black in dark mode, always borderless. Separation
-   comes from translucency + blur + elevation (a soft shadow in light mode,
-   a soft glow in dark mode), never a stroke. Used by every campaign card. */
+/* The billboard surface: frosted glass over the abstract backdrop, always
+   borderless. Separation comes from translucency + blur + a soft shadow,
+   never a stroke. Used by every campaign card. */
 @layer components {
   .billboard-surface-lg {
-    @apply bg-card/85 backdrop-blur-2xl backdrop-saturate-150 shadow-[0_30px_90px_-20px_rgba(0,0,0,0.45)] dark:shadow-[0_0_80px_-10px_rgba(255,255,255,0.18)];
+    @apply bg-card/85 backdrop-blur-2xl backdrop-saturate-150 shadow-[0_30px_90px_-20px_rgba(0,0,0,0.45)];
   }
   .billboard-surface {
-    @apply bg-card/80 backdrop-blur-xl backdrop-saturate-150 shadow-[0_20px_60px_-18px_rgba(0,0,0,0.35)] dark:shadow-[0_0_50px_-8px_rgba(255,255,255,0.14)];
+    @apply bg-card/80 backdrop-blur-xl backdrop-saturate-150 shadow-[0_20px_60px_-18px_rgba(0,0,0,0.35)];
   }
   .billboard-surface-sm {
-    @apply bg-card/75 backdrop-blur-lg backdrop-saturate-150 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.3)] dark:shadow-[0_0_28px_-6px_rgba(255,255,255,0.12)];
+    @apply bg-card/75 backdrop-blur-lg backdrop-saturate-150 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.3)];
   }
 }

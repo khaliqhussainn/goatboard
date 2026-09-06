@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
 import { CampaignHeroImage } from "@/components/campaign/campaign-hero-image";
+import { DestinationLink } from "@/components/campaign/destination-link";
+import { ClickCount } from "@/components/campaign/click-count";
 import { RankChip } from "@/components/billboard/rank-chip";
 import { GoatMascot } from "@/components/billboard/goat-mascot";
 import { PowerDisplay } from "@/components/billboard/power-display";
@@ -8,7 +9,7 @@ import { VoteButton } from "@/components/billboard/vote-button";
 import { BoostButton } from "@/components/billboard/boost-button";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
-import { powerBreakdown, hostnameOf } from "@/lib/utils";
+import { powerBreakdown } from "@/lib/utils";
 import type { Campaign } from "@/lib/types";
 
 export function SpotlightCampaign({
@@ -28,7 +29,7 @@ export function SpotlightCampaign({
         <RankChip rank={1} className="absolute left-3 top-3" />
         <GoatMascot
           seed={campaign.id}
-          className="absolute -bottom-2 -right-2 size-16 rotate-3 sm:size-20"
+          className="absolute -bottom-4 -right-4 size-32 rotate-3 sm:size-44"
         />
       </Link>
 
@@ -50,15 +51,10 @@ export function SpotlightCampaign({
 
         <p className="line-clamp-1 text-sm text-muted-foreground">{campaign.description}</p>
 
-        <a
-          href={campaign.destination_url}
-          target="_blank"
-          rel="noopener noreferrer nofollow"
-          className="inline-flex w-fit items-center gap-1 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
-        >
-          {hostnameOf(campaign.destination_url)}
-          <ExternalLink className="size-3.5" />
-        </a>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          <DestinationLink campaignId={campaign.id} url={campaign.destination_url} />
+          <ClickCount count={campaign.click_count} className="text-xs" />
+        </div>
 
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <PowerDisplay power={campaign.total_power} size="lg" />

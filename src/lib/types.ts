@@ -30,6 +30,7 @@ export type Campaign = {
   paid_power: number;
   total_power: number;
   has_been_goat: boolean;
+  click_count: number;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -108,6 +109,10 @@ export interface Database {
           p_power: number;
         };
         Returns: { success: boolean; message: string; total_power: number | null }[];
+      };
+      record_click: {
+        Args: { p_campaign_id: string };
+        Returns: { success: boolean; new_click_count: number | null }[];
       };
     };
     Enums: Record<string, never>;

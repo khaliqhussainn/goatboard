@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
 import { CampaignHeroImage } from "@/components/campaign/campaign-hero-image";
+import { DestinationLink } from "@/components/campaign/destination-link";
+import { ClickCount } from "@/components/campaign/click-count";
 import { RankChip } from "@/components/billboard/rank-chip";
 import { GoatMascot } from "@/components/billboard/goat-mascot";
 import { GoatBadge } from "@/components/billboard/goat-badge";
@@ -8,7 +9,7 @@ import { PowerDisplay } from "@/components/billboard/power-display";
 import { VoteButton } from "@/components/billboard/vote-button";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
-import { powerBreakdown, hostnameOf } from "@/lib/utils";
+import { powerBreakdown } from "@/lib/utils";
 import type { Campaign } from "@/lib/types";
 
 export function CampaignTile({
@@ -28,7 +29,10 @@ export function CampaignTile({
       >
         <CampaignHeroImage src={campaign.image_url} name={campaign.name} className="size-full" />
         <RankChip rank={rank} className="absolute left-2 top-2 px-2 py-0.5 text-xs" />
-        <GoatMascot seed={campaign.id} className="absolute -bottom-1 -right-1 size-10 rotate-3" />
+        <GoatMascot
+          seed={campaign.id}
+          className="absolute -bottom-2 -right-2 size-20 rotate-3 sm:size-24"
+        />
       </Link>
 
       <div className="flex flex-1 flex-col gap-1.5 p-4">
@@ -48,15 +52,10 @@ export function CampaignTile({
 
         <p className="line-clamp-1 text-xs text-muted-foreground">{campaign.description}</p>
 
-        <a
-          href={campaign.destination_url}
-          target="_blank"
-          rel="noopener noreferrer nofollow"
-          className="inline-flex w-fit items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          {hostnameOf(campaign.destination_url)}
-          <ExternalLink className="size-3" />
-        </a>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+          <DestinationLink campaignId={campaign.id} url={campaign.destination_url} />
+          <ClickCount count={campaign.click_count} />
+        </div>
 
         <PowerDisplay power={campaign.total_power} size="lg" className="mt-1" />
         <p className="text-xs text-muted-foreground">

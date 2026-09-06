@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 
 export function Navbar() {
@@ -21,7 +20,6 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          <ThemeToggle />
           <Link href="/create">
             <Button size="sm" variant="abstract">
               Create Campaign

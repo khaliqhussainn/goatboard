@@ -9,10 +9,12 @@ import { VoteButton } from "@/components/billboard/vote-button";
 import { BoostButton } from "@/components/billboard/boost-button";
 import { ShareButton } from "@/components/campaign/share-button";
 import { ReportButton } from "@/components/campaign/report-button";
+import { DestinationLink } from "@/components/campaign/destination-link";
+import { ClickCount } from "@/components/campaign/click-count";
 import { PaymentConfirmation } from "@/components/campaign/payment-confirmation";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
-import { formatMoney, ordinal, getSiteUrl, hostnameOf } from "@/lib/utils";
+import { formatMoney, ordinal, getSiteUrl } from "@/lib/utils";
 import type { Campaign } from "@/lib/types";
 
 async function getCampaign(slug: string): Promise<Campaign | null> {
@@ -118,14 +120,14 @@ export default async function CampaignPage({
 
         <p className="max-w-md text-sm text-muted-foreground">{campaign.description}</p>
 
-        <a
-          href={campaign.destination_url}
-          target="_blank"
-          rel="noopener noreferrer nofollow"
-          className="text-sm font-semibold underline underline-offset-4"
-        >
-          {hostnameOf(campaign.destination_url)}
-        </a>
+        <div className="flex flex-col items-center gap-1">
+          <DestinationLink
+            campaignId={campaign.id}
+            url={campaign.destination_url}
+            className="text-sm underline underline-offset-4"
+          />
+          <ClickCount count={campaign.click_count} className="text-xs" />
+        </div>
 
         <div className="flex flex-wrap items-center justify-center gap-3">
           <VoteButton campaignId={campaign.id} size="lg" />

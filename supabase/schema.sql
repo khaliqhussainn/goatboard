@@ -47,6 +47,10 @@ create index if not exists campaigns_created_by_idx on public.campaigns (created
 -- trigger below for how it gets set.
 alter table public.campaigns add column if not exists has_been_goat boolean not null default false;
 
+-- Outbound clicks on the destination link — tracked separately from Power,
+-- purely informational (see record_click below).
+alter table public.campaigns add column if not exists click_count integer not null default 0;
+
 -- `create table if not exists` above is a full no-op on a table that
 -- already exists — it does NOT drop old columns/constraints. Early
 -- versions of this schema had voter_id/created_by reference auth.users(id);
@@ -211,6 +215,39 @@ $$;
 
 revoke all on function public.cast_vote(uuid, uuid) from public;
 grant execute on function public.cast_vote(uuid, uuid) to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- record_click(campaign_id)
+-- Increments the outbound-click counter when a visitor clicks through to a
+-- campaign's destination URL. Purely informational — never affects Power
+-- or ranking — so unlike cast_vote this has no daily limit or uniqueness
+-- constraint; the API route rate-limits by IP instead.
+-- ---------------------------------------------------------------------------
+create or replace function public.record_click(p_campaign_id uuid)
+returns table(success boolean, new_click_count integer)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_count integer;
+begin
+  update public.campaigns
+    set click_count = click_count + 1
+    where id = p_campaign_id and status = 'active'
+    returning campaigns.click_count into v_count;
+
+  if v_count is null then
+    return query select false, null::integer;
+    return;
+  end if;
+
+  return query select true, v_count;
+end;
+$$;
+
+revoke all on function public.record_click(uuid) from public;
+grant execute on function public.record_click(uuid) to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- grant_purchase_power(order_id, campaign_id, amount, currency, power)
