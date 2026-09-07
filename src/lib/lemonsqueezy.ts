@@ -42,12 +42,12 @@ export async function createCheckout({
       data: {
         type: "checkouts",
         attributes: {
+          custom_price: Math.round(amountUsd * 100),
           checkout_data: {
             custom: {
               campaign_id: campaignId,
               power: String(power),
             },
-            custom_price: Math.round(amountUsd * 100),
           },
           product_options: {
             name: `Boost - ${campaignName}`,
