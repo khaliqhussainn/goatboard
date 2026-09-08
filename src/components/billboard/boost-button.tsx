@@ -10,18 +10,22 @@ import {
 } from "@/components/ui/dialog";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { BoostSelector } from "@/components/billboard/boost-selector";
+import { cn } from "@/lib/utils";
 
 export function BoostButton({
   campaignId,
   campaignName,
   size = "default",
   variant = "outline",
+  compact = false,
   className,
 }: {
   campaignId: string;
   campaignName: string;
   size?: ButtonProps["size"];
   variant?: ButtonProps["variant"];
+  /** Hide the "Boost $" label below the sm breakpoint, keeping just the icon. */
+  compact?: boolean;
   className?: string;
 }) {
   const [open, setOpen] = React.useState(false);
@@ -31,11 +35,11 @@ export function BoostButton({
       <Button
         size={size}
         variant={variant}
-        className={className}
+        className={cn(compact && "px-2 sm:px-3", className)}
         onClick={() => setOpen(true)}
         aria-label="Boost this campaign"
       >
-        <Zap /> Boost $
+        <Zap /> <span className={compact ? "hidden sm:inline" : undefined}>Boost $</span>
       </Button>
       <DialogContent>
         <DialogHeader>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
 import { VoteButton } from "@/components/billboard/vote-button";
 import { BoostButton } from "@/components/billboard/boost-button";
+import { ShareXButton } from "@/components/campaign/share-x-button";
 import { GoatBadge } from "@/components/billboard/goat-badge";
 import { ClickCount } from "@/components/campaign/click-count";
 import { formatPower, cn } from "@/lib/utils";
@@ -40,12 +41,22 @@ export function RankingRow({
         {formatPower(campaign.total_power)}
       </span>
       <div className="flex shrink-0 items-center gap-1.5">
-        <VoteButton campaignId={campaign.id} onVoted={onVoted} size="sm" />
+        <VoteButton campaignId={campaign.id} onVoted={onVoted} size="sm" compact />
         <BoostButton
           campaignId={campaign.id}
           campaignName={campaign.name}
           size="sm"
           variant="outline"
+          compact
+        />
+        <ShareXButton
+          slug={campaign.slug}
+          name={campaign.name}
+          rank={rank}
+          totalPower={campaign.total_power}
+          size="sm"
+          variant="outline"
+          compact
         />
       </div>
     </div>

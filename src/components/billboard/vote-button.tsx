@@ -11,11 +11,14 @@ export function VoteButton({
   campaignId,
   onVoted,
   size = "default",
+  compact = false,
   className,
 }: {
   campaignId: string;
   onVoted?: (totalPower: number) => void;
   size?: ButtonProps["size"];
+  /** Hide the "Vote" label below the sm breakpoint, keeping just the icon. */
+  compact?: boolean;
   className?: string;
 }) {
   const [pending, setPending] = React.useState(false);
@@ -60,10 +63,10 @@ export function VoteButton({
         size={size}
         onClick={handleVote}
         disabled={pending}
-        className={className}
+        className={cn(compact && "px-2 sm:px-3", className)}
         aria-label="Vote for this campaign"
       >
-        <ArrowUp /> Vote
+        <ArrowUp /> <span className={compact ? "hidden sm:inline" : undefined}>Vote</span>
       </Button>
       <AnimatePresence>
         {showBump && (

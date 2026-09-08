@@ -8,6 +8,7 @@ import { GoatBadge } from "@/components/billboard/goat-badge";
 import { PowerDisplay } from "@/components/billboard/power-display";
 import { VoteButton } from "@/components/billboard/vote-button";
 import { BoostButton } from "@/components/billboard/boost-button";
+import { ShareXButton } from "@/components/campaign/share-x-button";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
 import { powerBreakdown } from "@/lib/utils";
@@ -69,6 +70,14 @@ export function CampaignTile({
           <BoostButton
             campaignId={campaign.id}
             campaignName={campaign.name}
+            size="sm"
+            variant="outline"
+          />
+          <ShareXButton
+            slug={campaign.slug}
+            name={campaign.name}
+            rank={rank}
+            totalPower={campaign.total_power}
             size="sm"
             variant="outline"
           />

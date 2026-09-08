@@ -7,6 +7,7 @@ import { RankChip } from "@/components/billboard/rank-chip";
 import { PowerDisplay } from "@/components/billboard/power-display";
 import { VoteButton } from "@/components/billboard/vote-button";
 import { BoostButton } from "@/components/billboard/boost-button";
+import { ShareXButton } from "@/components/campaign/share-x-button";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
 import { powerBreakdown } from "@/lib/utils";
@@ -69,6 +70,13 @@ export function SpotlightCampaign({
         <div className="mt-auto flex items-center gap-3 pt-1">
           <VoteButton campaignId={campaign.id} onVoted={onVoted} />
           <BoostButton campaignId={campaign.id} campaignName={campaign.name} variant="outline" />
+          <ShareXButton
+            slug={campaign.slug}
+            name={campaign.name}
+            rank={1}
+            totalPower={campaign.total_power}
+            variant="outline"
+          />
         </div>
       </div>
     </div>
