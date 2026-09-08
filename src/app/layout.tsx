@@ -23,7 +23,6 @@ export const metadata: Metadata = {
   },
   description:
     "GOATBOARD is a public competitive billboard. Vote or boost anything - products, startups, ideas, memes - to the #1 spot. There's only one spotlight. Who's the GOAT?",
-  icons: { icon: "/icon.png" },
   openGraph: {
     title: "GOATBOARD - Take the board.",
     description:
