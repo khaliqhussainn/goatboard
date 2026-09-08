@@ -10,7 +10,7 @@ export default async function InterceptedCampaignPage({
 
   return (
     <CampaignModal>
-      <CampaignDetail slug={slug} />
+      <CampaignDetail slug={slug} compact />
     </CampaignModal>
   );
 }
