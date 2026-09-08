@@ -69,12 +69,14 @@ export async function CampaignDetail({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <VoteButton campaignId={campaign.id} size="lg" />
-        <BoostButton campaignId={campaign.id} campaignName={campaign.name} size="lg" />
+        <VoteButton campaignId={campaign.id} size="lg" compact />
+        <BoostButton campaignId={campaign.id} campaignName={campaign.name} size="lg" compact />
         <ShareButton
           url={url}
           title={`${campaign.name} on GOATBOARD`}
           text={`#${rank} on GOATBOARD - ${campaign.name} has ${campaign.total_power} Power.`}
+          size="lg"
+          compact
         />
       </div>
 
