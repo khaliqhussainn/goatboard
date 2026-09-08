@@ -8,6 +8,7 @@ import { PowerDisplay } from "@/components/billboard/power-display";
 import { VoteButton } from "@/components/billboard/vote-button";
 import { BoostButton } from "@/components/billboard/boost-button";
 import { ShareXButton } from "@/components/campaign/share-x-button";
+import { DownloadTileButton } from "@/components/campaign/download-tile-button";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
 import { powerBreakdown } from "@/lib/utils";
@@ -67,7 +68,7 @@ export function SpotlightCampaign({
           </span>
         </div>
 
-        <div className="mt-auto flex items-center gap-3 pt-1">
+        <div className="mt-auto flex flex-wrap items-center gap-3 pt-1">
           <VoteButton campaignId={campaign.id} onVoted={onVoted} />
           <BoostButton campaignId={campaign.id} campaignName={campaign.name} variant="outline" />
           <ShareXButton
@@ -75,8 +76,10 @@ export function SpotlightCampaign({
             name={campaign.name}
             rank={1}
             totalPower={campaign.total_power}
+            size="default"
             variant="outline"
           />
+          <DownloadTileButton slug={campaign.slug} size="default" variant="outline" />
         </div>
       </div>
     </div>
