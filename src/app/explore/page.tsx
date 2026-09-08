@@ -35,7 +35,7 @@ export default async function ExplorePage({
   const { data: campaigns } = await query.limit(100);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <div className="on-backdrop mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <AbstractBackdrop />
       <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Explore</h1>
       <p className="mt-2 text-sm text-muted-foreground">
@@ -47,7 +47,9 @@ export default async function ExplorePage({
           href="/explore"
           className={cn(
             "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
-            !category ? "border-foreground bg-foreground text-background" : "border-border hover:bg-muted",
+            !category
+              ? "border-foreground bg-foreground text-background"
+              : "border-border hover:bg-muted hover:text-foreground",
           )}
         >
           All
@@ -60,7 +62,7 @@ export default async function ExplorePage({
               "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
               category === c.value
                 ? "border-foreground bg-foreground text-background"
-                : "border-border hover:bg-muted",
+                : "border-border hover:bg-muted hover:text-foreground",
             )}
           >
             {c.label}

@@ -48,7 +48,7 @@ export default async function CampaignPage({
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+    <div className="on-backdrop mx-auto max-w-2xl px-4 py-10 sm:px-6">
       <AbstractBackdrop />
       <Suspense fallback={null}>
         <PaymentConfirmation />

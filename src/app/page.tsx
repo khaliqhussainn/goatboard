@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { AbstractBackdrop } from "@/components/layout/abstract-backdrop";
 import { Leaderboard } from "@/components/billboard/leaderboard";
@@ -25,14 +25,16 @@ export default async function Home() {
   return (
     <>
       <AbstractBackdrop />
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-        <div className="mb-6 flex items-center justify-center gap-2 sm:mb-8">
-          <span className="h-px w-8 bg-foreground/20" />
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground">
-            <Sparkles className="size-3.5" />
-            The board
-          </span>
-          <span className="h-px w-8 bg-foreground/20" />
+      <div className="on-backdrop mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+        <div className="mb-6 flex justify-center sm:mb-8">
+          <Image
+            src="/thegoat.png"
+            alt="The Goat"
+            width={2048}
+            height={768}
+            priority
+            className="h-16 w-auto sm:h-20"
+          />
         </div>
 
         <Leaderboard initialCampaigns={campaigns} />

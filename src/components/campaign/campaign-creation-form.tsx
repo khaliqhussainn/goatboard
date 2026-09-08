@@ -232,7 +232,7 @@ export function CampaignCreationForm() {
           ) : (
             <label
               htmlFor="image"
-              className="flex h-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-muted-foreground transition-colors hover:bg-muted"
+              className="flex h-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               {uploading || fetchingLogo ? (
                 <>
