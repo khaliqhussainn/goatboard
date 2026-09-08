@@ -70,6 +70,20 @@ export default async function Image({ params }: { params: { slug: string } }) {
           fontFamily: "sans-serif",
         }}
       >
+        {campaign.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={campaign.image_url}
+            width={160}
+            height={160}
+            alt=""
+            style={{
+              borderRadius: 24,
+              objectFit: "cover",
+              marginBottom: 28,
+            }}
+          />
+        ) : null}
         <div
           style={{
             fontSize: 28,
