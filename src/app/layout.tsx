@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 import { getSiteUrl } from "@/lib/utils";
 import "./globals.css";
 
@@ -49,9 +50,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <Navbar />
         <main className="flex-1">{children}</main>
-        <footer className="py-6 text-center text-xs text-muted-foreground">
-          GOATBOARD - there is one spot everyone wants.
-        </footer>
+        <Footer />
         {modal}
         <Toaster position="bottom-center" richColors closeButton />
       </body>
