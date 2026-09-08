@@ -23,13 +23,13 @@ export function SpotlightCampaign({
 }) {
   return (
     <div className="billboard-surface-lg flex flex-col overflow-hidden rounded-[1.75rem] sm:flex-row sm:items-stretch">
-      <Link
-        href={`/campaign/${campaign.slug}`}
-        className="relative block aspect-[16/10] w-full shrink-0 sm:aspect-auto sm:w-[42%]"
-      >
-        <CampaignHeroMascot campaignId={campaign.id} rank={1} className="size-full" />
+      <div className="relative aspect-[16/10] w-full shrink-0 sm:aspect-auto sm:w-[42%]">
+        <Link href={`/campaign/${campaign.slug}`} className="absolute inset-0 block">
+          <CampaignHeroMascot campaignId={campaign.id} rank={1} className="size-full" />
+        </Link>
         <RankChip rank={1} className="absolute left-3 top-3" />
-      </Link>
+        <DownloadTileButton slug={campaign.slug} className="absolute right-3 top-3" />
+      </div>
 
       <div className="flex flex-1 flex-col gap-2.5 p-5 sm:p-7">
         <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
@@ -79,7 +79,6 @@ export function SpotlightCampaign({
             size="default"
             variant="outline"
           />
-          <DownloadTileButton slug={campaign.slug} size="default" variant="outline" />
         </div>
       </div>
     </div>
