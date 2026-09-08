@@ -1,8 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { ImageResponse } from "next/og";
-import { createClient } from "@/lib/supabase/server";
-import type { Campaign } from "@/lib/types";
+import { getCampaignBySlug, getCampaignRank } from "@/lib/queries/campaign";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -51,32 +50,9 @@ async function getValidImageUrl(url: string | null): Promise<string | null> {
   }
 }
 
-async function getCampaign(slug: string): Promise<Campaign | null> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("campaigns")
-    .select("*")
-    .eq("slug", slug)
-    .eq("status", "active")
-    .maybeSingle();
-  return data;
-}
-
-async function getRank(campaign: Campaign): Promise<number> {
-  const supabase = await createClient();
-  const { count } = await supabase
-    .from("campaigns")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "active")
-    .or(
-      `total_power.gt.${campaign.total_power},and(total_power.eq.${campaign.total_power},updated_at.lt.${campaign.updated_at})`,
-    );
-  return (count ?? 0) + 1;
-}
-
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const campaign = await getCampaign(slug);
+  const campaign = await getCampaignBySlug(slug);
   const logo = await getLogoDataUrl();
 
   if (!campaign) {
@@ -107,7 +83,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
     );
   }
 
-  const rank = await getRank(campaign);
+  const rank = await getCampaignRank(campaign);
   const tileImage = await getValidImageUrl(campaign.image_url);
 
   return new ImageResponse(

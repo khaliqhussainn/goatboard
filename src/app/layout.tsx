@@ -37,7 +37,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+  modal,
+}: LayoutProps<"/"> & { modal: React.ReactNode }) {
   return (
     <html
       lang="en"
@@ -49,6 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <footer className="py-6 text-center text-xs text-muted-foreground">
           GOATBOARD - there is one spot everyone wants.
         </footer>
+        {modal}
         <Toaster position="bottom-center" richColors closeButton />
       </body>
     </html>
