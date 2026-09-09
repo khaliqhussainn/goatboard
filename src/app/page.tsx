@@ -28,7 +28,7 @@ export default async function Home() {
     <>
       <AbstractBackdrop />
       <div className="on-backdrop mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-        <div className="mb-6 sm:mb-8">
+        <div className="mb-4 sm:mb-6">
           <VisitorStatsCard initial={visitorStats} />
         </div>
 

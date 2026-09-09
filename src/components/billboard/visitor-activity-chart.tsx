@@ -42,7 +42,7 @@ export function VisitorActivityChart({ activity }: { activity: VisitorActivityPo
 
   if (points.length === 0) {
     return (
-      <div className="flex h-16 items-center justify-center text-xs text-muted-foreground sm:h-20">
+      <div className="flex h-10 items-center justify-center text-[11px] text-muted-foreground sm:h-12">
         No activity yet
       </div>
     );
@@ -63,7 +63,7 @@ export function VisitorActivityChart({ activity }: { activity: VisitorActivityPo
   return (
     <div
       ref={containerRef}
-      className="relative h-16 w-full touch-none sm:h-20"
+      className="relative h-10 w-full touch-none sm:h-12"
       onPointerMove={handlePointerMove}
       onPointerLeave={() => setHoverIndex(null)}
     >
