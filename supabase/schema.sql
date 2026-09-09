@@ -290,6 +290,105 @@ $$;
 revoke all on function public.grant_purchase_power(text, uuid, numeric, text, integer) from public;
 
 -- ---------------------------------------------------------------------------
+-- site visits  (all-time total + live presence for the homepage stats widget)
+-- ---------------------------------------------------------------------------
+
+-- One row per "the site was opened" — see the sessionStorage guard in
+-- VisitorStatsCard.tsx, which calls record_site_visit once per browser tab
+-- session, not once per page navigation. The all-time total is just
+-- count(*): it only ever goes up, matching the "stays like that forever" ask.
+create table if not exists public.site_visits (
+  id uuid primary key default gen_random_uuid(),
+  visitor_id uuid,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists site_visits_created_at_idx on public.site_visits (created_at);
+
+-- One row per visitor ever seen, upserted on every heartbeat. A visitor
+-- counts as "live" while last_seen_at is recent (see get_visitor_stats) —
+-- there's no explicit "left the site" signal, so presence just ages out.
+create table if not exists public.visitor_presence (
+  visitor_id uuid primary key,
+  last_seen_at timestamptz not null default now()
+);
+
+create index if not exists visitor_presence_last_seen_idx on public.visitor_presence (last_seen_at);
+
+alter table public.site_visits enable row level security;
+alter table public.visitor_presence enable row level security;
+-- No public select/insert policies on either table — every read and write
+-- goes through the security-definer functions below, same pattern as votes.
+
+create or replace function public.record_site_visit(p_visitor_id uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  insert into public.site_visits (visitor_id) values (p_visitor_id);
+$$;
+
+revoke all on function public.record_site_visit(uuid) from public;
+grant execute on function public.record_site_visit(uuid) to anon, authenticated;
+
+create or replace function public.record_visitor_heartbeat(p_visitor_id uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  insert into public.visitor_presence (visitor_id, last_seen_at)
+  values (p_visitor_id, now())
+  on conflict (visitor_id) do update set last_seen_at = excluded.last_seen_at;
+$$;
+
+revoke all on function public.record_visitor_heartbeat(uuid) from public;
+grant execute on function public.record_visitor_heartbeat(uuid) to anon, authenticated;
+
+-- Powers the homepage widget. "Live" = a heartbeat inside the last 90
+-- seconds — a bit over double the client's 30s heartbeat interval, so one
+-- missed beat doesn't drop someone off the count.
+create or replace function public.get_visitor_stats()
+returns table(total_visits bigint, live_visitors bigint)
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select
+    (select count(*) from public.site_visits),
+    (select count(*) from public.visitor_presence where last_seen_at > now() - interval '90 seconds');
+$$;
+
+revoke all on function public.get_visitor_stats() from public;
+grant execute on function public.get_visitor_stats() to anon, authenticated;
+
+-- Hourly visit counts for the last 24h sparkline. Always returns exactly 24
+-- rows (oldest first), zero-filled for hours with no visits.
+create or replace function public.get_visitor_activity()
+returns table(hour_start timestamptz, visits bigint)
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select h.hour_start, count(v.id)
+  from generate_series(
+    date_trunc('hour', now()) - interval '23 hours',
+    date_trunc('hour', now()),
+    interval '1 hour'
+  ) as h(hour_start)
+  left join public.site_visits v
+    on date_trunc('hour', v.created_at) = h.hour_start
+  group by h.hour_start
+  order by h.hour_start;
+$$;
+
+revoke all on function public.get_visitor_activity() from public;
+grant execute on function public.get_visitor_activity() to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
 -- Row Level Security
 --
 -- There's no Supabase Auth session, so there's no authenticated role to

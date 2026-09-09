@@ -36,6 +36,17 @@ export type Campaign = {
   updated_at: string;
 };
 
+export type VisitorActivityPoint = {
+  hour: string;
+  visits: number;
+};
+
+export type VisitorStats = {
+  totalVisits: number;
+  liveVisitors: number;
+  activity: VisitorActivityPoint[];
+};
+
 export type Vote = {
   id: string;
   campaign_id: string;
@@ -113,6 +124,22 @@ export interface Database {
       record_click: {
         Args: { p_campaign_id: string };
         Returns: { success: boolean; new_click_count: number | null }[];
+      };
+      record_site_visit: {
+        Args: { p_visitor_id: string | null };
+        Returns: undefined;
+      };
+      record_visitor_heartbeat: {
+        Args: { p_visitor_id: string };
+        Returns: undefined;
+      };
+      get_visitor_stats: {
+        Args: Record<string, never>;
+        Returns: { total_visits: number; live_visitors: number }[];
+      };
+      get_visitor_activity: {
+        Args: Record<string, never>;
+        Returns: { hour_start: string; visits: number }[];
       };
     };
     Enums: Record<string, never>;
