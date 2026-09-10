@@ -9,7 +9,7 @@ export function AbstractBackdrop() {
   return (
     <div
       aria-hidden
-      className="fixed inset-0 -z-10 bg-blob-navy bg-cover bg-center bg-no-repeat"
+      className="fixed inset-0 -z-10 bg-background bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: "url(/backdrop.png)" }}
     />
   );
