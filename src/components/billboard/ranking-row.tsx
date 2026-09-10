@@ -31,7 +31,7 @@ export function RankingRow({
       </Link>
       <Link
         href={`/campaign/${campaign.slug}`}
-        className="min-w-0 flex-1 truncate text-sm font-semibold hover:underline"
+        className="min-w-0 flex-1 truncate text-sm font-semibold transition-colors hover:text-hero-pink hover:underline"
       >
         {campaign.name}
       </Link>

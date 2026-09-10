@@ -43,7 +43,7 @@ export function CampaignTile({
 
         <Link
           href={`/campaign/${campaign.slug}`}
-          className="flex min-w-0 items-center gap-1.5 hover:underline"
+          className="flex min-w-0 items-center gap-1.5 transition-colors hover:text-hero-pink hover:underline"
         >
           <CampaignAvatar
             src={campaign.image_url}

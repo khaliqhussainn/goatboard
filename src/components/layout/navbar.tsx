@@ -11,13 +11,13 @@ export function Navbar() {
         </Link>
 
         <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-6 text-sm font-medium sm:flex">
-          <Link href="/explore" className="text-black transition-opacity hover:opacity-60">
+          <Link href="/explore" className="text-black transition-colors hover:text-hero-pink">
             Explore
           </Link>
-          <Link href="/mine" className="text-black transition-opacity hover:opacity-60">
+          <Link href="/mine" className="text-black transition-colors hover:text-hero-pink">
             My Campaigns
           </Link>
-          <Link href="/how-it-works" className="text-black transition-opacity hover:opacity-60">
+          <Link href="/how-it-works" className="text-black transition-colors hover:text-hero-pink">
             How it works
           </Link>
         </div>

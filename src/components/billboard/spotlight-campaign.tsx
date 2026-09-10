@@ -42,7 +42,7 @@ export function SpotlightCampaign({
 
         <Link
           href={`/campaign/${campaign.slug}`}
-          className="flex items-center gap-2 hover:underline"
+          className="flex items-center gap-2 transition-colors hover:text-hero-pink hover:underline"
         >
           <CampaignAvatar
             src={campaign.image_url}

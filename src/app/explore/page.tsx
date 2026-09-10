@@ -62,7 +62,7 @@ export default async function ExplorePage({
               "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
               category === c.value
                 ? "border-foreground bg-foreground text-background"
-                : "border-border hover:bg-muted hover:text-foreground",
+                : "border-border hover:border-hero-pink hover:text-hero-pink",
             )}
           >
             {c.label}

@@ -25,7 +25,7 @@ export function DestinationLink({
       rel="noopener noreferrer nofollow"
       onClick={() => trackClick(campaignId)}
       className={cn(
-        "inline-flex w-fit items-center gap-1 font-semibold text-muted-foreground transition-colors hover:text-foreground",
+        "inline-flex w-fit items-center gap-1 font-semibold text-muted-foreground transition-colors hover:text-hero-pink",
         className,
       )}
     >

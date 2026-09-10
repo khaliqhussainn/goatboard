@@ -128,19 +128,11 @@ body {
     @apply bg-card shadow-[0_10px_30px_-12px_rgba(0,0,0,0.3)];
   }
 
-  /* Page chrome that sits directly on the colorful AbstractBackdrop reads
-     white for contrast. Deliberately doesn't touch --foreground itself
-     (buttons use bg-foreground/text-background as their solid-fill look,
-     so redefining it would turn button fills white-on-white) — only the
-     inherited `color` and --muted-foreground are overridden here. Anything
-     with its own light surface (cards, inputs) resets back to the original
-     dark values below so it stays readable on its own white background. */
+  /* Page chrome that sits directly on the colorful AbstractBackdrop. The
+     backdrop is light enough that the default dark --foreground/
+     --muted-foreground already read fine, so this is a documented no-op —
+     kept as a single control point in case the backdrop darkens again. */
   .on-backdrop {
-    color: #ffffff;
-    --muted-foreground: #d4d4d8;
-  }
-  .on-backdrop :where(.billboard-surface, .billboard-surface-lg, .billboard-surface-sm, .form-field) {
     color: var(--foreground);
-    --muted-foreground: #6b6b6b;
   }
 }
