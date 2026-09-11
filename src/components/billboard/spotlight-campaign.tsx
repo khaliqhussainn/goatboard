@@ -31,7 +31,7 @@ export function SpotlightCampaign({
         <DownloadTileButton slug={campaign.slug} className="absolute right-3 top-3" />
       </div>
 
-      <div className="flex flex-1 flex-col gap-2.5 p-5 sm:p-7">
+      <div className="flex min-w-0 flex-1 flex-col gap-2.5 p-5 sm:p-7">
         <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
           🐐 GOAT right now
         </span>
@@ -42,14 +42,14 @@ export function SpotlightCampaign({
 
         <Link
           href={`/campaign/${campaign.slug}`}
-          className="flex items-center gap-2 transition-colors hover:text-hero-pink hover:underline"
+          className="flex min-w-0 items-center gap-2 transition-colors hover:text-hero-pink hover:underline"
         >
           <CampaignAvatar
             src={campaign.image_url}
             name={campaign.name}
             className="size-7 shrink-0 text-xs sm:size-8"
           />
-          <span className="text-2xl font-black tracking-tight sm:text-3xl">
+          <span className="min-w-0 truncate text-2xl font-black tracking-tight sm:text-3xl">
             {campaign.name}
           </span>
         </Link>

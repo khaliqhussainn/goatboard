@@ -33,7 +33,7 @@ export function CampaignTile({
         <RankChip rank={rank} className="absolute left-2 top-2 px-2 py-0.5 text-xs" />
       </Link>
 
-      <div className="flex flex-1 flex-col gap-1.5 p-4">
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-4">
         <div className="flex flex-wrap items-center gap-1">
           <Badge variant={categoryAccent(campaign.category)}>
             {categoryLabel(campaign.category)}
@@ -50,7 +50,7 @@ export function CampaignTile({
             name={campaign.name}
             className="size-5 shrink-0 text-[10px]"
           />
-          <span className="truncate font-bold">{campaign.name}</span>
+          <span className="min-w-0 truncate font-bold">{campaign.name}</span>
         </Link>
 
         <p className="line-clamp-1 text-xs text-muted-foreground">{campaign.description}</p>

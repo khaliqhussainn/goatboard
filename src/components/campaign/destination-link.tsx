@@ -25,12 +25,12 @@ export function DestinationLink({
       rel="noopener noreferrer nofollow"
       onClick={() => trackClick(campaignId)}
       className={cn(
-        "inline-flex w-fit items-center gap-1 font-semibold text-muted-foreground transition-colors hover:text-hero-pink",
+        "inline-flex max-w-full min-w-0 items-center gap-1 font-semibold text-muted-foreground transition-colors hover:text-hero-pink",
         className,
       )}
     >
-      {hostnameOf(url)}
-      <ExternalLink className="size-3.5" />
+      <span className="min-w-0 truncate">{hostnameOf(url)}</span>
+      <ExternalLink className="size-3.5 shrink-0" />
     </a>
   );
 }

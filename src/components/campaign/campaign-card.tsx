@@ -25,7 +25,9 @@ export function CampaignCard({ campaign, rank }: { campaign: Campaign; rank: num
         </div>
         <span className="shrink-0 text-xs font-bold text-muted-foreground">#{rank}</span>
       </div>
-      <p className="line-clamp-2 text-sm text-muted-foreground">{campaign.description}</p>
+      <p className="line-clamp-2 wrap-break-word text-sm text-muted-foreground">
+        {campaign.description}
+      </p>
       <p className="text-lg font-black tabular-nums">{formatPower(campaign.total_power)} Power</p>
     </Link>
   );

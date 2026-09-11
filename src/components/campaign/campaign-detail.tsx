@@ -56,7 +56,7 @@ export async function CampaignDetail({
         </span>
       </div>
 
-      <p className={cn("text-sm text-muted-foreground", compact && "line-clamp-3")}>
+      <p className={cn("wrap-break-word text-sm text-muted-foreground", compact && "line-clamp-3")}>
         {campaign.description}
       </p>
 

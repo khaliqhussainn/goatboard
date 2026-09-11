@@ -26,13 +26,16 @@ export function CampaignPreview({
         name={name || "?"}
         className="size-20 text-3xl"
       />
-      <div className="flex flex-col items-center gap-2">
-        <p className="text-xl font-black tracking-tight">{name || "Your campaign name"}</p>
-        <div className="flex flex-wrap items-center justify-center gap-2">
+      <div className="flex w-full min-w-0 flex-col items-center gap-2">
+        <p className="line-clamp-2 w-full wrap-break-word text-xl font-black tracking-tight">
+          {name || "Your campaign name"}
+        </p>
+        <div className="flex max-w-full flex-wrap items-center justify-center gap-2">
           <Badge variant={categoryAccent(category)}>{categoryLabel(category)}</Badge>
           {xHandle && (
-            <span className="inline-flex items-center gap-1 text-sm font-semibold text-muted-foreground">
-              <XLogo className="size-3.5" />@{xHandle.replace(/^@/, "")}
+            <span className="inline-flex min-w-0 items-center gap-1 text-sm font-semibold text-muted-foreground">
+              <XLogo className="size-3.5 shrink-0" />
+              <span className="min-w-0 truncate">@{xHandle.replace(/^@/, "")}</span>
             </span>
           )}
         </div>
