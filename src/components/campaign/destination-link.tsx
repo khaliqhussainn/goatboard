@@ -22,7 +22,7 @@ export function DestinationLink({
     <a
       href={url}
       target="_blank"
-      rel="noopener noreferrer nofollow"
+      rel="noopener noreferrer"
       onClick={() => trackClick(campaignId)}
       className={cn(
         "inline-flex max-w-full min-w-0 items-center gap-1 font-semibold text-muted-foreground transition-colors hover:text-hero-pink",
