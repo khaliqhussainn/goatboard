@@ -33,15 +33,18 @@ export function SearchBar({
 }) {
   const router = useRouter();
   const [value, setValue] = React.useState(defaultValue);
-  const isFirstRender = React.useRef(true);
+  // Compared (not just flagged) against the previous value so this stays
+  // correct under StrictMode's dev-mode double-invoke: a boolean "have I
+  // mounted yet" ref flips permanently on the first (throwaway) invocation,
+  // so the second invocation no longer sees a "first render" and fires the
+  // navigation for real — before anyone's typed anything. Comparing values
+  // instead re-evaluates to the same answer no matter how many times the
+  // effect body replays.
+  const prevValue = React.useRef(value);
 
   React.useEffect(() => {
-    // Skip on mount — otherwise an idle search bar navigates itself to
-    // /explore a moment after the page loads, before anyone's typed.
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
+    if (prevValue.current === value) return;
+    prevValue.current = value;
 
     const id = setTimeout(() => {
       const params = new URLSearchParams();

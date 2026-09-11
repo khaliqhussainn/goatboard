@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Kalam } from "next/font/google";
 import { Toaster } from "sonner";
 import { Navbar } from "@/components/layout/navbar";
 import { getSiteUrl } from "@/lib/utils";
@@ -12,6 +12,14 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+// The casual marker-script used only for hand-drawn-style annotations (the
+// ad slot's "Your product could be here" / "Rent this spot" callouts).
+const kalam = Kalam({
+  variable: "--font-kalam",
+  weight: ["700"],
   subsets: ["latin"],
 });
 
@@ -44,7 +52,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${kalam.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <Navbar />
