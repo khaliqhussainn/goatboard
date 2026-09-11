@@ -31,6 +31,7 @@ export type Campaign = {
   total_power: number;
   has_been_goat: boolean;
   click_count: number;
+  x_handle: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;

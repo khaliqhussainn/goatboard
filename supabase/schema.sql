@@ -51,6 +51,11 @@ alter table public.campaigns add column if not exists has_been_goat boolean not 
 -- purely informational (see record_click below).
 alter table public.campaigns add column if not exists click_count integer not null default 0;
 
+-- Optional X (Twitter) handle the creator can attach to their campaign,
+-- stored without the leading "@" (see campaignSchema in lib/validation.ts).
+alter table public.campaigns add column if not exists x_handle text
+  check (x_handle is null or x_handle ~ '^[A-Za-z0-9_]{1,15}$');
+
 -- `create table if not exists` above is a full no-op on a table that
 -- already exists — it does NOT drop old columns/constraints. Early
 -- versions of this schema had voter_id/created_by reference auth.users(id);

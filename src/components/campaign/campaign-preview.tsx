@@ -1,4 +1,5 @@
 import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
+import { XLogo } from "@/components/icons/x-logo";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
 
@@ -7,11 +8,13 @@ export function CampaignPreview({
   description,
   imageUrl,
   category,
+  xHandle,
 }: {
   name: string;
   description: string;
   imageUrl: string | null;
   category: string;
+  xHandle?: string;
 }) {
   return (
     <div className="billboard-surface-lg flex flex-col items-center gap-3 rounded-[1.75rem] p-6 text-center">
@@ -25,7 +28,14 @@ export function CampaignPreview({
       />
       <div className="flex flex-col items-center gap-2">
         <p className="text-xl font-black tracking-tight">{name || "Your campaign name"}</p>
-        <Badge variant={categoryAccent(category)}>{categoryLabel(category)}</Badge>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <Badge variant={categoryAccent(category)}>{categoryLabel(category)}</Badge>
+          {xHandle && (
+            <span className="inline-flex items-center gap-1 text-sm font-semibold text-muted-foreground">
+              <XLogo className="size-3.5" />@{xHandle.replace(/^@/, "")}
+            </span>
+          )}
+        </div>
       </div>
       <p className="text-3xl font-black tabular-nums tracking-tight">0 Power</p>
       <p className="line-clamp-2 max-w-sm text-sm text-muted-foreground">

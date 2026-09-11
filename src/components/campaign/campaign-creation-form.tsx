@@ -27,6 +27,7 @@ export function CampaignCreationForm() {
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [destinationUrl, setDestinationUrl] = React.useState("");
+  const [xHandle, setXHandle] = React.useState("");
   const [category, setCategory] = React.useState<Category>("product");
   const [imageUrl, setImageUrl] = React.useState<string | null>(null);
   const [imageSource, setImageSource] = React.useState<"upload" | "site" | null>(null);
@@ -111,6 +112,7 @@ export function CampaignCreationForm() {
       description,
       destination_url: destinationUrl,
       image_url: imageUrl,
+      x_handle: xHandle,
       category,
     });
 
@@ -187,6 +189,24 @@ export function CampaignCreationForm() {
           {errors.destination_url && (
             <p className="text-xs text-red-500">{errors.destination_url}</p>
           )}
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="x-handle">X account (optional)</Label>
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+              @
+            </span>
+            <Input
+              id="x-handle"
+              value={xHandle}
+              onChange={(e) => setXHandle(e.target.value)}
+              placeholder="yourhandle"
+              maxLength={15}
+              className="pl-7"
+            />
+          </div>
+          {errors.x_handle && <p className="text-xs text-red-500">{errors.x_handle}</p>}
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -280,6 +300,7 @@ export function CampaignCreationForm() {
           description={description}
           imageUrl={imageUrl}
           category={category}
+          xHandle={xHandle}
         />
       </div>
     </div>

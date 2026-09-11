@@ -33,6 +33,13 @@ export const campaignSchema = z.object({
     .refine((v) => v === "" || isSafeUrl(v), "Enter a valid image URL.")
     .optional()
     .nullable(),
+  x_handle: z
+    .string()
+    .trim()
+    .transform((v) => v.replace(/^@/, ""))
+    .refine((v) => v === "" || /^[A-Za-z0-9_]{1,15}$/.test(v), "Enter a valid X handle.")
+    .optional()
+    .nullable(),
   category: z.enum([
     "product",
     "startup",

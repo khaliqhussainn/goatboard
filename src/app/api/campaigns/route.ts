@@ -54,6 +54,7 @@ export async function POST(request: Request) {
           description: parsed.data.description,
           destination_url: parsed.data.destination_url,
           image_url: parsed.data.image_url || null,
+          x_handle: parsed.data.x_handle || null,
           category: parsed.data.category,
           created_by: visitorId,
         })

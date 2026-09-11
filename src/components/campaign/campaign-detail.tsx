@@ -6,6 +6,7 @@ import { BoostButton } from "@/components/billboard/boost-button";
 import { ShareButton } from "@/components/campaign/share-button";
 import { ReportButton } from "@/components/campaign/report-button";
 import { DestinationLink } from "@/components/campaign/destination-link";
+import { XHandleLink } from "@/components/campaign/x-handle-link";
 import { ClickCount } from "@/components/campaign/click-count";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
@@ -59,12 +60,15 @@ export async function CampaignDetail({
         {campaign.description}
       </p>
 
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-        <DestinationLink
-          campaignId={campaign.id}
-          url={campaign.destination_url}
-          className="underline underline-offset-4"
-        />
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <DestinationLink
+            campaignId={campaign.id}
+            url={campaign.destination_url}
+            className="underline underline-offset-4"
+          />
+          {campaign.x_handle && <XHandleLink handle={campaign.x_handle} />}
+        </div>
         <ClickCount count={campaign.click_count} className="text-xs" />
       </div>
 
