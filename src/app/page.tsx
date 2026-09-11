@@ -15,8 +15,7 @@ async function getCampaigns(): Promise<Campaign[]> {
     .select("*")
     .eq("status", "active")
     .order("total_power", { ascending: false })
-    .order("updated_at", { ascending: true })
-    .limit(20);
+    .order("updated_at", { ascending: true });
 
   return data ?? [];
 }

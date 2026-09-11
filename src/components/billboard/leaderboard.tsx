@@ -7,8 +7,6 @@ import { CampaignSlot } from "@/components/billboard/campaign-slot";
 import { EmptyBoard } from "@/components/billboard/empty-board";
 import type { Campaign } from "@/lib/types";
 
-const VISIBLE_COUNT = 10;
-
 export function Leaderboard({ initialCampaigns }: { initialCampaigns: Campaign[] }) {
   const { campaigns, applyOptimisticVote } = useRealtimeLeaderboard(initialCampaigns);
   const prevFirstId = React.useRef<string | null>(initialCampaigns[0]?.id ?? null);
@@ -29,12 +27,10 @@ export function Leaderboard({ initialCampaigns }: { initialCampaigns: Campaign[]
     return <EmptyBoard />;
   }
 
-  const visible = campaigns.slice(0, VISIBLE_COUNT);
-
   return (
     <LayoutGroup>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-        {visible.map((campaign, index) => (
+        {campaigns.map((campaign, index) => (
           <CampaignSlot
             key={campaign.id}
             campaign={campaign}
