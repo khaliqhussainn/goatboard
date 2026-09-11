@@ -22,6 +22,9 @@ function useActivityDelta(activity: VisitorStats["activity"]) {
   }, [activity]);
 }
 
+/** Three stacked stat cards (total visits, live count, 24h activity) meant to
+ * sit in a sidebar next to the #1 spotlight — each its own billboard-surface
+ * card, not one combined card, so they read as a column of equal-width tiles. */
 export function VisitorStatsCard({ initial }: { initial: VisitorStats }) {
   const [stats, setStats] = React.useState(initial);
   const delta = useActivityDelta(stats.activity);
@@ -63,8 +66,8 @@ export function VisitorStatsCard({ initial }: { initial: VisitorStats }) {
   }, []);
 
   return (
-    <div className="billboard-surface grid grid-cols-1 divide-y divide-border overflow-hidden rounded-2xl sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-      <div className="flex flex-col gap-1.5 p-3.5 sm:p-4">
+    <>
+      <div className="billboard-surface flex flex-col gap-1.5 rounded-2xl p-4">
         <div className="flex items-center gap-2">
           <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-accent-blue text-blue-600">
             <Eye className="size-3.5" />
@@ -76,7 +79,7 @@ export function VisitorStatsCard({ initial }: { initial: VisitorStats }) {
         <div className="flex items-baseline gap-1.5">
           <AnimatedNumber
             value={stats.totalVisits}
-            className="text-xl font-black tracking-tight tabular-nums sm:text-2xl"
+            className="text-2xl font-black tracking-tight tabular-nums"
           />
           {delta !== null && (
             <span
@@ -90,10 +93,10 @@ export function VisitorStatsCard({ initial }: { initial: VisitorStats }) {
             </span>
           )}
         </div>
-        <p className="text-[11px] text-muted-foreground">All-time visits</p>
+        <p className="text-[11px] text-muted-foreground">vs previous 12h</p>
       </div>
 
-      <div className="flex flex-col gap-1.5 p-3.5 sm:p-4">
+      <div className="billboard-surface flex flex-col gap-1.5 rounded-2xl p-4">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-accent-green text-green-600">
@@ -113,12 +116,12 @@ export function VisitorStatsCard({ initial }: { initial: VisitorStats }) {
         </div>
         <AnimatedNumber
           value={stats.liveVisitors}
-          className="text-xl font-black tracking-tight tabular-nums sm:text-2xl"
+          className="text-2xl font-black tracking-tight tabular-nums"
         />
         <p className="text-[11px] text-muted-foreground">Browsing right now</p>
       </div>
 
-      <div className="flex flex-col gap-1.5 p-3.5 sm:p-4">
+      <div className="billboard-surface flex flex-1 flex-col gap-1.5 rounded-2xl p-4">
         <div className="flex items-center justify-between gap-2">
           <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
             Visitor activity
@@ -127,8 +130,10 @@ export function VisitorStatsCard({ initial }: { initial: VisitorStats }) {
             Last 24h <ChevronDown className="size-2.5" />
           </span>
         </div>
-        <VisitorActivityChart activity={stats.activity} />
+        <div className="flex-1">
+          <VisitorActivityChart activity={stats.activity} />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

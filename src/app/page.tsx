@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { AbstractBackdrop } from "@/components/layout/abstract-backdrop";
 import { Leaderboard } from "@/components/billboard/leaderboard";
-import { VisitorStatsCard } from "@/components/billboard/visitor-stats-card";
 import { AdPurchaseConfirmation } from "@/components/billboard/ad-purchase-confirmation";
 import { getVisitorStats } from "@/lib/queries/visitors";
 import { getCurrentAd } from "@/lib/queries/ad-slots";
@@ -37,11 +36,7 @@ export default async function Home() {
           <AdPurchaseConfirmation />
         </Suspense>
 
-        <div className="mb-4 sm:mb-6">
-          <VisitorStatsCard initial={visitorStats} />
-        </div>
-
-        <Leaderboard initialCampaigns={campaigns} adSlot={adSlot} />
+        <Leaderboard initialCampaigns={campaigns} adSlot={adSlot} visitorStats={visitorStats} />
       </div>
     </>
   );
