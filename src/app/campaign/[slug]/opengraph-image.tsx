@@ -8,10 +8,10 @@ export const contentType = "image/png";
 
 let logoDataUrl: string | null | undefined;
 
-// The campaign's tile image lives on an external host and may 404, time
-// out, or stop resolving by the time X/Discord crawl this route — falling
-// through to the GOATBOARD wordmark keeps the share card branded instead of
-// broken. Cached so repeated OG requests don't re-read the file from disk.
+// Every share card is branded with the GOATBOARD wordmark, never the
+// campaign's own image — consistent, recognizable link previews across the
+// whole site rather than a different logo per campaign. Cached so repeated
+// OG requests don't re-read the file from disk.
 async function getLogoDataUrl(): Promise<string | null> {
   if (logoDataUrl !== undefined) return logoDataUrl;
   try {
@@ -21,33 +21,6 @@ async function getLogoDataUrl(): Promise<string | null> {
     logoDataUrl = null;
   }
   return logoDataUrl;
-}
-
-// next/og's Satori-based renderer can only rasterize a handful of formats —
-// .ico (and other oddities users might upload as a campaign avatar) report
-// an image/* content-type but render as a blank box, which is worse than
-// falling back to the logo.
-const RENDERABLE_IMAGE_TYPES = new Set([
-  "image/png",
-  "image/jpeg",
-  "image/gif",
-  "image/webp",
-]);
-
-async function getValidImageUrl(url: string | null): Promise<string | null> {
-  if (!url) return null;
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000);
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeout);
-    if (!res.ok) return null;
-    const contentType = (res.headers.get("content-type") ?? "").split(";")[0].trim();
-    if (!RENDERABLE_IMAGE_TYPES.has(contentType)) return null;
-    return url;
-  } catch {
-    return null;
-  }
 }
 
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
@@ -84,7 +57,6 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   }
 
   const rank = await getCampaignRank(campaign);
-  const tileImage = await getValidImageUrl(campaign.image_url);
 
   return new ImageResponse(
     (
@@ -100,20 +72,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
           fontFamily: "sans-serif",
         }}
       >
-        {tileImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={tileImage}
-            width={160}
-            height={160}
-            alt=""
-            style={{
-              borderRadius: 24,
-              objectFit: "cover",
-              marginBottom: 28,
-            }}
-          />
-        ) : logo ? (
+        {logo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={logo} height={72} alt="" style={{ marginBottom: 28 }} />
         ) : null}
