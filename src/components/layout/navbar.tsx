@@ -3,8 +3,9 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SearchBar } from "@/components/campaign/search-bar";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -16,6 +17,7 @@ const NAV_LINKS = [
 export function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
+  const [searchOpen, setSearchOpen] = React.useState(false);
 
   // Auto-close on navigation — the navbar persists across route changes
   // (it lives in the root layout), so it never unmounts on its own. Adjusted
@@ -25,16 +27,30 @@ export function Navbar() {
   if (pathname !== prevPathname) {
     setPrevPathname(pathname);
     setOpen(false);
+    setSearchOpen(false);
   }
 
   React.useEffect(() => {
-    if (!open) return;
+    if (!open && !searchOpen) return;
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        setSearchOpen(false);
+      }
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open]);
+  }, [open, searchOpen]);
+
+  function toggleMenu() {
+    setOpen((v) => !v);
+    setSearchOpen(false);
+  }
+
+  function toggleSearch() {
+    setSearchOpen((v) => !v);
+    setOpen(false);
+  }
 
   return (
     <div className="sticky top-0 z-40 px-4 pt-[15px] sm:px-6">
@@ -57,12 +73,22 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleSearch}
+            aria-label={searchOpen ? "Close search" : "Search"}
+            aria-expanded={searchOpen}
+            aria-controls="nav-search-panel"
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg text-black transition-colors hover:text-hero-pink"
+          >
+            {searchOpen ? <X className="size-5" /> : <Search className="size-5" />}
+          </button>
           <Link href="/create">
             <Button size="sm">Create Campaign</Button>
           </Link>
           <button
             type="button"
-            onClick={() => setOpen((v) => !v)}
+            onClick={toggleMenu}
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             aria-controls="mobile-nav-menu"
@@ -81,6 +107,25 @@ export function Navbar() {
           onClick={() => setOpen(false)}
           className="fixed inset-0 z-30 cursor-default sm:hidden"
         />
+      )}
+
+      {searchOpen && (
+        <button
+          type="button"
+          aria-hidden
+          tabIndex={-1}
+          onClick={() => setSearchOpen(false)}
+          className="fixed inset-0 z-30 cursor-default"
+        />
+      )}
+
+      {searchOpen && (
+        <div
+          id="nav-search-panel"
+          className="animate-in fade-in zoom-in-95 absolute inset-x-4 top-full z-40 mt-2 origin-top rounded-2xl bg-white p-3 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)] duration-150 sm:inset-x-auto sm:right-6 sm:w-96"
+        >
+          <SearchBar navigation="push" autoFocus className="w-full" />
+        </div>
       )}
 
       <div

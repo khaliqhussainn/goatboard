@@ -21,12 +21,14 @@ export function SearchBar({
   category,
   navigation = "replace",
   size = "default",
+  autoFocus = false,
   className,
 }: {
   defaultValue?: string;
   category?: string;
   navigation?: "replace" | "push";
   size?: "default" | "lg";
+  autoFocus?: boolean;
   className?: string;
 }) {
   const router = useRouter();
@@ -72,6 +74,7 @@ export function SearchBar({
         onChange={(e) => setValue(e.target.value)}
         placeholder="Search startups, categories, or @handles"
         aria-label="Search campaigns"
+        autoFocus={autoFocus}
         className={cn(
           isLg &&
             "h-14 rounded-full pl-13 pr-12 text-base shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)] focus-visible:ring-hero-pink/40",
