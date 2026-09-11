@@ -12,9 +12,9 @@ import { cn } from "@/lib/utils";
  * query as the category pills (and stay in sync with them — see `category`).
  *
  * Used two ways: in place on /explore (`navigation="replace"`, the default,
- * so refining a search doesn't spam browser history), and as a "search from
- * anywhere" hero field on the homepage (`navigation="push"`, so Back returns
- * to `/` instead of landing back on Explore's own prior search).
+ * so refining a search doesn't spam browser history), and as a chromeless
+ * inline field inside the header's expanding search (`size="minimal"`,
+ * `navigation="push"` — see Navbar).
  */
 export function SearchBar({
   defaultValue = "",
@@ -27,7 +27,7 @@ export function SearchBar({
   defaultValue?: string;
   category?: string;
   navigation?: "replace" | "push";
-  size?: "default" | "lg";
+  size?: "default" | "minimal";
   autoFocus?: boolean;
   className?: string;
 }) {
@@ -59,39 +59,41 @@ export function SearchBar({
     return () => clearTimeout(id);
   }, [value, category, navigation, router]);
 
-  const isLg = size === "lg";
+  if (size === "minimal") {
+    return (
+      <div className={cn("flex items-center gap-2", className)}>
+        <Search className="size-4 shrink-0 text-muted-foreground" />
+        <input
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="Search startups, categories, or @handles"
+          aria-label="Search campaigns"
+          autoFocus={autoFocus}
+          className="w-full min-w-0 border-none bg-transparent text-sm text-black outline-none placeholder:text-muted-foreground"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={cn("relative", className)}>
-      <Search
-        className={cn(
-          "pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted-foreground",
-          isLg ? "left-5 size-5" : "left-3.5 size-4",
-        )}
-      />
+      <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Search startups, categories, or @handles"
         aria-label="Search campaigns"
         autoFocus={autoFocus}
-        className={cn(
-          isLg &&
-            "h-14 rounded-full pl-13 pr-12 text-base shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)] focus-visible:ring-hero-pink/40",
-          !isLg && "pl-10 pr-9",
-        )}
+        className="pl-10 pr-9"
       />
       {value && (
         <button
           type="button"
           onClick={() => setValue("")}
           aria-label="Clear search"
-          className={cn(
-            "absolute top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-hero-pink",
-            isLg ? "right-4" : "right-3",
-          )}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-hero-pink"
         >
-          <X className={isLg ? "size-5" : "size-4"} />
+          <X className="size-4" />
         </button>
       )}
     </div>

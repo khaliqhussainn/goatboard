@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { AbstractBackdrop } from "@/components/layout/abstract-backdrop";
 import { Leaderboard } from "@/components/billboard/leaderboard";
 import { VisitorStatsCard } from "@/components/billboard/visitor-stats-card";
-import { SearchBar } from "@/components/campaign/search-bar";
 import { getVisitorStats } from "@/lib/queries/visitors";
 import type { Campaign } from "@/lib/types";
 
@@ -42,8 +41,6 @@ export default async function Home() {
             className="h-16 w-auto sm:h-20"
           />
         </div>
-
-        <SearchBar navigation="push" size="lg" className="mx-auto mb-8 max-w-xl sm:mb-10" />
 
         <Leaderboard initialCampaigns={campaigns} />
       </div>
