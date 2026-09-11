@@ -3,31 +3,30 @@ import crypto from "node:crypto";
 
 const LEMONSQUEEZY_API = "https://api.lemonsqueezy.com/v1";
 
-interface CreateCheckoutParams {
-  campaignId: string;
-  campaignName: string;
-  amountUsd: number;
-  power: number;
+interface CheckoutSessionParams {
+  variantId: string;
+  customPriceCents: number;
+  customData: Record<string, string>;
+  productName: string;
+  productDescription: string;
   redirectUrl: string;
 }
 
-/**
- * Creates a Lemon Squeezy checkout for a "pay what you want" variant, with
- * the campaign + power baked into custom_data so the webhook can trust
- * nothing from the client and still know what to credit.
- */
-export async function createCheckout({
-  campaignId,
-  campaignName,
-  amountUsd,
-  power,
+/** Low-level Lemon Squeezy checkout creation shared by every "pay what you
+ * want" variant this app uses (boosts, ad slots) — everything that varies
+ * between them is passed in, nothing here is boost- or ad-specific. */
+async function createCheckoutSession({
+  variantId,
+  customPriceCents,
+  customData,
+  productName,
+  productDescription,
   redirectUrl,
-}: CreateCheckoutParams): Promise<string> {
+}: CheckoutSessionParams): Promise<string> {
   const apiKey = process.env.LEMONSQUEEZY_API_KEY;
   const storeId = process.env.LEMONSQUEEZY_STORE_ID;
-  const variantId = process.env.LEMONSQUEEZY_VARIANT_ID;
 
-  if (!apiKey || !storeId || !variantId) {
+  if (!apiKey || !storeId) {
     throw new Error("Lemon Squeezy is not configured.");
   }
 
@@ -42,16 +41,11 @@ export async function createCheckout({
       data: {
         type: "checkouts",
         attributes: {
-          custom_price: Math.round(amountUsd * 100),
-          checkout_data: {
-            custom: {
-              campaign_id: campaignId,
-              power: String(power),
-            },
-          },
+          custom_price: customPriceCents,
+          checkout_data: { custom: customData },
           product_options: {
-            name: `Boost - ${campaignName}`,
-            description: `+${power} Power on GOATBOARD`,
+            name: productName,
+            description: productDescription,
             redirect_url: redirectUrl,
           },
           checkout_options: {
@@ -76,6 +70,73 @@ export async function createCheckout({
   const url = json?.data?.attributes?.url;
   if (!url) throw new Error("Lemon Squeezy did not return a checkout URL.");
   return url;
+}
+
+interface CreateCheckoutParams {
+  campaignId: string;
+  campaignName: string;
+  amountUsd: number;
+  power: number;
+  redirectUrl: string;
+}
+
+/**
+ * Creates a Lemon Squeezy checkout for a "pay what you want" variant, with
+ * the campaign + power baked into custom_data so the webhook can trust
+ * nothing from the client and still know what to credit.
+ */
+export async function createCheckout({
+  campaignId,
+  campaignName,
+  amountUsd,
+  power,
+  redirectUrl,
+}: CreateCheckoutParams): Promise<string> {
+  const variantId = process.env.LEMONSQUEEZY_VARIANT_ID;
+  if (!variantId) throw new Error("Lemon Squeezy is not configured.");
+
+  return createCheckoutSession({
+    variantId,
+    customPriceCents: Math.round(amountUsd * 100),
+    customData: { campaign_id: campaignId, power: String(power) },
+    productName: `Boost - ${campaignName}`,
+    productDescription: `+${power} Power on GOATBOARD`,
+    redirectUrl,
+  });
+}
+
+interface CreateAdSlotCheckoutParams {
+  adSlotId: string;
+  adSlotName: string;
+  amountUsd: number;
+  durationDays: number;
+  redirectUrl: string;
+}
+
+/**
+ * Creates a Lemon Squeezy checkout for renting the homepage ad slot, with
+ * the ad_slots row id + duration baked into custom_data so the webhook can
+ * trust nothing from the client and still know which row to activate and
+ * for how long.
+ */
+export async function createAdSlotCheckout({
+  adSlotId,
+  adSlotName,
+  amountUsd,
+  durationDays,
+  redirectUrl,
+}: CreateAdSlotCheckoutParams): Promise<string> {
+  const variantId = process.env.LEMONSQUEEZY_AD_VARIANT_ID;
+  if (!variantId) throw new Error("Lemon Squeezy is not configured.");
+
+  return createCheckoutSession({
+    variantId,
+    customPriceCents: Math.round(amountUsd * 100),
+    customData: { ad_slot_id: adSlotId, duration_days: String(durationDays) },
+    productName: `Ad Space (${durationDays} days) - ${adSlotName}`,
+    productDescription: `${durationDays}-day featured spot on GOATBOARD`,
+    redirectUrl,
+  });
 }
 
 /** Verifies the X-Signature header on an incoming webhook using the raw body. */

@@ -1,9 +1,11 @@
-import Image from "next/image";
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { AbstractBackdrop } from "@/components/layout/abstract-backdrop";
 import { Leaderboard } from "@/components/billboard/leaderboard";
 import { VisitorStatsCard } from "@/components/billboard/visitor-stats-card";
+import { AdPurchaseConfirmation } from "@/components/billboard/ad-purchase-confirmation";
 import { getVisitorStats } from "@/lib/queries/visitors";
+import { getCurrentAd } from "@/lib/queries/ad-slots";
 import type { Campaign } from "@/lib/types";
 
 export const revalidate = 0;
@@ -21,28 +23,25 @@ async function getCampaigns(): Promise<Campaign[]> {
 }
 
 export default async function Home() {
-  const [campaigns, visitorStats] = await Promise.all([getCampaigns(), getVisitorStats()]);
+  const [campaigns, visitorStats, adSlot] = await Promise.all([
+    getCampaigns(),
+    getVisitorStats(),
+    getCurrentAd(),
+  ]);
 
   return (
     <>
       <AbstractBackdrop />
       <div className="on-backdrop mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+        <Suspense fallback={null}>
+          <AdPurchaseConfirmation />
+        </Suspense>
+
         <div className="mb-4 sm:mb-6">
           <VisitorStatsCard initial={visitorStats} />
         </div>
 
-        <div className="mb-6 flex justify-center sm:mb-8">
-          <Image
-            src="/thegoat.png"
-            alt="The Goat"
-            width={2048}
-            height={768}
-            priority
-            className="h-16 w-auto sm:h-20"
-          />
-        </div>
-
-        <Leaderboard initialCampaigns={campaigns} />
+        <Leaderboard initialCampaigns={campaigns} adSlot={adSlot} />
       </div>
     </>
   );

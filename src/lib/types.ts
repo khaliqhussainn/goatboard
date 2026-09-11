@@ -75,6 +75,33 @@ export type Report = {
   created_at: string;
 };
 
+export type AdSlotStatus = "pending" | "paid";
+export type AdSlotDuration = 7 | 14 | 30;
+
+export type AdSlot = {
+  id: string;
+  name: string;
+  description: string;
+  destination_url: string;
+  image_url: string | null;
+  duration_days: AdSlotDuration;
+  amount: number;
+  lemon_squeezy_order_id: string | null;
+  status: AdSlotStatus;
+  starts_at: string | null;
+  ends_at: string | null;
+  created_at: string;
+};
+
+/** The public-safe shape get_current_ad() returns — never a pending draft, order id, or amount. */
+export type CurrentAd = {
+  name: string;
+  description: string;
+  destination_url: string;
+  image_url: string | null;
+  ends_at: string;
+};
+
 /** Minimal hand-rolled Supabase Database type (kept in sync with supabase/schema.sql). */
 export interface Database {
   public: {
@@ -103,6 +130,13 @@ export interface Database {
         Row: Report;
         Insert: Partial<Report> & Pick<Report, "campaign_id" | "reason">;
         Update: Partial<Report>;
+        Relationships: [];
+      };
+      ad_slots: {
+        Row: AdSlot;
+        Insert: Partial<AdSlot> &
+          Pick<AdSlot, "name" | "description" | "destination_url" | "duration_days" | "amount">;
+        Update: Partial<AdSlot>;
         Relationships: [];
       };
     };
@@ -141,6 +175,10 @@ export interface Database {
       get_visitor_activity: {
         Args: Record<string, never>;
         Returns: { hour_start: string; visits: number }[];
+      };
+      get_current_ad: {
+        Args: Record<string, never>;
+        Returns: CurrentAd[];
       };
     };
     Enums: Record<string, never>;

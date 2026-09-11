@@ -75,3 +75,39 @@ export const reportSchema = z.object({
   campaignId: z.string().uuid(),
   reason: z.string().trim().min(3, "Say a bit more.").max(500, "Keep it under 500 characters."),
 });
+
+/** Duration -> price in whole USD. The only prices /api/ad-checkout and the
+ * webhook will ever charge/accept — never trust a client-submitted amount. */
+export const AD_SLOT_PRICING = { 7: 5, 14: 8, 30: 15 } as const;
+export const AD_SLOT_DURATIONS = [7, 14, 30] as const;
+
+export const adSlotSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Give it a name (2+ characters).")
+    .max(60, "Keep it under 60 characters."),
+  description: z
+    .string()
+    .trim()
+    .min(4, "Tell people what this is.")
+    .max(140, "Keep it under 140 characters."),
+  destination_url: z
+    .string()
+    .trim()
+    .min(1, "A destination link is required.")
+    .refine(isSafeUrl, "Enter a valid http(s) URL."),
+  image_url: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || isSafeUrl(v), "Enter a valid image URL.")
+    .optional()
+    .nullable(),
+  duration_days: z.union([z.literal(7), z.literal(14), z.literal(30)]),
+});
+
+export type AdSlotInput = z.infer<typeof adSlotSchema>;
+
+export const adCheckoutSchema = z.object({
+  adSlotId: z.string().uuid(),
+});

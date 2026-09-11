@@ -295,6 +295,63 @@ $$;
 revoke all on function public.grant_purchase_power(text, uuid, numeric, text, integer) from public;
 
 -- ---------------------------------------------------------------------------
+-- ad_slots  (a single paid, time-boxed banner below the #1 spotlight)
+--
+-- One row per purchase attempt. `pending` rows are drafts created before
+-- checkout that never got paid (abandoned checkouts) — harmless clutter,
+-- same as an unpaid campaign draft would be. A `paid` row is "live" purely
+-- by its starts_at/ends_at window, not a separately-maintained flag, so
+-- nothing needs to flip a status when a slot's time runs out.
+-- ---------------------------------------------------------------------------
+create table if not exists public.ad_slots (
+  id uuid primary key default gen_random_uuid(),
+  name text not null check (char_length(name) between 1 and 60),
+  description text not null check (char_length(description) between 1 and 140),
+  destination_url text not null,
+  image_url text,
+  duration_days integer not null check (duration_days in (7, 14, 30)),
+  amount numeric(10, 2) not null check (amount > 0),
+  lemon_squeezy_order_id text unique,
+  status text not null default 'pending' check (status in ('pending', 'paid')),
+  starts_at timestamptz,
+  ends_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists ad_slots_live_idx
+  on public.ad_slots (starts_at, ends_at)
+  where status = 'paid';
+
+alter table public.ad_slots enable row level security;
+-- No public policies — creation goes through /api/ad-slots and activation
+-- through the Lemon Squeezy webhook, both service-role. The only public
+-- read is get_current_ad() below, which exposes just the live ad's public
+-- fields (never pending drafts, order ids, or amounts).
+
+create or replace function public.get_current_ad()
+returns table(
+  name text,
+  description text,
+  destination_url text,
+  image_url text,
+  ends_at timestamptz
+)
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select name, description, destination_url, image_url, ends_at
+  from public.ad_slots
+  where status = 'paid' and starts_at <= now() and ends_at > now()
+  order by starts_at desc
+  limit 1;
+$$;
+
+revoke all on function public.get_current_ad() from public;
+grant execute on function public.get_current_ad() to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
 -- site visits  (all-time total + live presence for the homepage stats widget)
 -- ---------------------------------------------------------------------------
 
