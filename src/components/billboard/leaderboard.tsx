@@ -12,10 +12,12 @@ import type { Campaign, CurrentAd, VisitorStats } from "@/lib/types";
 export function Leaderboard({
   initialCampaigns,
   adSlot,
+  adSlotMascot,
   visitorStats,
 }: {
   initialCampaigns: Campaign[];
   adSlot: CurrentAd | null;
+  adSlotMascot: string | null;
   visitorStats: VisitorStats;
 }) {
   const { campaigns, applyOptimisticVote } = useRealtimeLeaderboard(initialCampaigns);
@@ -57,7 +59,7 @@ export function Leaderboard({
           ) : (
             <EmptyBoard />
           )}
-          <AdSlotDisplay ad={adSlot} />
+          <AdSlotDisplay ad={adSlot} mascot={adSlotMascot} />
         </div>
       </div>
 

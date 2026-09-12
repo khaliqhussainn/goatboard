@@ -5,6 +5,7 @@ import { Leaderboard } from "@/components/billboard/leaderboard";
 import { AdPurchaseConfirmation } from "@/components/billboard/ad-purchase-confirmation";
 import { getVisitorStats } from "@/lib/queries/visitors";
 import { getCurrentAd } from "@/lib/queries/ad-slots";
+import { pickHourlyMascot } from "@/lib/mascots";
 import type { Campaign } from "@/lib/types";
 
 export const revalidate = 0;
@@ -36,7 +37,12 @@ export default async function Home() {
           <AdPurchaseConfirmation />
         </Suspense>
 
-        <Leaderboard initialCampaigns={campaigns} adSlot={adSlot} visitorStats={visitorStats} />
+        <Leaderboard
+          initialCampaigns={campaigns}
+          adSlot={adSlot}
+          adSlotMascot={pickHourlyMascot()}
+          visitorStats={visitorStats}
+        />
       </div>
     </>
   );

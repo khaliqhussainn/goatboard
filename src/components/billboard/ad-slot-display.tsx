@@ -16,7 +16,16 @@ const SPARKLES = [
   "absolute right-10 top-1/2 size-3 -translate-y-1/2 sm:right-16",
 ];
 
-export function AdSlotDisplay({ ad }: { ad: CurrentAd | null }) {
+export function AdSlotDisplay({
+  ad,
+  mascot,
+}: {
+  ad: CurrentAd | null;
+  /** The ad slot's own goat, distinct from the sponsor's logo — rotates once
+   * per hour (see pickHourlyMascot in lib/mascots.ts). Null only if no
+   * mascot art exists at all. */
+  mascot: string | null;
+}) {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -29,6 +38,10 @@ export function AdSlotDisplay({ ad }: { ad: CurrentAd | null }) {
       {ad ? (
         <div className="relative overflow-hidden rounded-[4rem] border-2 border-purple-200 bg-purple-50 px-6 py-8 sm:px-10">
           <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
+            {mascot && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={mascot} alt="" className="h-14 w-auto shrink-0 sm:h-16" />
+            )}
             <CampaignAvatar
               src={ad.image_url}
               name={ad.name}
@@ -63,12 +76,10 @@ export function AdSlotDisplay({ ad }: { ad: CurrentAd | null }) {
           ))}
 
           <div className="relative flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/mascots/goat-1.webp"
-              alt=""
-              className="h-16 w-auto shrink-0 sm:h-20"
-            />
+            {mascot && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={mascot} alt="" className="h-16 w-auto shrink-0 sm:h-20" />
+            )}
 
             <p className="font-handwritten text-2xl leading-tight text-purple-700 sm:text-3xl">
               Your product could be here

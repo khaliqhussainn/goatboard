@@ -27,3 +27,16 @@ export function pickMascot(seed: string): string | null {
   }
   return MASCOT_IMAGES[Math.abs(hash) % MASCOT_IMAGES.length];
 }
+
+/**
+ * The ad slot's own mascot — cycles to the next pose once per UTC hour
+ * rather than being tied to a campaign/seed. Computed server-side (the
+ * homepage is fully dynamic, revalidate = 0) and passed down as a prop
+ * rather than called from a client component, so the pick doesn't depend on
+ * exactly when a client happens to render relative to the hour boundary.
+ */
+export function pickHourlyMascot(): string | null {
+  if (MASCOT_IMAGES.length === 0) return null;
+  const hourIndex = Math.floor(Date.now() / (60 * 60 * 1000));
+  return MASCOT_IMAGES[hourIndex % MASCOT_IMAGES.length];
+}
