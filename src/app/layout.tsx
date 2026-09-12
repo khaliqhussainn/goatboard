@@ -24,17 +24,23 @@ const kalam = Kalam({
 });
 
 /**
- * The share card every page falls back to. Served straight out of public/ as
- * the original artwork rather than composed at request time, so what gets
- * scraped is byte-for-byte the file in the repo. The relative path is
- * resolved against metadataBase into the absolute URL scrapers require.
+ * The share card every page falls back to, served straight out of public/
+ * rather than composed at request time. The relative path is resolved against
+ * metadataBase into the absolute URL scrapers require.
+ *
+ * 1200x630 (1.91:1) because that is the ratio every platform's card is built
+ * around - X in particular will not render a summary_large_image far outside
+ * it, which is why the 2.69:1 source artwork (public/goatboard.png) could not
+ * be used directly. The card keeps that artwork whole and extends its edge
+ * colours into the bands instead of cropping it.
  *
  * Campaign pages override this with their own opengraph-image route.
  */
 const SHARE_IMAGE = {
-  url: "/goatboard.png",
-  width: 2056,
-  height: 765,
+  url: "/og-image.jpg",
+  width: 1200,
+  height: 630,
+  type: "image/jpeg",
   alt: "GOATBOARD - get VOAT to become a GOAT",
 };
 
