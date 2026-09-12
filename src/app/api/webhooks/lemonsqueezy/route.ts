@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyWebhookSignature } from "@/lib/lemonsqueezy";
+import { nextAdSlotStart } from "@/lib/ad-slots";
 import { AD_SLOT_PRICING } from "@/lib/validation";
 import type { AdSlotDuration } from "@/lib/types";
 
@@ -89,16 +90,7 @@ async function handleAdSlotOrder(adSlotId: string, durationDays: number, orderId
     return false;
   }
 
-  const { data: current } = await admin
-    .from("ad_slots")
-    .select("ends_at")
-    .eq("status", "paid")
-    .gt("ends_at", new Date().toISOString())
-    .order("ends_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const startsAt = current?.ends_at ? new Date(current.ends_at) : new Date();
+  const startsAt = await nextAdSlotStart(admin);
   const endsAt = new Date(startsAt.getTime() + durationDays * 24 * 60 * 60 * 1000);
 
   const { error: updateError } = await admin

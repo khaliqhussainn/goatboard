@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CampaignStatusActions, ReportActions } from "@/components/admin/admin-actions";
+import { AdSlotAdminPanel } from "@/components/admin/ad-slot-admin-panel";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { formatMoney, formatPower } from "@/lib/utils";
@@ -28,16 +29,18 @@ export default async function AdminPage({
     campaignsQuery = campaignsQuery.ilike("name", `%${q}%`);
   }
 
-  const [{ data: campaigns }, { data: reports }, { data: purchases }] = await Promise.all([
-    campaignsQuery,
-    admin
-      .from("reports")
-      .select("*")
-      .eq("status", "open")
-      .order("created_at", { ascending: false })
-      .limit(50),
-    admin.from("purchases").select("*").order("created_at", { ascending: false }).limit(50),
-  ]);
+  const [{ data: campaigns }, { data: reports }, { data: purchases }, { data: adSlots }] =
+    await Promise.all([
+      campaignsQuery,
+      admin
+        .from("reports")
+        .select("*")
+        .eq("status", "open")
+        .order("created_at", { ascending: false })
+        .limit(50),
+      admin.from("purchases").select("*").order("created_at", { ascending: false }).limit(50),
+      admin.from("ad_slots").select("*").order("created_at", { ascending: false }).limit(20),
+    ]);
 
   const referencedIds = Array.from(
     new Set([...(reports ?? []).map((r) => r.campaign_id), ...(purchases ?? []).map((p) => p.campaign_id)]),
@@ -124,7 +127,7 @@ export default async function AdminPage({
         </div>
       </section>
 
-      <section>
+      <section className="mb-12">
         <h2 className="mb-3 text-lg font-bold">Recent purchases</h2>
         <div className="flex flex-col gap-2">
           {(purchases ?? []).map((p) => {
@@ -147,6 +150,15 @@ export default async function AdminPage({
             <p className="text-sm text-muted-foreground">No purchases yet.</p>
           )}
         </div>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-bold">Ad slot</h2>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Create a slot for free to test the homepage ad without going through checkout, or end/
+          delete one below.
+        </p>
+        <AdSlotAdminPanel adSlots={adSlots ?? []} />
       </section>
     </div>
   );
