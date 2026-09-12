@@ -24,6 +24,18 @@ export function formatMoney(amount: number, currency = "USD"): string {
   }).format(amount);
 }
 
+/** "Sep 19" — the form of date an ad slot's window is quoted in. */
+export function formatSlotDate(iso: string): string {
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(iso));
+}
+
+/** "Sep 19 - Oct 3", with the year added when the window leaves this one. */
+export function formatSlotRange(startIso: string, endIso: string): string {
+  const end = new Date(endIso);
+  const suffix = end.getFullYear() === new Date().getFullYear() ? "" : `, ${end.getFullYear()}`;
+  return `${formatSlotDate(startIso)} - ${formatSlotDate(endIso)}${suffix}`;
+}
+
 export function ordinal(n: number): string {
   const rem100 = n % 100;
   if (rem100 >= 11 && rem100 <= 13) return `${n}th`;

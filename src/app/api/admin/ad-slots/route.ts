@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthed } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { nextAdSlotStart } from "@/lib/ad-slots";
+import { nextAdSlotStart, addDays } from "@/lib/ad-slots";
 import { adSlotSchema, AD_SLOT_PRICING } from "@/lib/validation";
 
 /**
@@ -26,10 +26,9 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient();
+  // Queues behind whatever is already booked, exactly like a paid slot does.
   const startsAt = await nextAdSlotStart(admin);
-  const endsAt = new Date(
-    startsAt.getTime() + parsed.data.duration_days * 24 * 60 * 60 * 1000,
-  );
+  const endsAt = addDays(startsAt, parsed.data.duration_days);
 
   const { error } = await admin.from("ad_slots").insert({
     name: parsed.data.name,

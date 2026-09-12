@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyWebhookSignature } from "@/lib/lemonsqueezy";
-import { nextAdSlotStart } from "@/lib/ad-slots";
+import { bookAdSlot } from "@/lib/ad-slots";
 import { AD_SLOT_PRICING } from "@/lib/validation";
 import type { AdSlotDuration } from "@/lib/types";
 
@@ -50,10 +50,11 @@ async function handleBoostOrder(
 }
 
 /**
- * Activates a paid ad slot: verifies the paid total actually matches the
- * price for the claimed duration (the checkout route already set the price
- * server-side, but the webhook trusts nothing either), then schedules it to
- * start when the current live/queued ad (if any) ends, or immediately.
+ * Confirms a paid ad slot, booking it into the next free window in the queue.
+ * Verifies the price on the row still matches what that duration costs (the
+ * checkout route set it server-side, but the webhook trusts nothing either)
+ * before handing off to bookAdSlot, which owns the scheduling and the
+ * idempotency.
  */
 async function handleAdSlotOrder(adSlotId: string, durationDays: number, orderId: string) {
   if (!(durationDays in AD_SLOT_PRICING)) {
@@ -73,11 +74,6 @@ async function handleAdSlotOrder(adSlotId: string, durationDays: number, orderId
     return false;
   }
 
-  if (adSlot.status === "paid") {
-    // Already processed (Lemon Squeezy retried the webhook) — no-op success.
-    return true;
-  }
-
   const expectedAmount = AD_SLOT_PRICING[durationDays as AdSlotDuration];
   if (Number(adSlot.amount) !== expectedAmount || adSlot.duration_days !== durationDays) {
     console.error(
@@ -90,21 +86,14 @@ async function handleAdSlotOrder(adSlotId: string, durationDays: number, orderId
     return false;
   }
 
-  const startsAt = await nextAdSlotStart(admin);
-  const endsAt = new Date(startsAt.getTime() + durationDays * 24 * 60 * 60 * 1000);
+  const result = await bookAdSlot(admin, {
+    adSlotId,
+    durationDays: durationDays as AdSlotDuration,
+    orderId,
+  });
 
-  const { error: updateError } = await admin
-    .from("ad_slots")
-    .update({
-      status: "paid",
-      starts_at: startsAt.toISOString(),
-      ends_at: endsAt.toISOString(),
-      lemon_squeezy_order_id: orderId,
-    })
-    .eq("id", adSlotId);
-
-  if (updateError) {
-    console.error("ad slot webhook: activation failed", updateError);
+  if (!result.ok) {
+    console.error("ad slot webhook: booking failed", adSlotId, result.reason);
     return false;
   }
   return true;

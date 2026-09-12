@@ -9,8 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ImagePicker, fetchSiteLogo } from "@/components/campaign/image-picker";
 import { adSlotSchema, isSafeUrl, AD_SLOT_PRICING, AD_SLOT_DURATIONS } from "@/lib/validation";
-import { formatMoney, cn } from "@/lib/utils";
+import { formatMoney, formatSlotDate, formatSlotRange, cn } from "@/lib/utils";
 import type { AdSlotDuration } from "@/lib/types";
+
+type Availability = {
+  nextStart: string;
+  queuedCount: number;
+  liveUntil: string | null;
+  options: { days: AdSlotDuration; startsAt: string; endsAt: string }[];
+};
 
 export function AdSlotForm({ onDone }: { onDone: () => void }) {
   const [name, setName] = React.useState("");
@@ -24,7 +31,25 @@ export function AdSlotForm({ onDone }: { onDone: () => void }) {
   const [logoNotFound, setLogoNotFound] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [availability, setAvailability] = React.useState<Availability | null>(null);
   const lastAutoFetchedUrl = React.useRef<string | null>(null);
+
+  // The queue as it stands right now, so the buyer sees the window they're
+  // actually buying rather than just a duration.
+  React.useEffect(() => {
+    let active = true;
+    fetch("/api/ad-slots/availability")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (active && data) setAvailability(data as Availability);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const selected = availability?.options.find((o) => o.days === durationDays);
 
   // Pull the site's favicon as soon as there's a URL to work with, without
   // clobbering a logo the advertiser picked themselves.
@@ -182,26 +207,56 @@ export function AdSlotForm({ onDone }: { onDone: () => void }) {
       <div className="flex flex-col gap-1.5">
         <Label>Duration</Label>
         <div className="grid grid-cols-3 gap-2">
-          {AD_SLOT_DURATIONS.map((days) => (
-            <button
-              key={days}
-              type="button"
-              onClick={() => setDurationDays(days)}
-              className={cn(
-                "flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2.5 text-sm font-semibold transition-colors",
-                durationDays === days
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border hover:border-hero-pink hover:text-hero-pink",
-              )}
-            >
-              <span>{days} days</span>
-              <span className="text-xs font-normal opacity-70">
-                {formatMoney(AD_SLOT_PRICING[days])}
-              </span>
-            </button>
-          ))}
+          {AD_SLOT_DURATIONS.map((days) => {
+            const option = availability?.options.find((o) => o.days === days);
+            return (
+              <button
+                key={days}
+                type="button"
+                onClick={() => setDurationDays(days)}
+                className={cn(
+                  "flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2.5 text-sm font-semibold transition-colors",
+                  durationDays === days
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border hover:border-hero-pink hover:text-hero-pink",
+                )}
+              >
+                <span>{days} days</span>
+                <span className="text-xs font-normal opacity-70">
+                  {formatMoney(AD_SLOT_PRICING[days])}
+                </span>
+                {option && (
+                  <span className="text-[10px] font-normal opacity-60">
+                    ends {formatSlotDate(option.endsAt)}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
+
+      {/* What they're buying, in dates, before they're sent to checkout. */}
+      {selected && (
+        <div className="flex flex-col gap-1 rounded-xl border border-border bg-muted/40 p-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+            <span className="text-sm text-muted-foreground">
+              Your {selected.days}-day slot runs
+            </span>
+            <span className="text-sm font-semibold">
+              {formatSlotRange(selected.startsAt, selected.endsAt)}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {availability!.queuedCount === 0
+              ? "The board is free - your ad goes live as soon as payment clears."
+              : availability!.queuedCount === 1
+                ? `1 ad is booked ahead of you, running until ${formatSlotDate(availability!.nextStart)}.`
+                : `${availability!.queuedCount} ads are booked ahead of you, through ${formatSlotDate(availability!.nextStart)}.`}{" "}
+            Your dates are locked in once payment completes.
+          </p>
+        </div>
+      )}
 
       <Button type="submit" size="lg" variant="abstract" disabled={submitting}>
         {submitting ? "Redirecting…" : `Rent for ${formatMoney(AD_SLOT_PRICING[durationDays])}`}

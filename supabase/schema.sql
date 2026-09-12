@@ -326,6 +326,25 @@ create index if not exists ad_slots_live_idx
 -- content at low opacity. Separate from image_url, which is the small logo.
 alter table public.ad_slots add column if not exists backdrop_url text;
 
+-- Bookings queue, so two confirmed slots must never share a moment. The range
+-- is half-open, which is exactly what back-to-back queueing needs: a slot
+-- ending Sept 19 and the next starting Sept 19 do not count as overlapping.
+--
+-- This is the hard guarantee behind bookAdSlot()'s retry loop — that code
+-- picks a start date from the current queue, and if a concurrent booking
+-- claims the window first, this constraint rejects the write rather than
+-- letting both through, and the start date is recomputed.
+do $$
+begin
+  alter table public.ad_slots
+    add constraint ad_slots_no_overlap
+    exclude using gist (tstzrange(starts_at, ends_at) with &&)
+    where (status = 'paid' and starts_at is not null and ends_at is not null);
+exception
+  when duplicate_table then null;  -- constraint already present
+  when duplicate_object then null;
+end $$;
+
 alter table public.ad_slots enable row level security;
 -- No public policies — creation goes through /api/ad-slots and activation
 -- through the Lemon Squeezy webhook, both service-role. The only public
