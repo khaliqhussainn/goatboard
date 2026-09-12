@@ -81,6 +81,15 @@ export const reportSchema = z.object({
 export const AD_SLOT_PRICING = { 7: 5, 14: 8, 30: 15 } as const;
 export const AD_SLOT_DURATIONS = [7, 14, 30] as const;
 
+/** The Lemon Squeezy variant each duration is sold as. Matched by name at
+ * checkout time rather than by a hardcoded id, so these only have to agree
+ * with what the variants are actually called in the dashboard. */
+export const AD_SLOT_VARIANT_NAMES = {
+  7: "7 days",
+  14: "14 days",
+  30: "30 days",
+} as const;
+
 export const adSlotSchema = z.object({
   name: z
     .string()

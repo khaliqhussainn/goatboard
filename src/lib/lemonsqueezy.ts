@@ -1,20 +1,23 @@
 import "server-only";
 import crypto from "node:crypto";
+import { AD_SLOT_VARIANT_NAMES } from "@/lib/validation";
+import type { AdSlotDuration } from "@/lib/types";
 
 const LEMONSQUEEZY_API = "https://api.lemonsqueezy.com/v1";
 
 interface CheckoutSessionParams {
   variantId: string;
-  customPriceCents: number;
+  /** Omitted for fixed-price variants, so the variant's own price applies. */
+  customPriceCents?: number;
   customData: Record<string, string>;
   productName: string;
   productDescription: string;
   redirectUrl: string;
 }
 
-/** Low-level Lemon Squeezy checkout creation shared by every "pay what you
- * want" variant this app uses (boosts, ad slots) — everything that varies
- * between them is passed in, nothing here is boost- or ad-specific. */
+/** Low-level Lemon Squeezy checkout creation shared by boosts and ad slots —
+ * everything that varies between them is passed in, nothing here is boost- or
+ * ad-specific. */
 async function createCheckoutSession({
   variantId,
   customPriceCents,
@@ -41,7 +44,7 @@ async function createCheckoutSession({
       data: {
         type: "checkouts",
         attributes: {
-          custom_price: customPriceCents,
+          ...(customPriceCents === undefined ? {} : { custom_price: customPriceCents }),
           checkout_data: { custom: customData },
           product_options: {
             name: productName,
@@ -70,6 +73,52 @@ async function createCheckoutSession({
   const url = json?.data?.attributes?.url;
   if (!url) throw new Error("Lemon Squeezy did not return a checkout URL.");
   return url;
+}
+
+const variantIdsByName = new Map<string, string>();
+
+/**
+ * Looks up a variant's id from the name it carries in the Lemon Squeezy
+ * dashboard. The checkout API only takes ids, but ids are opaque numbers
+ * nobody wants to copy around by hand, so the durations are configured by
+ * name (see AD_SLOT_VARIANT_NAMES) and resolved here. Cached for the life of
+ * the process — variants effectively never change.
+ */
+async function resolveVariantIdByName(name: string): Promise<string> {
+  const cached = variantIdsByName.get(name);
+  if (cached) return cached;
+
+  const apiKey = process.env.LEMONSQUEEZY_API_KEY;
+  if (!apiKey) throw new Error("Lemon Squeezy is not configured.");
+
+  // Brackets pre-encoded: Lemon Squeezy's JSON:API pagination params are
+  // page[size], and leaving them raw is at the mercy of whoever normalises
+  // the URL next.
+  const res = await fetch(`${LEMONSQUEEZY_API}/variants?page%5Bsize%5D=100`, {
+    headers: {
+      Accept: "application/vnd.api+json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Lemon Squeezy variant lookup failed (${res.status}): ${await res.text()}`);
+  }
+
+  const json = await res.json();
+  const variants: { id: string; attributes?: { name?: string } }[] = json?.data ?? [];
+  const wanted = name.trim().toLowerCase();
+  const match = variants.find((v) => v.attributes?.name?.trim().toLowerCase() === wanted);
+
+  if (!match) {
+    const found = variants.map((v) => v.attributes?.name).filter(Boolean).join(", ");
+    throw new Error(
+      `Lemon Squeezy has no variant named "${name}". Variants found: ${found || "none"}.`,
+    );
+  }
+
+  variantIdsByName.set(name, String(match.id));
+  return String(match.id);
 }
 
 interface CreateCheckoutParams {
@@ -108,8 +157,7 @@ export async function createCheckout({
 interface CreateAdSlotCheckoutParams {
   adSlotId: string;
   adSlotName: string;
-  amountUsd: number;
-  durationDays: number;
+  durationDays: AdSlotDuration;
   redirectUrl: string;
 }
 
@@ -117,21 +165,20 @@ interface CreateAdSlotCheckoutParams {
  * Creates a Lemon Squeezy checkout for renting the homepage ad slot, with
  * the ad_slots row id + duration baked into custom_data so the webhook can
  * trust nothing from the client and still know which row to activate and
- * for how long.
+ * for how long. Each duration is its own fixed-price variant ("7 days",
+ * "14 days", "30 days"), so no price is passed — the variant's own price is
+ * what gets charged.
  */
 export async function createAdSlotCheckout({
   adSlotId,
   adSlotName,
-  amountUsd,
   durationDays,
   redirectUrl,
 }: CreateAdSlotCheckoutParams): Promise<string> {
-  const variantId = process.env.LEMONSQUEEZY_AD_VARIANT_ID;
-  if (!variantId) throw new Error("Lemon Squeezy is not configured.");
+  const variantId = await resolveVariantIdByName(AD_SLOT_VARIANT_NAMES[durationDays]);
 
   return createCheckoutSession({
     variantId,
-    customPriceCents: Math.round(amountUsd * 100),
     customData: { ad_slot_id: adSlotId, duration_days: String(durationDays) },
     productName: `Ad Space (${durationDays} days) - ${adSlotName}`,
     productDescription: `${durationDays}-day featured spot on GOATBOARD`,

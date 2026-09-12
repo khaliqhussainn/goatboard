@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient, SupabaseConfigError } from "@/lib/supabase/admin";
 import { createAdSlotCheckout } from "@/lib/lemonsqueezy";
-import { adCheckoutSchema, AD_SLOT_PRICING } from "@/lib/validation";
+import { adCheckoutSchema } from "@/lib/validation";
 import { getSiteUrl } from "@/lib/utils";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
@@ -33,13 +33,13 @@ export async function POST(request: Request) {
   }
 
   const siteUrl = getSiteUrl(new URL(request.url).origin);
-  const amount = AD_SLOT_PRICING[adSlot.duration_days as keyof typeof AD_SLOT_PRICING];
 
   try {
+    // No price is sent: each duration is its own fixed-price Lemon Squeezy
+    // variant, so the variant decides what gets charged.
     const url = await createAdSlotCheckout({
       adSlotId: adSlot.id,
       adSlotName: adSlot.name,
-      amountUsd: amount,
       durationDays: adSlot.duration_days,
       redirectUrl: `${siteUrl}/?ad_purchased=${adSlot.duration_days}`,
     });
