@@ -23,6 +23,21 @@ const kalam = Kalam({
   subsets: ["latin"],
 });
 
+/**
+ * The share card every page falls back to. Served straight out of public/ as
+ * the original artwork rather than composed at request time, so what gets
+ * scraped is byte-for-byte the file in the repo. The relative path is
+ * resolved against metadataBase into the absolute URL scrapers require.
+ *
+ * Campaign pages override this with their own opengraph-image route.
+ */
+const SHARE_IMAGE = {
+  url: "/goatboard.png",
+  width: 2056,
+  height: 765,
+  alt: "GOATBOARD - get VOAT to become a GOAT",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
@@ -37,11 +52,14 @@ export const metadata: Metadata = {
       "One #1 spotlight. Everyone's fighting for it. Vote for free or boost with Power to climb the leaderboard.",
     siteName: "GOATBOARD",
     type: "website",
+    url: "/",
+    images: [SHARE_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: "GOATBOARD - Take the board.",
     description: "One #1 spotlight. Everyone's fighting for it.",
+    images: [SHARE_IMAGE],
   },
 };
 
