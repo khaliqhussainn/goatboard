@@ -322,11 +322,19 @@ create index if not exists ad_slots_live_idx
   on public.ad_slots (starts_at, ends_at)
   where status = 'paid';
 
+-- Optional full-bleed background image for the banner, shown behind the ad's
+-- content at low opacity. Separate from image_url, which is the small logo.
+alter table public.ad_slots add column if not exists backdrop_url text;
+
 alter table public.ad_slots enable row level security;
 -- No public policies — creation goes through /api/ad-slots and activation
 -- through the Lemon Squeezy webhook, both service-role. The only public
 -- read is get_current_ad() below, which exposes just the live ad's public
 -- fields (never pending drafts, order ids, or amounts).
+
+-- Dropped rather than replaced: CREATE OR REPLACE cannot change a
+-- function's return type, so adding backdrop_url to the result needs this.
+drop function if exists public.get_current_ad();
 
 create or replace function public.get_current_ad()
 returns table(
@@ -334,6 +342,7 @@ returns table(
   description text,
   destination_url text,
   image_url text,
+  backdrop_url text,
   ends_at timestamptz
 )
 language sql
@@ -341,7 +350,7 @@ security definer
 set search_path = public
 stable
 as $$
-  select name, description, destination_url, image_url, ends_at
+  select name, description, destination_url, image_url, backdrop_url, ends_at
   from public.ad_slots
   where status = 'paid' and starts_at <= now() and ends_at > now()
   order by starts_at desc

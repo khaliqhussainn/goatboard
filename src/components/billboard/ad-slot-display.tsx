@@ -40,6 +40,26 @@ function AdSlotMascot({ src, className }: { src: string; className?: string }) {
   );
 }
 
+/**
+ * The advertiser's optional full-bleed background. Clipped to the banner's
+ * own radius by its own wrapper rather than overflow-hidden on the banner,
+ * which would also cut off the goat breaking past the edges. Held at a low
+ * opacity, with a scrim that's heaviest behind the copy and clears toward
+ * the goat, so any uploaded image stays readable underneath the text.
+ */
+function AdSlotBackdrop({ src }: { src: string }) {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute inset-0 overflow-hidden rounded-[4rem]"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt="" className="size-full object-cover opacity-25" />
+      <span className="absolute inset-0 bg-gradient-to-r from-purple-50/85 via-purple-50/40 to-transparent" />
+    </span>
+  );
+}
+
 export function AdSlotDisplay({
   ad,
   mascot,
@@ -60,13 +80,14 @@ export function AdSlotDisplay({
       <Sparkle className="absolute -top-4 left-0 z-10 size-5 fill-purple-300 text-purple-300 sm:-left-1" />
 
       {ad ? (
-        <div className="relative rounded-[4rem] border-2 border-purple-200 bg-purple-50 px-6 py-8 sm:px-10">
+        <div className="relative rounded-[4rem] border-2 border-purple-200 bg-gradient-to-br from-purple-50 via-white to-purple-100 px-6 py-8 shadow-[0_18px_50px_-28px_rgba(88,28,135,0.45)] ring-1 ring-inset ring-white/70 sm:px-10">
+          {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} />}
           {mascot && <AdSlotMascot src={mascot} className="mx-auto mb-5 block h-24" />}
-          <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:pr-44 sm:text-left">
+          <div className="relative flex flex-col items-center gap-4 text-center sm:flex-row sm:pr-44 sm:text-left">
             <CampaignAvatar
               src={ad.image_url}
               name={ad.name}
-              className="size-16 shrink-0 rounded-2xl text-xl"
+              className="size-16 shrink-0 rounded-2xl text-xl shadow-sm ring-2 ring-white"
             />
             <div className="min-w-0 flex-1">
               <p className="truncate text-lg font-black tracking-tight">{ad.name}</p>
@@ -76,7 +97,7 @@ export function AdSlotDisplay({
               href={ad.destination_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-purple-100 px-4 py-2 text-sm font-bold text-purple-700 transition-colors hover:bg-purple-200"
+              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-purple-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-purple-700"
             >
               Visit <ExternalLink className="size-3.5" />
             </a>
@@ -86,7 +107,7 @@ export function AdSlotDisplay({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="group relative w-full rounded-[4rem] border-2 border-dashed border-purple-300 bg-purple-50 px-5 py-6 text-left transition-colors hover:border-purple-400 hover:bg-purple-100/60 sm:px-10 sm:py-8"
+          className="group relative w-full rounded-[4rem] border-2 border-dashed border-purple-300 bg-gradient-to-br from-purple-50 via-white to-purple-100 px-5 py-6 text-left shadow-[0_18px_50px_-28px_rgba(88,28,135,0.4)] ring-1 ring-inset ring-white/70 transition-colors hover:border-purple-400 hover:from-purple-100/70 hover:to-purple-200/60 sm:px-10 sm:py-8"
         >
           {SPARKLES.map((cls, i) => (
             <Sparkle

@@ -2,12 +2,12 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import { ImagePlus, Loader2, Sparkles, X } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
+import { ImagePicker, fetchSiteLogo } from "@/components/campaign/image-picker";
 import { adSlotSchema, isSafeUrl, AD_SLOT_PRICING, AD_SLOT_DURATIONS } from "@/lib/validation";
 import { formatMoney, cn } from "@/lib/utils";
 import type { AdSlotDuration } from "@/lib/types";
@@ -19,16 +19,15 @@ export function AdSlotForm({ onDone }: { onDone: () => void }) {
   const [durationDays, setDurationDays] = React.useState<AdSlotDuration>(7);
   const [imageUrl, setImageUrl] = React.useState<string | null>(null);
   const [imageSource, setImageSource] = React.useState<"upload" | "site" | null>(null);
-  const [uploading, setUploading] = React.useState(false);
+  const [backdropUrl, setBackdropUrl] = React.useState<string | null>(null);
   const [fetchingLogo, setFetchingLogo] = React.useState(false);
   const [logoNotFound, setLogoNotFound] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const lastAutoFetchedUrl = React.useRef<string | null>(null);
 
-  // Same auto-fetch-on-blur as the campaign creation form: try to pull a
-  // logo straight from the site being advertised before asking for an
-  // upload.
+  // Pull the site's favicon as soon as there's a URL to work with, without
+  // clobbering a logo the advertiser picked themselves.
   async function handleDestinationBlur() {
     const url = destinationUrl.trim();
     if (!url || !isSafeUrl(url)) return;
@@ -37,60 +36,14 @@ export function AdSlotForm({ onDone }: { onDone: () => void }) {
     lastAutoFetchedUrl.current = url;
     setFetchingLogo(true);
     setLogoNotFound(false);
-    try {
-      const res = await fetch("/api/fetch-logo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-      const data = await res.json();
-      if (res.ok && data.url) {
-        setImageUrl(data.url);
-        setImageSource("site");
-      } else {
-        setLogoNotFound(true);
-      }
-    } catch {
+    const found = await fetchSiteLogo(url);
+    if (found) {
+      setImageUrl(found);
+      setImageSource("site");
+    } else {
       setLogoNotFound(true);
-    } finally {
-      setFetchingLogo(false);
     }
-  }
-
-  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be under 5MB.");
-      return;
-    }
-
-    setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.message ?? "Couldn't upload image. Try again.");
-        return;
-      }
-      setImageUrl(data.url);
-      setImageSource("upload");
-    } catch {
-      toast.error("Couldn't upload image. Try again.");
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  function clearImage() {
-    setImageUrl(null);
-    setImageSource(null);
-    lastAutoFetchedUrl.current = null;
+    setFetchingLogo(false);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -101,6 +54,7 @@ export function AdSlotForm({ onDone }: { onDone: () => void }) {
       description,
       destination_url: destinationUrl,
       image_url: imageUrl,
+      backdrop_url: backdropUrl,
       duration_days: durationDays,
     });
 
@@ -149,7 +103,7 @@ export function AdSlotForm({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="ad-name">Product name</Label>
         <Input
@@ -191,66 +145,37 @@ export function AdSlotForm({ onDone }: { onDone: () => void }) {
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="ad-image">Logo</Label>
-
-        {imageUrl ? (
-          <div className="flex items-center gap-3">
-            <CampaignAvatar
-              src={imageUrl}
-              name={name || "?"}
-              className="size-12 shrink-0 rounded-xl"
-            />
-            <div className="min-w-0 flex-1 text-xs text-muted-foreground">
-              {imageSource === "site" ? "Fetched from your website" : "Uploaded"}
-            </div>
-            <label
-              htmlFor="ad-image"
-              className="cursor-pointer rounded-lg px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              Replace
-            </label>
-            <button
-              type="button"
-              onClick={clearImage}
-              aria-label="Remove image"
-              className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
-        ) : (
-          <label
-            htmlFor="ad-image"
-            className="flex h-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            {uploading || fetchingLogo ? (
-              <>
-                <Loader2 className="size-5 animate-spin" />
-                {fetchingLogo && (
-                  <span className="text-xs">Looking for a logo on your site…</span>
-                )}
-              </>
-            ) : (
-              <>
-                <ImagePlus className="size-5" />
-                <span className="text-xs">Upload a logo (optional)</span>
-              </>
-            )}
-          </label>
-        )}
-
+        <ImagePicker
+          id="ad-image"
+          value={imageUrl}
+          name={name || "?"}
+          caption={imageSource === "site" ? "Fetched from your website" : "Uploaded"}
+          busy={fetchingLogo}
+          busyLabel="Looking for your favicon…"
+          emptyLabel="Upload a logo (optional)"
+          onChange={(url) => {
+            setImageUrl(url);
+            setImageSource(url ? "upload" : null);
+            if (!url) lastAutoFetchedUrl.current = null;
+          }}
+        />
         {logoNotFound && !imageUrl && (
           <p className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Sparkles className="size-3" /> Couldn&apos;t find a logo on that site - upload one
+            <Sparkles className="size-3" /> Couldn&apos;t find a favicon on that site - upload one
             above.
           </p>
         )}
+      </div>
 
-        <input
-          id="ad-image"
-          type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
-          className="sr-only"
-          onChange={handleImageChange}
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="ad-backdrop">Backdrop image (optional)</Label>
+        <ImagePicker
+          id="ad-backdrop"
+          value={backdropUrl}
+          wide
+          caption="Shown faintly behind your ad"
+          emptyLabel="Upload a background image"
+          onChange={setBackdropUrl}
         />
       </div>
 
@@ -278,7 +203,7 @@ export function AdSlotForm({ onDone }: { onDone: () => void }) {
         </div>
       </div>
 
-      <Button type="submit" size="lg" variant="abstract" disabled={submitting || uploading}>
+      <Button type="submit" size="lg" variant="abstract" disabled={submitting}>
         {submitting ? "Redirecting…" : `Rent for ${formatMoney(AD_SLOT_PRICING[durationDays])}`}
       </Button>
     </form>

@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AD_SLOT_PRICING, AD_SLOT_DURATIONS } from "@/lib/validation";
+import { ImagePicker, fetchSiteLogo } from "@/components/campaign/image-picker";
+import { AD_SLOT_PRICING, AD_SLOT_DURATIONS, isSafeUrl } from "@/lib/validation";
 import { formatMoney, cn } from "@/lib/utils";
 import type { AdSlot, AdSlotDuration } from "@/lib/types";
 
@@ -28,10 +29,29 @@ export function AdSlotAdminPanel({ adSlots }: { adSlots: AdSlot[] }) {
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [destinationUrl, setDestinationUrl] = React.useState("");
-  const [imageUrl, setImageUrl] = React.useState("");
+  const [imageUrl, setImageUrl] = React.useState<string | null>(null);
+  const [imageSource, setImageSource] = React.useState<"upload" | "site" | null>(null);
+  const [backdropUrl, setBackdropUrl] = React.useState<string | null>(null);
+  const [fetchingLogo, setFetchingLogo] = React.useState(false);
+  const lastAutoFetchedUrl = React.useRef<string | null>(null);
   const [durationDays, setDurationDays] = React.useState<AdSlotDuration>(7);
   const [creating, setCreating] = React.useState(false);
   const [actingId, setActingId] = React.useState<string | null>(null);
+
+  async function handleDestinationBlur() {
+    const url = destinationUrl.trim();
+    if (!url || !isSafeUrl(url)) return;
+    if (imageSource === "upload" || lastAutoFetchedUrl.current === url) return;
+
+    lastAutoFetchedUrl.current = url;
+    setFetchingLogo(true);
+    const found = await fetchSiteLogo(url);
+    if (found) {
+      setImageUrl(found);
+      setImageSource("site");
+    }
+    setFetchingLogo(false);
+  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -45,6 +65,7 @@ export function AdSlotAdminPanel({ adSlots }: { adSlots: AdSlot[] }) {
           description,
           destination_url: destinationUrl,
           image_url: imageUrl || null,
+          backdrop_url: backdropUrl || null,
           duration_days: durationDays,
         }),
       });
@@ -57,7 +78,10 @@ export function AdSlotAdminPanel({ adSlots }: { adSlots: AdSlot[] }) {
       setName("");
       setDescription("");
       setDestinationUrl("");
-      setImageUrl("");
+      setImageUrl(null);
+      setImageSource(null);
+      setBackdropUrl(null);
+      lastAutoFetchedUrl.current = null;
       router.refresh();
     } finally {
       setCreating(false);
@@ -119,6 +143,7 @@ export function AdSlotAdminPanel({ adSlots }: { adSlots: AdSlot[] }) {
             type="url"
             value={destinationUrl}
             onChange={(e) => setDestinationUrl(e.target.value)}
+            onBlur={handleDestinationBlur}
             placeholder="https://…"
             required
           />
@@ -134,13 +159,32 @@ export function AdSlotAdminPanel({ adSlots }: { adSlots: AdSlot[] }) {
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="admin-ad-image">Logo URL (optional)</Label>
-          <Input
+          <Label htmlFor="admin-ad-image">Logo</Label>
+          <ImagePicker
             id="admin-ad-image"
-            type="url"
             value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://…"
+            name={name || "?"}
+            caption={imageSource === "site" ? "Fetched from the site" : "Uploaded"}
+            busy={fetchingLogo}
+            busyLabel="Looking for the favicon…"
+            emptyLabel="Upload a logo"
+            onChange={(url) => {
+              setImageUrl(url);
+              setImageSource(url ? "upload" : null);
+              if (!url) lastAutoFetchedUrl.current = null;
+            }}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="admin-ad-backdrop">Backdrop image (optional)</Label>
+          <ImagePicker
+            id="admin-ad-backdrop"
+            value={backdropUrl}
+            wide
+            caption="Shown faintly behind the ad"
+            emptyLabel="Upload a background image"
+            onChange={setBackdropUrl}
           />
         </div>
         <div className="flex flex-col gap-1.5">

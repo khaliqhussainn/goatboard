@@ -84,6 +84,7 @@ export type AdSlot = {
   description: string;
   destination_url: string;
   image_url: string | null;
+  backdrop_url: string | null;
   duration_days: AdSlotDuration;
   amount: number;
   lemon_squeezy_order_id: string | null;
@@ -99,6 +100,7 @@ export type CurrentAd = {
   description: string;
   destination_url: string;
   image_url: string | null;
+  backdrop_url: string | null;
   ends_at: string;
 };
 

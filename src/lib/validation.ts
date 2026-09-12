@@ -103,6 +103,12 @@ export const adSlotSchema = z.object({
     .refine((v) => v === "" || isSafeUrl(v), "Enter a valid image URL.")
     .optional()
     .nullable(),
+  backdrop_url: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || isSafeUrl(v), "Enter a valid image URL.")
+    .optional()
+    .nullable(),
   duration_days: z.union([z.literal(7), z.literal(14), z.literal(30)]),
 });
 
