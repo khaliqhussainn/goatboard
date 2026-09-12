@@ -37,7 +37,7 @@ export default async function MinePage() {
   return (
     <div className="on-backdrop mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <AbstractBackdrop />
-      <div className="mb-8 flex items-center justify-between gap-4">
+      <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-black tracking-tight sm:text-4xl">My Campaigns</h1>
           <p className="mt-2 text-sm text-muted-foreground">

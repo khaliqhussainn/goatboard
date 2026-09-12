@@ -72,17 +72,20 @@ export function Navbar() {
     <div className="sticky top-0 z-40 px-4 pt-[15px] sm:px-6">
       <nav
         ref={navRef}
-        className="relative mx-auto flex h-16 max-w-6xl items-center gap-2 rounded-2xl bg-white px-4 text-black shadow-[0_10px_30px_-14px_rgba(0,0,0,0.3)] sm:px-6"
+        className="relative mx-auto flex h-16 max-w-6xl items-center gap-2 rounded-2xl bg-white px-3 text-black shadow-[0_10px_30px_-14px_rgba(0,0,0,0.3)] sm:px-6"
       >
         <Link
           href="/"
           className={cn(
             "flex shrink-0 items-center gap-2 transition-opacity duration-200",
-            searchOpen && "pointer-events-none opacity-0",
+            // On a narrow phone the wordmark and an open search field can't
+            // both fit, so the logo leaves the layout entirely there; from sm
+            // up there's room, so it just fades in place.
+            searchOpen && "hidden sm:flex sm:pointer-events-none sm:opacity-0",
           )}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-gb.png" alt="GOATBOARD" className="h-14 w-auto" />
+          <img src="/logo-gb.png" alt="GOATBOARD" className="h-9 w-auto sm:h-14" />
         </Link>
 
         <div
@@ -106,10 +109,13 @@ export function Navbar() {
           {/* The slide-open field: a CSS grid track animated from 0fr to 1fr
               (clipped by the overflow-hidden wrapper) is what makes an
               intrinsically-sized child expand/collapse smoothly without
-              knowing its pixel width up front. */}
+              knowing its pixel width up front. min-w-0 is load-bearing — as a
+              flex item this would otherwise refuse to shrink below the
+              field's own width, so the collapsed track never reached zero and
+              pushed the whole navbar past the viewport on every phone. */}
           <div
             className={cn(
-              "grid transition-[grid-template-columns] duration-300 ease-out",
+              "grid min-w-0 transition-[grid-template-columns] duration-300 ease-out",
               searchOpen ? "grid-cols-[1fr]" : "grid-cols-[0fr]",
             )}
           >
@@ -118,14 +124,16 @@ export function Navbar() {
                 navigation="push"
                 size="minimal"
                 autoFocus={searchOpen}
-                className="w-56 sm:w-72"
+                className="w-52 sm:w-72"
               />
             </div>
           </div>
 
           {!searchOpen && (
-            <Link href="/create">
-              <Button size="sm">Create Campaign</Button>
+            <Link href="/create" className="shrink-0">
+              <Button size="sm">
+                Create<span className="hidden sm:inline"> Campaign</span>
+              </Button>
             </Link>
           )}
 

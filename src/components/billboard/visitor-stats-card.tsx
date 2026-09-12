@@ -106,12 +106,15 @@ export function VisitorStatsCard({ initial }: { initial: VisitorStats }) {
               Live Visitors
             </span>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-full bg-accent-green px-1.5 py-0.5 text-[10px] font-bold text-green-700">
+          {/* In the narrow two-up card on phones the word would squeeze the
+              label onto two lines, and "Live visitors" already says it — so
+              only the pulsing dot survives down there. */}
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent-green px-1.5 py-0.5 text-[10px] font-bold text-green-700">
             <span className="relative flex size-1.5">
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-500 opacity-75" />
               <span className="relative inline-flex size-1.5 rounded-full bg-green-600" />
             </span>
-            Live
+            <span className="hidden sm:inline">Live</span>
           </span>
         </div>
         <AnimatedNumber
@@ -121,7 +124,7 @@ export function VisitorStatsCard({ initial }: { initial: VisitorStats }) {
         <p className="text-[11px] text-muted-foreground">Browsing right now</p>
       </div>
 
-      <div className="billboard-surface flex flex-1 flex-col gap-1.5 rounded-2xl p-4">
+      <div className="billboard-surface col-span-2 flex flex-1 flex-col gap-1.5 rounded-2xl p-4 lg:col-span-1">
         <div className="flex items-center justify-between gap-2">
           <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
             Visitor activity

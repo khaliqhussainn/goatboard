@@ -43,11 +43,14 @@ export function Leaderboard({
           Everything else ranked #2+ flows in its own full-width grid below,
           not confined to the spotlight column. */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_1fr]">
-        <div className="flex flex-col gap-4">
+        {/* On a phone the counters would otherwise push the #1 spot below the
+            fold, so they drop below it and sit two-up; the sidebar only
+            becomes a single stacked column once it's beside the spotlight. */}
+        <div className="order-2 grid grid-cols-2 gap-3 sm:gap-4 lg:order-1 lg:flex lg:flex-col">
           <VisitorStatsCard initial={visitorStats} />
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="order-1 flex flex-col gap-4 lg:order-2">
           {first ? (
             <CampaignSlot
               key={first.id}

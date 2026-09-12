@@ -25,14 +25,17 @@ const SPARKLES = [
  * mobile, where the banner stacks, it drops back into normal flow instead of
  * overlapping the stacked content.
  */
-function AdSlotMascot({ src }: { src: string }) {
+function AdSlotMascot({ src, className }: { src: string; className?: string }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
       alt=""
       aria-hidden
-      className="pointer-events-none mx-auto mb-5 block h-24 w-auto drop-shadow-[0_14px_22px_rgba(88,28,135,0.28)] sm:absolute sm:bottom-0 sm:left-10 sm:mx-0 sm:mb-0 sm:h-40 sm:transition-transform sm:duration-300 sm:group-hover:-translate-y-1.5"
+      className={cn(
+        "pointer-events-none w-auto drop-shadow-[0_14px_22px_rgba(88,28,135,0.28)] sm:absolute sm:bottom-0 sm:left-10 sm:right-auto sm:mx-0 sm:mb-0 sm:h-40 sm:transition-transform sm:duration-300 sm:group-hover:-translate-y-1.5",
+        className,
+      )}
     />
   );
 }
@@ -60,7 +63,7 @@ export function AdSlotDisplay({
 
       {ad ? (
         <div className="relative rounded-[4rem] border-2 border-purple-200 bg-purple-50 px-6 py-8 sm:px-10">
-          {mascot && <AdSlotMascot src={mascot} />}
+          {mascot && <AdSlotMascot src={mascot} className="mx-auto mb-5 block h-24" />}
           <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:pl-44 sm:text-left">
             <CampaignAvatar
               src={ad.image_url}
@@ -85,7 +88,7 @@ export function AdSlotDisplay({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="group relative w-full rounded-[4rem] border-2 border-dashed border-purple-300 bg-purple-50 px-8 py-8 text-left transition-colors hover:border-purple-400 hover:bg-purple-100/60 sm:px-10"
+          className="group relative w-full rounded-[4rem] border-2 border-dashed border-purple-300 bg-purple-50 px-5 py-6 text-left transition-colors hover:border-purple-400 hover:bg-purple-100/60 sm:px-10 sm:py-8"
         >
           {SPARKLES.map((cls, i) => (
             <Sparkle
@@ -95,14 +98,17 @@ export function AdSlotDisplay({
             />
           ))}
 
-          {mascot && <AdSlotMascot src={mascot} />}
+          {/* On a phone the goat tucks into the bottom-right instead of
+              stacking above the copy, which keeps this banner about a third
+              of the height it would be otherwise. */}
+          {mascot && <AdSlotMascot src={mascot} className="absolute bottom-0 right-1 h-24 sm:right-auto" />}
 
-          <div className="relative flex flex-col items-center gap-6 sm:flex-row sm:justify-between sm:pl-44">
-            <p className="font-handwritten text-2xl leading-tight text-purple-700 sm:text-3xl">
+          <div className="relative flex flex-col items-start gap-3 pr-20 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:pl-44 sm:pr-0">
+            <p className="font-handwritten text-xl leading-tight text-purple-700 sm:text-3xl">
               Your product could be here
             </p>
 
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-purple-100 px-5 py-2.5 text-sm font-bold text-purple-700 transition-colors group-hover:bg-purple-200">
+            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-purple-100 px-4 py-2 text-sm font-bold text-purple-700 transition-colors group-hover:bg-purple-200 sm:px-5 sm:py-2.5">
               Get noticed →
             </span>
           </div>
