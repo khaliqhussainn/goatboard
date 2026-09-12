@@ -15,6 +15,18 @@ export const MASCOT_IMAGES: string[] = [
   "/mascots/goat-4.webp",
   "/mascots/goat-5.webp",
   "/mascots/goat-6.webp",
+  "/mascots/goat-7.webp",
+  "/mascots/goat-8.webp",
+  "/mascots/goat-9.webp",
+  "/mascots/goat-10.webp",
+  "/mascots/goat-11.webp",
+  "/mascots/goat-12.webp",
+  "/mascots/goat-13.webp",
+  "/mascots/goat-14.webp",
+  "/mascots/goat-15.webp",
+  "/mascots/goat-16.webp",
+  "/mascots/goat-17.webp",
+  "/mascots/goat-18.webp",
 ];
 
 /** Deterministic pick so the same campaign always gets the same mascot pose. */

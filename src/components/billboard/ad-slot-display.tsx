@@ -13,7 +13,7 @@ const SPARKLES = [
   "absolute left-24 bottom-5 size-2.5 sm:left-36",
   "absolute right-[38%] top-5 size-2",
   "absolute right-[30%] bottom-6 size-3",
-  "absolute right-10 top-1/2 size-3 -translate-y-1/2 sm:right-16",
+  "absolute left-[46%] top-1/2 size-3 -translate-y-1/2",
 ];
 
 /**
@@ -33,7 +33,7 @@ function AdSlotMascot({ src, className }: { src: string; className?: string }) {
       alt=""
       aria-hidden
       className={cn(
-        "pointer-events-none w-auto drop-shadow-[0_14px_22px_rgba(88,28,135,0.28)] sm:absolute sm:bottom-0 sm:left-10 sm:right-auto sm:mx-0 sm:mb-0 sm:h-40 sm:transition-transform sm:duration-300 sm:group-hover:-translate-y-1.5",
+        "pointer-events-none w-auto drop-shadow-[0_14px_22px_rgba(88,28,135,0.28)] sm:absolute sm:left-auto sm:right-8 sm:top-1/2 sm:mx-0 sm:-mt-20 sm:mb-0 sm:h-40 sm:transition-transform sm:duration-300 sm:group-hover:-translate-y-1.5",
         className,
       )}
     />
@@ -53,10 +53,8 @@ export function AdSlotDisplay({
   const [open, setOpen] = React.useState(false);
 
   return (
-    <div className="relative">
-      {/* From sm up the goat owns the top-left corner (it breaks out over the
-          banner's edge there), so the badge moves across to keep clear of it. */}
-      <span className="absolute -top-3 left-7 z-10 inline-flex items-center gap-1 rounded-full bg-purple-600 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm sm:left-auto sm:right-9">
+    <div className="relative mb-3 sm:mb-4">
+      <span className="absolute -top-3 left-7 z-10 inline-flex items-center gap-1 rounded-full bg-purple-600 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
         🐐 {ad ? "Sponsored" : "Ad space · 7 days"}
       </span>
       <Sparkle className="absolute -top-4 left-0 z-10 size-5 fill-purple-300 text-purple-300 sm:-left-1" />
@@ -64,7 +62,7 @@ export function AdSlotDisplay({
       {ad ? (
         <div className="relative rounded-[4rem] border-2 border-purple-200 bg-purple-50 px-6 py-8 sm:px-10">
           {mascot && <AdSlotMascot src={mascot} className="mx-auto mb-5 block h-24" />}
-          <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:pl-44 sm:text-left">
+          <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:pr-44 sm:text-left">
             <CampaignAvatar
               src={ad.image_url}
               name={ad.name}
@@ -101,9 +99,9 @@ export function AdSlotDisplay({
           {/* On a phone the goat tucks into the bottom-right instead of
               stacking above the copy, which keeps this banner about a third
               of the height it would be otherwise. */}
-          {mascot && <AdSlotMascot src={mascot} className="absolute bottom-0 right-1 h-24 sm:right-auto" />}
+          {mascot && <AdSlotMascot src={mascot} className="absolute right-1 top-1/2 -mt-16 h-32" />}
 
-          <div className="relative flex flex-col items-start gap-3 pr-20 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:pl-44 sm:pr-0">
+          <div className="relative flex flex-col items-start gap-3 pr-20 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:pr-44">
             <p className="font-handwritten text-xl leading-tight text-purple-700 sm:text-3xl">
               Your product could be here
             </p>
