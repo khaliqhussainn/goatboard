@@ -10,6 +10,7 @@ import {
   Check,
   ArrowRight,
   Sparkles,
+  Wrench,
 } from "lucide-react";
 import { AbstractBackdrop } from "@/components/layout/abstract-backdrop";
 import { Button } from "@/components/ui/button";
@@ -81,7 +82,15 @@ export default function DistributionPage() {
       {/* Hero */}
       <section className="grid grid-cols-1 items-center gap-6 lg:grid-cols-[1fr_1.05fr] lg:gap-8">
         <div className="flex flex-col items-start gap-5">
-          <Badge variant="purple">Distribution service</Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="purple">Distribution service</Badge>
+            {/* Carried through from the promo card - someone who clicks in
+                shouldn't lose the "this isn't finished yet" signal. */}
+            <span className="inline-flex items-center gap-1 rounded-md bg-foreground px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-background">
+              <Wrench className="size-3" />
+              Beta
+            </span>
+          </div>
 
           <h1 className="text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
             Get your startup{" "}
@@ -108,6 +117,14 @@ export default function DistributionPage() {
           <p className="max-w-md text-base text-muted-foreground sm:text-lg">
             We manually submit your startup to relevant directories and discovery platforms, so you
             can spend less time hunting for listings and more time building.
+          </p>
+
+          <p className="flex max-w-md items-start gap-2 rounded-xl bg-accent-yellow/60 px-3 py-2 text-sm font-semibold text-yellow-900">
+            <Wrench className="mt-0.5 size-4 shrink-0" />
+            <span>
+              This service is still in the works. Get in touch to join the first round - we&apos;ll
+              confirm scope and timing with you before anything is charged.
+            </span>
           </p>
 
           <div className="flex flex-wrap items-center gap-3">

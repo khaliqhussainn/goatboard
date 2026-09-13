@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Sparkle } from "lucide-react";
+import { ArrowRight, Sparkle, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** Scattered marker specks, the same trick the ad slot uses so a flat panel
@@ -46,9 +46,17 @@ export function DistributionPromo({
       ))}
 
       <div className="relative flex min-w-0 flex-col items-start gap-3">
-        <span className="inline-flex w-fit items-center rounded-md bg-accent-yellow px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-yellow-900">
-          Startup distribution
-        </span>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="inline-flex w-fit items-center rounded-md bg-accent-yellow px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-yellow-900">
+            Startup distribution
+          </span>
+          {/* Solid and dark against the yellow card rather than another pastel
+              pill, so "this isn't finished" is the thing you notice first. */}
+          <span className="inline-flex w-fit items-center gap-1 rounded-md bg-foreground px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-background">
+            <Wrench className="size-2.5" />
+            Beta
+          </span>
+        </div>
 
         <h2 className="font-handwritten text-2xl uppercase leading-[1.05] tracking-tight text-foreground sm:text-3xl xl:text-2xl">
           Get your startup out there. <span aria-hidden>🐐</span>
@@ -57,6 +65,12 @@ export function DistributionPromo({
         <p className="max-w-md text-sm leading-snug text-muted-foreground">
           We manually submit your startup to relevant directories and discovery platforms so you can
           spend less time filling forms and more time building.
+        </p>
+
+        {/* Says what beta actually means here, so the badge informs instead of
+            just decorating. */}
+        <p className="max-w-md text-xs font-semibold leading-snug text-yellow-900">
+          Still in the works - we&apos;re taking early sign-ups while we build it out.
         </p>
 
         <span className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-sm font-bold text-background transition-opacity group-hover:opacity-85">

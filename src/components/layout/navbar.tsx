@@ -8,12 +8,22 @@ import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/campaign/search-bar";
 import { cn } from "@/lib/utils";
 
-const NAV_LINKS = [
+const NAV_LINKS: { href: string; label: string; badge?: string }[] = [
   { href: "/explore", label: "Explore" },
-  { href: "/distribution", label: "Get Listed" },
+  { href: "/distribution", label: "Get Listed", badge: "Beta" },
   { href: "/mine", label: "My Campaigns" },
   { href: "/how-it-works", label: "How it works" },
 ];
+
+/** Marks a nav entry as not-finished-yet. Deliberately quiet here - the
+ *  loud version of this lives on the promo card itself. */
+function BetaTag({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="rounded-md bg-accent-yellow px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none tracking-wide text-yellow-900">
+      {children}
+    </span>
+  );
+}
 
 export function Navbar() {
   const pathname = usePathname();
@@ -103,9 +113,10 @@ export function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-black transition-colors hover:text-hero-pink"
+              className="flex items-center gap-1.5 text-black transition-colors hover:text-hero-pink"
             >
               {link.label}
+              {link.badge && <BetaTag>{link.badge}</BetaTag>}
             </Link>
           ))}
         </div>
@@ -192,9 +203,10 @@ export function Navbar() {
             key={link.href}
             href={link.href}
             tabIndex={open ? undefined : -1}
-            className="block rounded-xl px-4 py-3 text-sm font-medium transition-colors hover:bg-muted hover:text-hero-pink"
+            className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-colors hover:bg-muted hover:text-hero-pink"
           >
             {link.label}
+            {link.badge && <BetaTag>{link.badge}</BetaTag>}
           </Link>
         ))}
       </div>
