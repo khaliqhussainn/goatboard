@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { href: "/explore", label: "Explore" },
+  { href: "/distribution", label: "Get Listed" },
   { href: "/mine", label: "My Campaigns" },
   { href: "/how-it-works", label: "How it works" },
 ];
@@ -90,7 +91,11 @@ export function Navbar() {
 
         <div
           className={cn(
-            "absolute left-1/2 hidden -translate-x-1/2 items-center gap-6 text-sm font-medium transition-opacity duration-200 sm:flex",
+            // Inline from lg, not sm: the links are absolutely centred, so a
+            // fourth one grew the block until it ran under the logo. Four
+            // links plus the wordmark simply don't fit a tablet, and tablets
+            // get the same menu button phones already use.
+            "absolute left-1/2 hidden -translate-x-1/2 items-center gap-6 text-sm font-medium transition-opacity duration-200 lg:flex",
             searchOpen && "pointer-events-none opacity-0",
           )}
         >
@@ -154,7 +159,7 @@ export function Navbar() {
               aria-label={open ? "Close menu" : "Open menu"}
               aria-expanded={open}
               aria-controls="mobile-nav-menu"
-              className="flex size-9 shrink-0 items-center justify-center rounded-lg text-black transition-colors hover:text-hero-pink sm:hidden"
+              className="flex size-9 shrink-0 items-center justify-center rounded-lg text-black transition-colors hover:text-hero-pink lg:hidden"
             >
               {open ? <X className="size-5" /> : <Menu className="size-5" />}
             </button>
@@ -168,7 +173,7 @@ export function Navbar() {
           aria-hidden
           tabIndex={-1}
           onClick={() => setOpen(false)}
-          className="fixed inset-0 z-30 cursor-default sm:hidden"
+          className="fixed inset-0 z-30 cursor-default lg:hidden"
         />
       )}
 
@@ -176,7 +181,7 @@ export function Navbar() {
         id="mobile-nav-menu"
         aria-hidden={!open}
         className={cn(
-          "absolute inset-x-4 top-full z-40 mt-2 origin-top rounded-2xl bg-white p-2 text-black shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)] transition-all duration-150 sm:hidden",
+          "absolute inset-x-4 top-full z-40 mt-2 origin-top rounded-2xl bg-white p-2 text-black shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)] transition-all duration-150 lg:hidden",
           open
             ? "pointer-events-auto scale-100 opacity-100"
             : "pointer-events-none scale-95 opacity-0",

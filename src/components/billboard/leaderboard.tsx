@@ -6,6 +6,7 @@ import { useRealtimeLeaderboard } from "@/hooks/use-realtime-leaderboard";
 import { CampaignSlot } from "@/components/billboard/campaign-slot";
 import { AdSlotDisplay } from "@/components/billboard/ad-slot-display";
 import { VisitorStatsCard } from "@/components/billboard/visitor-stats-card";
+import { DistributionPromo } from "@/components/distribution/distribution-promo";
 import { EmptyBoard } from "@/components/billboard/empty-board";
 import type { Campaign, CurrentAd, VisitorStats } from "@/lib/types";
 
@@ -65,6 +66,8 @@ export function Leaderboard({
           <AdSlotDisplay ad={adSlot} mascot={adSlotMascot} />
         </div>
       </div>
+
+      <DistributionPromo />
 
       {rest.length > 0 && (
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
