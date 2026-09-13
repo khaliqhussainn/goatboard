@@ -161,13 +161,35 @@ interface CreateAdSlotCheckoutParams {
   redirectUrl: string;
 }
 
+/** Per-duration overrides, for when the variants aren't named after them. */
+const AD_VARIANT_ENV_VARS = {
+  7: "LEMONSQUEEZY_AD_VARIANT_7",
+  14: "LEMONSQUEEZY_AD_VARIANT_14",
+  30: "LEMONSQUEEZY_AD_VARIANT_30",
+} as const;
+
+/**
+ * Finds the variant to sell a given duration as.
+ *
+ * An explicit id in the environment wins, because a single-variant Lemon
+ * Squeezy product calls its variant "Default" - there is nothing to match on
+ * by name, and every such product would collide anyway. Falling back to the
+ * name keeps a store whose variants are named after the duration working
+ * with no environment setup at all.
+ */
+async function resolveAdVariantId(durationDays: AdSlotDuration): Promise<string> {
+  const fromEnv = process.env[AD_VARIANT_ENV_VARS[durationDays]]?.trim();
+  if (fromEnv) return fromEnv;
+
+  return resolveVariantIdByName(AD_SLOT_VARIANT_NAMES[durationDays]);
+}
+
 /**
  * Creates a Lemon Squeezy checkout for renting the homepage ad slot, with
  * the ad_slots row id + duration baked into custom_data so the webhook can
  * trust nothing from the client and still know which row to activate and
- * for how long. Each duration is its own fixed-price variant ("7 days",
- * "14 days", "30 days"), so no price is passed — the variant's own price is
- * what gets charged.
+ * for how long. Each duration is its own fixed-price variant, so no price is
+ * passed - the variant's own price is what gets charged.
  */
 export async function createAdSlotCheckout({
   adSlotId,
@@ -175,7 +197,7 @@ export async function createAdSlotCheckout({
   durationDays,
   redirectUrl,
 }: CreateAdSlotCheckoutParams): Promise<string> {
-  const variantId = await resolveVariantIdByName(AD_SLOT_VARIANT_NAMES[durationDays]);
+  const variantId = await resolveAdVariantId(durationDays);
 
   return createCheckoutSession({
     variantId,
