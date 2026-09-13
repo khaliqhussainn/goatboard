@@ -36,6 +36,22 @@ export function formatSlotRange(startIso: string, endIso: string): string {
   return `${formatSlotDate(startIso)} - ${formatSlotDate(endIso)}${suffix}`;
 }
 
+/**
+ * Earnings as they appear in the square stat tile, which is only ~130px wide:
+ * exact while the figure is small enough to fit, compact once it isn't. Without
+ * this the number silently overflows its tile somewhere past a thousand.
+ */
+export function formatEarnings(amount: number): string {
+  if (amount < 10_000) return formatMoney(amount);
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(amount);
+}
+
 export function ordinal(n: number): string {
   const rem100 = n % 100;
   if (rem100 >= 11 && rem100 <= 13) return `${n}th`;

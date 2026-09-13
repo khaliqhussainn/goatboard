@@ -45,6 +45,8 @@ export type VisitorActivityPoint = {
 export type VisitorStats = {
   totalVisits: number;
   liveVisitors: number;
+  /** Gross USD taken across boosts and ad slots. */
+  totalEarnings: number;
   activity: VisitorActivityPoint[];
 };
 

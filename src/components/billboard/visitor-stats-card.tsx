@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Eye, Users, ArrowUp, ArrowDown, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Eye, Users, DollarSign, ArrowUp, ArrowDown, ChevronDown } from "lucide-react";
+import { cn, formatEarnings } from "@/lib/utils";
 import { AnimatedNumber } from "@/components/billboard/animated-number";
 import { VisitorActivityChart } from "@/components/billboard/visitor-activity-chart";
 import type { VisitorStats } from "@/lib/types";
@@ -22,9 +22,10 @@ function useActivityDelta(activity: VisitorStats["activity"]) {
   }, [activity]);
 }
 
-/** Three stacked stat cards (total visits, live count, 24h activity) meant to
- * sit in a sidebar next to the #1 spotlight — each its own billboard-surface
- * card, not one combined card, so they read as a column of equal-width tiles. */
+/** Stat tiles for the sidebar beside the #1 spotlight: a full-width visitor
+ * count, then live-visitors and earnings paired as two squares, then the 24h
+ * sparkline. Each is its own billboard-surface card rather than one combined
+ * panel, so they read as a stack of tiles at every width. */
 export function VisitorStatsCard({ initial }: { initial: VisitorStats }) {
   const [stats, setStats] = React.useState(initial);
   const delta = useActivityDelta(stats.activity);
@@ -67,7 +68,7 @@ export function VisitorStatsCard({ initial }: { initial: VisitorStats }) {
 
   return (
     <>
-      <div className="billboard-surface flex flex-col gap-1.5 rounded-2xl p-4">
+      <div className="billboard-surface col-span-2 flex flex-col gap-1.5 rounded-2xl p-4 lg:col-span-1">
         <div className="flex items-center gap-2">
           <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-accent-blue text-blue-600">
             <Eye className="size-3.5" />
@@ -96,32 +97,48 @@ export function VisitorStatsCard({ initial }: { initial: VisitorStats }) {
         <p className="text-[11px] text-muted-foreground">vs previous 12h</p>
       </div>
 
-      <div className="billboard-surface flex flex-col gap-1.5 rounded-2xl p-4">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-accent-green text-green-600">
-              <Users className="size-3.5" />
-            </span>
-            <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
-              Live Visitors
-            </span>
-          </div>
-          {/* In the narrow two-up card on phones the word would squeeze the
-              label onto two lines, and "Live visitors" already says it — so
-              only the pulsing dot survives down there. */}
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent-green px-1.5 py-0.5 text-[10px] font-bold text-green-700">
-            <span className="relative flex size-1.5">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-500 opacity-75" />
-              <span className="relative inline-flex size-1.5 rounded-full bg-green-600" />
-            </span>
-            <span className="hidden sm:inline">Live</span>
+      {/* Paired squares. The wrapper spans the parent's two phone columns and
+          re-splits them itself, so the pairing survives the sidebar switching
+          from a two-column grid to a single stacked column at lg. */}
+      <div className="col-span-2 grid grid-cols-2 gap-3 sm:gap-4 lg:col-span-1">
+        <div className="billboard-surface flex aspect-square flex-col justify-between rounded-2xl p-3.5">
+        <div className="flex items-center justify-between gap-1.5">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-accent-green text-green-600">
+            <Users className="size-3.5" />
+          </span>
+          {/* The square leaves no room for the word beside the count, and the
+              label already says "live" — so only the pulsing dot rides here. */}
+          <span className="relative flex size-1.5 shrink-0">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-500 opacity-75" />
+            <span className="relative inline-flex size-1.5 rounded-full bg-green-600" />
           </span>
         </div>
-        <AnimatedNumber
-          value={stats.liveVisitors}
-          className="text-2xl font-black tracking-tight tabular-nums"
-        />
-        <p className="text-[11px] text-muted-foreground">Browsing right now</p>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[10px] font-bold uppercase leading-tight tracking-[0.08em] text-muted-foreground">
+            Live Users
+          </span>
+          <AnimatedNumber
+            value={stats.liveVisitors}
+            className="text-2xl font-black leading-none tracking-tight tabular-nums"
+          />
+        </div>
+        </div>
+
+        <div className="billboard-surface flex aspect-square flex-col justify-between rounded-2xl p-3.5">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-accent-purple text-purple-600">
+            <DollarSign className="size-3.5" />
+          </span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] font-bold uppercase leading-tight tracking-[0.08em] text-muted-foreground">
+              Total Earnings
+            </span>
+            {/* No delta or comparison window here: this is a running total, not
+                a trend, and a percentage next to it would invite reading it as one. */}
+            <span className="text-xl font-black leading-none tracking-tight tabular-nums">
+              {formatEarnings(stats.totalEarnings)}
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="billboard-surface col-span-2 flex flex-1 flex-col gap-1.5 rounded-2xl p-4 lg:col-span-1">
