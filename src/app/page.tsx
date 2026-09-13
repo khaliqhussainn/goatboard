@@ -5,7 +5,7 @@ import { Leaderboard } from "@/components/billboard/leaderboard";
 import { AdPurchaseConfirmation } from "@/components/billboard/ad-purchase-confirmation";
 import { getVisitorStats } from "@/lib/queries/visitors";
 import { getCurrentAd } from "@/lib/queries/ad-slots";
-import { pickHourlyMascot } from "@/lib/mascots";
+import { MASCOT_IMAGES, pickHourlyMascot } from "@/lib/mascots";
 import type { Campaign } from "@/lib/types";
 
 export const revalidate = 0;
@@ -29,10 +29,19 @@ export default async function Home() {
     getCurrentAd(),
   ]);
 
+  // The promo stands next to the ad slot, so it takes a different pose -
+  // otherwise the two goats twin whenever the hourly pick lands on the same
+  // one. Offset rather than random so it stays stable across renders.
+  const adSlotMascot = pickHourlyMascot();
+  const promoMascot =
+    adSlotMascot && MASCOT_IMAGES.length > 1
+      ? MASCOT_IMAGES[(MASCOT_IMAGES.indexOf(adSlotMascot) + 7) % MASCOT_IMAGES.length]
+      : adSlotMascot;
+
   return (
     <>
       <AbstractBackdrop />
-      <div className="on-backdrop mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+      <div className="on-backdrop mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
         <Suspense fallback={null}>
           <AdPurchaseConfirmation />
         </Suspense>
@@ -40,7 +49,8 @@ export default async function Home() {
         <Leaderboard
           initialCampaigns={campaigns}
           adSlot={adSlot}
-          adSlotMascot={pickHourlyMascot()}
+          adSlotMascot={adSlotMascot}
+          promoMascot={promoMascot}
           visitorStats={visitorStats}
         />
       </div>

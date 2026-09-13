@@ -14,11 +14,13 @@ export function Leaderboard({
   initialCampaigns,
   adSlot,
   adSlotMascot,
+  promoMascot,
   visitorStats,
 }: {
   initialCampaigns: Campaign[];
   adSlot: CurrentAd | null;
   adSlotMascot: string | null;
+  promoMascot: string | null;
   visitorStats: VisitorStats;
 }) {
   const { campaigns, applyOptimisticVote } = useRealtimeLeaderboard(initialCampaigns);
@@ -40,10 +42,13 @@ export function Leaderboard({
 
   return (
     <LayoutGroup>
-      {/* Hero row: a visitor-stats sidebar beside the #1 spotlight + ad slot.
-          Everything else ranked #2+ flows in its own full-width grid below,
-          not confined to the spotlight column. */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_1fr]">
+      {/* Hero row: visitor stats beside the #1 spotlight + ad slot, with the
+          distribution promo joining as a third column once there's room for
+          it at xl. Below that it spans the row underneath instead - a third
+          column any narrower steals enough width from the spotlight to wrap
+          its Vote/Boost/Share row onto two lines. Everything ranked #2+ flows
+          in its own full-width grid below. */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_1fr] xl:grid-cols-[280px_1fr_204px]">
         {/* On a phone the counters would otherwise push the #1 spot below the
             fold, so they drop below it and sit two-up; the sidebar only
             becomes a single stacked column once it's beside the spotlight. */}
@@ -65,9 +70,15 @@ export function Leaderboard({
           )}
           <AdSlotDisplay ad={adSlot} mascot={adSlotMascot} />
         </div>
-      </div>
 
-      <DistributionPromo />
+        {/* Third in the reading order everywhere: on a phone it follows the
+            spotlight and the counters rather than pushing them down, and it
+            keeps that position once the row goes three-up. */}
+        <DistributionPromo
+          mascot={promoMascot}
+          className="order-3 self-start lg:col-span-2 xl:col-span-1"
+        />
+      </div>
 
       {rest.length > 0 && (
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
