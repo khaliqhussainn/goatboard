@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyWebhookSignature } from "@/lib/lemonsqueezy";
 import { bookAdSlot } from "@/lib/ad-slots";
 import { AD_SLOT_PRICING } from "@/lib/validation";
-import { getListedPackage, isGetListedPackageKey } from "@/lib/get-listed";
+import { allowedGetListedAmounts, isGetListedPackageKey } from "@/lib/get-listed";
 import type { AdSlotDuration } from "@/lib/types";
 
 interface LemonSqueezyWebhookBody {
@@ -134,12 +134,20 @@ async function handleGetListedOrder(
     return false;
   }
 
-  const expectedAmount = getListedPackage(order.package_key).priceUsd;
+  // An order created during the sale can be paid for after it ends, so the
+  // check is "is this one of the prices this package is sold at" rather than
+  // "is this today's price" - the latter would reject exactly the orders that
+  // were charged correctly.
+  const stored = Number(order.amount);
+  if (!allowedGetListedAmounts(order.package_key).includes(stored)) {
+    console.error("get listed webhook: amount not a valid price", order.package_key, stored);
+    return false;
+  }
 
   const { data, error: rpcError } = await admin.rpc("activate_get_listed_order", {
     p_order_id: order.id,
     p_provider_order_id: providerOrderId,
-    p_expected_amount: expectedAmount,
+    p_expected_amount: stored,
     p_provider_customer_id: customerId,
   });
 

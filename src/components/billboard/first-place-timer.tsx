@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useNow } from "@/hooks/use-now";
 
 /** The streak the badge is awarded for. Mirrors the 24 hours in
  *  sync_first_place(); the database remains the authority on the award. */
@@ -12,35 +12,6 @@ function format(ms: number): string {
   const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
   return h > 0 ? `${h}h ${m}m ${s}s` : `${m}m ${s}s`;
-}
-
-/**
- * A once-per-second clock shared by every subscriber.
- *
- * useSyncExternalStore rather than setState-in-an-effect: the snapshot has to
- * be a stable value between ticks (returning Date.now() straight from the
- * getter would re-render forever), and the server snapshot is null so nothing
- * renders until the browser takes over.
- */
-let tick = Date.now();
-const listeners = new Set<() => void>();
-let interval: ReturnType<typeof setInterval> | null = null;
-
-function subscribe(onChange: () => void) {
-  listeners.add(onChange);
-  if (interval === null) {
-    interval = setInterval(() => {
-      tick = Date.now();
-      for (const listener of listeners) listener();
-    }, 1000);
-  }
-  return () => {
-    listeners.delete(onChange);
-    if (listeners.size === 0 && interval !== null) {
-      clearInterval(interval);
-      interval = null;
-    }
-  };
 }
 
 /**
@@ -61,11 +32,7 @@ export function FirstPlaceTimer({
   /** True once the 24-hour badge has been awarded. */
   awarded: boolean;
 }) {
-  const now = React.useSyncExternalStore(
-    subscribe,
-    () => tick,
-    () => null,
-  );
+  const now = useNow();
 
   if (!since || now === null) return null;
 

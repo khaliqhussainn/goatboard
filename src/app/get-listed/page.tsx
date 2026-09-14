@@ -15,7 +15,11 @@ import {
   GET_LISTED_PACKAGE_LIST,
   GET_LISTED_STEPS,
   GET_LISTED_DISCLOSURES,
+  GET_LISTED_PROMO,
+  isPromoActive,
+  promoPrice,
 } from "@/lib/get-listed";
+import { PromoCountdown } from "@/components/get-listed/promo-countdown";
 import { pickHourlyMascot } from "@/lib/mascots";
 import { formatMoney, cn } from "@/lib/utils";
 
@@ -54,6 +58,8 @@ function SectionTag({ children }: { children: React.ReactNode }) {
 export default function GetListedPage() {
   const mascot = pickHourlyMascot();
   const popularKey = "big_goat";
+  // Read once per render so every price on the page agrees with itself.
+  const promo = isPromoActive();
 
   return (
     <div className="on-backdrop">
@@ -85,6 +91,8 @@ export default function GetListedPage() {
               </Button>
             </a>
           </div>
+
+          {promo && <PromoCountdown />}
 
           <dl className="flex flex-wrap gap-x-8 gap-y-3 pt-1">
             {HERO_STATS.map((stat) => (
@@ -186,6 +194,12 @@ export default function GetListedPage() {
             Choose the package that fits your goals. All plans include manual submissions, relevant
             directories and a final report.
           </p>
+          {promo && (
+            <p className="text-sm font-semibold text-yellow-900">
+              {GET_LISTED_PROMO.percentOff}% off every package this week - the discount is applied
+              at checkout.
+            </p>
+          )}
         </div>
 
         <div className="mt-8 grid grid-cols-1 items-start gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -220,8 +234,20 @@ export default function GetListedPage() {
                   </div>
                 </div>
 
-                <div className="text-4xl font-black tracking-tight tabular-nums">
-                  {formatMoney(pkg.priceUsd)}
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                  <span className="text-4xl font-black tracking-tight tabular-nums">
+                    {formatMoney(promoPrice(pkg))}
+                  </span>
+                  {promo && (
+                    <>
+                      <span className="text-lg font-bold tabular-nums text-muted-foreground line-through">
+                        {formatMoney(pkg.priceUsd)}
+                      </span>
+                      <span className="rounded-full bg-accent-yellow px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-yellow-900">
+                        {GET_LISTED_PROMO.percentOff}% off
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 <ul className="flex flex-1 flex-col gap-2">

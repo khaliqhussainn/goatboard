@@ -10,8 +10,11 @@ import { Button } from "@/components/ui/button";
 import { CATEGORIES } from "@/lib/categories";
 import {
   GET_LISTED_PACKAGE_LIST,
+  GET_LISTED_PROMO,
   isGetListedPackageKey,
   getListedPackage,
+  isPromoActive,
+  promoPrice,
   type GetListedPackageKey,
 } from "@/lib/get-listed";
 import { getListedCampaignSchema } from "@/lib/validation";
@@ -44,6 +47,9 @@ export function StartCampaignForm({ initialPackage }: { initialPackage?: string 
   const [submitting, setSubmitting] = React.useState(false);
 
   const pkg = getListedPackage(packageKey);
+  // Display only. The server prices the order again at checkout, so a stale
+  // tab can't buy at last week's price - or be charged this week's by mistake.
+  const promo = isPromoActive();
 
   function buildPayload() {
     return {
@@ -127,7 +133,14 @@ export function StartCampaignForm({ initialPackage }: { initialPackage?: string 
 
           <dl className="flex flex-col gap-2 text-sm">
             <Row label="Package" value={`${pkg.name} - ${pkg.summary}`} />
-            <Row label="Price" value={`${formatMoney(pkg.priceUsd)} one-time`} />
+            <Row
+              label="Price"
+              value={
+                promo
+                  ? `${formatMoney(promoPrice(pkg))} one-time (was ${formatMoney(pkg.priceUsd)})`
+                  : `${formatMoney(pkg.priceUsd)} one-time`
+              }
+            />
             <Row label="Startup" value={startupName} />
             <Row label="Website" value={websiteUrl} />
             <Row label="Category" value={category} />
@@ -175,7 +188,7 @@ export function StartCampaignForm({ initialPackage }: { initialPackage?: string 
             disabled={submitting || !acceptTerms}
             onClick={handleCheckout}
           >
-            {submitting ? "Starting checkout…" : `Pay ${formatMoney(pkg.priceUsd)}`}
+            {submitting ? "Starting checkout…" : `Pay ${formatMoney(promoPrice(pkg))}`}
           </Button>
           <Button size="lg" variant="outline" disabled={submitting} onClick={() => setStep("details")}>
             Back
@@ -189,6 +202,11 @@ export function StartCampaignForm({ initialPackage }: { initialPackage?: string 
     <form onSubmit={goToReview} className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
         <Label>Package</Label>
+        {promo && (
+          <p className="text-xs font-semibold text-yellow-900">
+            {GET_LISTED_PROMO.percentOff}% off applied automatically at checkout.
+          </p>
+        )}
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           {GET_LISTED_PACKAGE_LIST.map((option) => (
             <button
@@ -204,7 +222,14 @@ export function StartCampaignForm({ initialPackage }: { initialPackage?: string 
             >
               <span className="text-sm font-bold">{option.name}</span>
               <span className="text-xs opacity-70">{option.summary}</span>
-              <span className="text-sm font-black">{formatMoney(option.priceUsd)}</span>
+              <span className="flex items-baseline gap-1.5">
+                <span className="text-sm font-black">{formatMoney(promoPrice(option))}</span>
+                {promo && (
+                  <span className="text-xs tabular-nums line-through opacity-60">
+                    {formatMoney(option.priceUsd)}
+                  </span>
+                )}
+              </span>
             </button>
           ))}
         </div>

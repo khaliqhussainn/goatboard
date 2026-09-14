@@ -235,6 +235,10 @@ interface CreateGetListedCheckoutParams {
   packageKey: GetListedPackageKey;
   startupName: string;
   redirectUrl: string;
+  /** Overrides the variant's own price, for the launch-week discount.
+   *  Verified against a real checkout: Lemon Squeezy honours this on a
+   *  fixed-price variant, and the page charges the overridden figure. */
+  customPriceCents?: number;
 }
 
 /**
@@ -251,12 +255,14 @@ export async function createGetListedCheckout({
   packageKey,
   startupName,
   redirectUrl,
+  customPriceCents,
 }: CreateGetListedCheckoutParams): Promise<{ url: string; variantId: string }> {
   const pkg = getListedPackage(packageKey);
   const variantId = resolveGetListedVariantId(packageKey);
 
   const url = await createCheckoutSession({
     variantId,
+    customPriceCents,
     customData: {
       get_listed_order_id: orderId,
       campaign_id: campaignId,

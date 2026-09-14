@@ -88,6 +88,48 @@ export function getListedPackage(key: GetListedPackageKey): GetListedPackage {
   return GET_LISTED_PACKAGES[key];
 }
 
+/**
+ * Launch-week promotion.
+ *
+ * The server is the only thing that decides what anyone pays: the checkout
+ * route prices the order from promoPrice() and sends that as the checkout's
+ * custom_price, which overrides the variant's own figure. The countdown on
+ * the page is display, and could be a minute out without affecting a charge.
+ *
+ * It ends by itself. Nothing needs deploying when the week is up - every
+ * price, badge and countdown on the page is derived from endsAt.
+ */
+export const GET_LISTED_PROMO = {
+  percentOff: 50,
+  /** The instant the sale stops. Change this to extend or end it early. */
+  endsAt: "2026-09-21T23:59:59.000Z",
+  label: "Launch week",
+} as const;
+
+export function isPromoActive(now: number = Date.now()): boolean {
+  return now < Date.parse(GET_LISTED_PROMO.endsAt);
+}
+
+/** What a package costs right now, in whole dollars and cents. */
+export function promoPrice(pkg: GetListedPackage, now: number = Date.now()): number {
+  if (!isPromoActive(now)) return pkg.priceUsd;
+  return Math.round(pkg.priceUsd * (100 - GET_LISTED_PROMO.percentOff)) / 100;
+}
+
+/**
+ * Every amount an order for this package is allowed to have been created at.
+ *
+ * The webhook checks the stored amount against this rather than against one
+ * price, because an order placed during the sale can be paid for after it
+ * ends - recomputing the price at webhook time would reject exactly the
+ * orders that were charged correctly.
+ */
+export function allowedGetListedAmounts(key: GetListedPackageKey): number[] {
+  const pkg = GET_LISTED_PACKAGES[key];
+  const discounted = Math.round(pkg.priceUsd * (100 - GET_LISTED_PROMO.percentOff)) / 100;
+  return [pkg.priceUsd, discounted];
+}
+
 /** What the service does and does not promise. Rendered on the sales page and
  *  repeated in the Terms, so the two can never drift apart. */
 export const GET_LISTED_DISCLOSURES = [

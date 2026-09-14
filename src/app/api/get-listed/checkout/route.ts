@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient, SupabaseConfigError } from "@/lib/supabase/admin";
 import { createGetListedCheckout } from "@/lib/lemonsqueezy";
 import { getListedCheckoutSchema } from "@/lib/validation";
-import { getListedPackage } from "@/lib/get-listed";
+import { getListedPackage, promoPrice } from "@/lib/get-listed";
 import { getVisitorId } from "@/lib/visitor";
 import { getSiteUrl } from "@/lib/utils";
 import { rateLimit } from "@/lib/rate-limit";
@@ -66,13 +66,16 @@ export async function POST(request: Request) {
     }
 
     const pkg = getListedPackage(campaign.package_key);
+    // Priced here and nowhere else. The client never sends an amount, and the
+    // order row records what this decided so the webhook can check it later.
+    const amount = promoPrice(pkg);
 
     // Reuse an unpaid order for this campaign rather than stacking up a new
     // row per checkout attempt; a buyer who backs out and retries should not
     // leave a trail of pending orders.
     const { data: existing } = await admin
       .from("get_listed_orders")
-      .select("id, payment_status")
+      .select("id, payment_status, amount")
       .eq("campaign_id", campaign.id)
       .eq("payment_status", "pending")
       .order("created_at", { ascending: false })
@@ -80,6 +83,12 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     let orderId = existing?.id ?? null;
+
+    // A reused order may have been priced before the sale started or after it
+    // ended, so it is repriced to whatever the page is quoting now.
+    if (existing && Number(existing.amount) !== amount) {
+      await admin.from("get_listed_orders").update({ amount }).eq("id", existing.id);
+    }
 
     if (!orderId) {
       const { data: order, error } = await admin
@@ -89,9 +98,10 @@ export async function POST(request: Request) {
           owner_id: ownerId,
           provider: "lemonsqueezy",
           package_key: pkg.key,
-          // Server-resolved price. The webhook checks the paid order against
-          // this exact number.
-          amount: pkg.priceUsd,
+          // Server-resolved price, discounted if the sale is running. The
+          // webhook checks the paid order against the prices this package is
+          // allowed to have been sold at.
+          amount,
           currency: pkg.currency,
           payment_status: "pending",
         })
@@ -112,6 +122,8 @@ export async function POST(request: Request) {
       packageKey: pkg.key,
       startupName: campaign.startup_name,
       redirectUrl: `${siteUrl}/my-campaigns/${campaign.id}?checkout=complete`,
+      // Only sent while discounted; otherwise the variant's own price stands.
+      customPriceCents: amount === pkg.priceUsd ? undefined : Math.round(amount * 100),
     });
 
     await admin
