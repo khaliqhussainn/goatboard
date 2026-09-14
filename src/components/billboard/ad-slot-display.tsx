@@ -75,7 +75,7 @@ export function AdSlotDisplay({
   return (
     <div className="relative mb-3 sm:mb-4">
       <span className="absolute -top-3 left-7 z-10 inline-flex items-center gap-1 rounded-full bg-purple-600 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
-        🐐 {ad ? "Sponsored" : "Ad space · 7 days"}
+        {ad ? "Sponsored" : "Ad space · 7 days"}
       </span>
       <Sparkle className="absolute -top-4 left-0 z-10 size-5 fill-purple-300 text-purple-300 sm:-left-1" />
 

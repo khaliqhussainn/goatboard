@@ -59,7 +59,7 @@ export function DistributionPromo({
         </div>
 
         <h2 className="font-handwritten text-2xl uppercase leading-[1.05] tracking-tight text-foreground sm:text-3xl xl:text-2xl">
-          Get your startup out there. <span aria-hidden>🐐</span>
+          Get your startup out there.
         </h2>
 
         <p className="max-w-md text-sm leading-snug text-muted-foreground">

@@ -33,7 +33,7 @@ export function SpotlightCampaign({
 
       <div className="flex min-w-0 flex-1 flex-col gap-2.5 p-5 sm:p-7">
         <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-          🐐 GOAT right now
+          GOAT right now
         </span>
 
         <Badge variant={categoryAccent(campaign.category)} className="w-fit">

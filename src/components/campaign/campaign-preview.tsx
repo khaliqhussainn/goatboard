@@ -19,7 +19,7 @@ export function CampaignPreview({
   return (
     <div className="billboard-surface-lg flex flex-col items-center gap-3 rounded-[1.75rem] p-6 text-center">
       <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-        🐐 GOAT right now
+        GOAT right now
       </span>
       <CampaignAvatar
         src={imageUrl}

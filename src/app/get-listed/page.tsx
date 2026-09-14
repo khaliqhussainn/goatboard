@@ -65,7 +65,7 @@ export default function GetListedPage() {
           <SectionTag>Get listed</SectionTag>
 
           <h1 className="font-handwritten text-4xl uppercase leading-[1.02] tracking-tight sm:text-5xl lg:text-[2.9rem] xl:text-5xl">
-            Get your startup out there. <span aria-hidden>🐐</span>
+            Get your startup out there.
           </h1>
 
           <p className="max-w-md text-base text-muted-foreground">
