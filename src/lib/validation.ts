@@ -126,3 +126,93 @@ export type AdSlotInput = z.infer<typeof adSlotSchema>;
 export const adCheckoutSchema = z.object({
   adSlotId: z.string().uuid(),
 });
+
+// ---------------------------------------------------------------------------
+// Get Listed (paid startup distribution service)
+//
+// The client sends a package key and never a price. Every amount charged is
+// resolved server-side from GET_LISTED_PACKAGES.
+// ---------------------------------------------------------------------------
+
+const optionalUrl = z
+  .string()
+  .trim()
+  .refine((v) => v === "" || isSafeUrl(v), "Enter a valid http(s) URL.")
+  .optional()
+  .nullable();
+
+export const getListedCampaignSchema = z.object({
+  package_key: z.enum(["baby_goat", "big_goat", "goat_mode"]),
+  startup_name: z
+    .string()
+    .trim()
+    .min(2, "Give your startup a name (2+ characters).")
+    .max(80, "Keep it under 80 characters."),
+  website_url: z
+    .string()
+    .trim()
+    .min(1, "A website link is required.")
+    .refine(isSafeUrl, "Enter a valid http(s) URL."),
+  description: z
+    .string()
+    .trim()
+    .min(4, "Tell us what your startup does.")
+    .max(500, "Keep it under 500 characters."),
+  category: z.enum([
+    "product",
+    "startup",
+    "website",
+    "app",
+    "creator",
+    "music",
+    "meme",
+    "cause",
+    "game",
+    "other",
+  ]),
+  x_url: optionalUrl,
+  linkedin_url: optionalUrl,
+  other_url: optionalUrl,
+  // Checkout is refused without this; the acceptance time is stored on the row.
+  accept_terms: z.literal(true, {
+    message: "You need to accept the Terms of Service to continue.",
+  }),
+});
+
+export type GetListedCampaignInput = z.infer<typeof getListedCampaignSchema>;
+
+export const getListedCheckoutSchema = z.object({
+  campaignId: z.string().uuid(),
+});
+
+export const getListedSubmissionSchema = z.object({
+  campaign_id: z.string().uuid(),
+  directory_name: z
+    .string()
+    .trim()
+    .min(1, "Directory name is required.")
+    .max(120, "Keep it under 120 characters."),
+  directory_url: optionalUrl,
+  status: z.enum(["pending", "submitted", "accepted", "rejected"]).optional(),
+  listing_url: optionalUrl,
+  notes: z.string().trim().max(1000, "Keep notes under 1000 characters.").optional().nullable(),
+});
+
+export const getListedSubmissionUpdateSchema = z.object({
+  directory_name: z.string().trim().min(1).max(120).optional(),
+  directory_url: optionalUrl,
+  status: z.enum(["pending", "submitted", "accepted", "rejected"]).optional(),
+  listing_url: optionalUrl,
+  notes: z.string().trim().max(1000).optional().nullable(),
+});
+
+export const getListedCampaignStatusSchema = z.object({
+  status: z.enum([
+    "draft",
+    "awaiting_payment",
+    "active",
+    "in_progress",
+    "completed",
+    "cancelled",
+  ]),
+});

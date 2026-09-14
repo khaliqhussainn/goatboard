@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Geist, Geist_Mono, Kalam } from "next/font/google";
 import { Toaster } from "sonner";
 import { Navbar } from "@/components/layout/navbar";
@@ -81,8 +82,22 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <Navbar />
         <main className="flex-1">{children}</main>
-        <footer className="py-6 text-center text-xs text-muted-foreground">
-          GOATBOARD - there is one spot everyone wants.
+        <footer className="flex flex-col items-center gap-2 py-6 text-center text-xs text-muted-foreground">
+          <p>GOATBOARD - there is one spot everyone wants.</p>
+          <nav className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+            <Link href="/terms" className="underline underline-offset-4 hover:text-foreground">
+              Terms
+            </Link>
+            <Link href="/privacy" className="underline underline-offset-4 hover:text-foreground">
+              Privacy
+            </Link>
+            <Link
+              href="/refund-policy"
+              className="underline underline-offset-4 hover:text-foreground"
+            >
+              Refunds
+            </Link>
+          </nav>
         </footer>
         {modal}
         <Toaster position="bottom-center" richColors closeButton />

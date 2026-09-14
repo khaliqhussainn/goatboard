@@ -570,3 +570,192 @@ create policy "campaign images are publicly readable"
   using (bucket_id = 'campaign-images');
 
 drop policy if exists "authenticated users can upload campaign images" on storage.objects;
+
+-- ===========================================================================
+-- GET LISTED  (paid startup distribution service)
+--
+-- Deliberately separate from the billboard: these campaigns are never voted
+-- on, boosted, ranked, or shown on the board. Nothing here touches
+-- public.campaigns.
+--
+-- Ownership is the same anonymous goatboard_uid cookie the rest of the
+-- product uses (see proxy.ts) - there is no Supabase Auth in this project.
+-- Every read and write goes through service-role server code that filters on
+-- owner_id; RLS is on with no public policies, same as votes and ad_slots.
+-- ===========================================================================
+
+create table if not exists public.get_listed_campaigns (
+  id uuid primary key default gen_random_uuid(),
+  -- Anonymous visitor id, not an authenticated user id.
+  owner_id uuid not null,
+  startup_name text not null check (char_length(startup_name) between 2 and 80),
+  website_url text not null,
+  description text not null check (char_length(description) between 4 and 500),
+  category text not null default 'startup',
+  x_url text,
+  linkedin_url text,
+  other_url text,
+  package_key text not null check (package_key in ('baby_goat', 'big_goat', 'goat_mode')),
+  submission_target integer not null check (submission_target > 0),
+  -- draft            : created, not yet sent to checkout
+  -- awaiting_payment : checkout opened, webhook hasn't confirmed
+  -- active           : paid, queued for work
+  -- in_progress      : admin is submitting
+  -- completed        : admin has finished and the report is final
+  -- cancelled        : abandoned or refunded
+  status text not null default 'draft'
+    check (status in ('draft', 'awaiting_payment', 'active', 'in_progress', 'completed', 'cancelled')),
+  -- When the buyer accepted the Terms. Null until they tick the box.
+  terms_accepted_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists get_listed_campaigns_owner_idx
+  on public.get_listed_campaigns (owner_id, created_at desc);
+create index if not exists get_listed_campaigns_status_idx
+  on public.get_listed_campaigns (status, created_at desc);
+
+-- One row per payment attempt. provider_order_id is unique, which is what
+-- makes webhook replays a no-op rather than a second activation.
+create table if not exists public.get_listed_orders (
+  id uuid primary key default gen_random_uuid(),
+  campaign_id uuid not null references public.get_listed_campaigns (id) on delete cascade,
+  owner_id uuid not null,
+  provider text not null default 'lemonsqueezy',
+  provider_order_id text unique,
+  provider_customer_id text,
+  provider_variant_id text,
+  package_key text not null check (package_key in ('baby_goat', 'big_goat', 'goat_mode')),
+  -- Resolved server-side from the package config, never from the client.
+  amount numeric(10, 2) not null check (amount > 0),
+  currency text not null default 'USD',
+  payment_status text not null default 'pending'
+    check (payment_status in ('pending', 'paid', 'failed', 'refunded', 'cancelled')),
+  paid_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists get_listed_orders_campaign_idx
+  on public.get_listed_orders (campaign_id, created_at desc);
+create index if not exists get_listed_orders_owner_idx
+  on public.get_listed_orders (owner_id, created_at desc);
+
+-- The actual work: one row per directory the admin submits the startup to.
+-- Never generated automatically - progress is only ever real rows.
+create table if not exists public.get_listed_submissions (
+  id uuid primary key default gen_random_uuid(),
+  campaign_id uuid not null references public.get_listed_campaigns (id) on delete cascade,
+  directory_name text not null check (char_length(directory_name) between 1 and 120),
+  directory_url text,
+  status text not null default 'pending'
+    check (status in ('pending', 'submitted', 'accepted', 'rejected')),
+  listing_url text,
+  notes text,
+  submitted_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists get_listed_submissions_campaign_idx
+  on public.get_listed_submissions (campaign_id, created_at);
+
+alter table public.get_listed_campaigns enable row level security;
+alter table public.get_listed_orders enable row level security;
+alter table public.get_listed_submissions enable row level security;
+-- No public policies on any of the three. There is no logged-in database
+-- role to scope a policy to - the owner is a cookie value the server knows
+-- and Postgres doesn't - so every access goes through server code holding
+-- the service role, which filters on owner_id itself.
+
+drop trigger if exists get_listed_campaigns_touch_updated_at on public.get_listed_campaigns;
+create trigger get_listed_campaigns_touch_updated_at
+  before update on public.get_listed_campaigns
+  for each row
+  execute function public.touch_updated_at();
+
+drop trigger if exists get_listed_orders_touch_updated_at on public.get_listed_orders;
+create trigger get_listed_orders_touch_updated_at
+  before update on public.get_listed_orders
+  for each row
+  execute function public.touch_updated_at();
+
+drop trigger if exists get_listed_submissions_touch_updated_at on public.get_listed_submissions;
+create trigger get_listed_submissions_touch_updated_at
+  before update on public.get_listed_submissions
+  for each row
+  execute function public.touch_updated_at();
+
+-- ---------------------------------------------------------------------------
+-- Confirms a paid Get Listed order and activates its campaign, in one
+-- transaction so a campaign can never be active without a paid order behind
+-- it.
+--
+-- Idempotent in two independent ways, because Lemon Squeezy retries webhooks:
+--   * the order is only moved out of 'pending', so a replay finds it already
+--     paid and returns without charging anything again;
+--   * provider_order_id is unique, so one provider order can never attach to
+--     two rows.
+--
+-- p_expected_amount is the price the server resolved from the package config.
+-- The stored amount has to match it, so a tampered checkout cannot activate a
+-- campaign for the wrong money.
+-- ---------------------------------------------------------------------------
+create or replace function public.activate_get_listed_order(
+  p_order_id uuid,
+  p_provider_order_id text,
+  p_expected_amount numeric,
+  p_provider_customer_id text default null
+)
+returns table(success boolean, message text, campaign_id uuid)
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_order public.get_listed_orders%rowtype;
+begin
+  select * into v_order from public.get_listed_orders where id = p_order_id for update;
+
+  if not found then
+    return query select false, 'order_not_found'::text, null::uuid;
+    return;
+  end if;
+
+  -- Already confirmed by an earlier delivery of this same webhook.
+  if v_order.payment_status = 'paid' then
+    return query select true, 'already_processed'::text, v_order.campaign_id;
+    return;
+  end if;
+
+  if v_order.payment_status <> 'pending' then
+    return query
+      select false, ('unexpected_status:' || v_order.payment_status)::text, v_order.campaign_id;
+    return;
+  end if;
+
+  if v_order.amount <> p_expected_amount then
+    return query select false, 'amount_mismatch'::text, v_order.campaign_id;
+    return;
+  end if;
+
+  update public.get_listed_orders
+     set payment_status = 'paid',
+         paid_at = now(),
+         provider_order_id = p_provider_order_id,
+         provider_customer_id = coalesce(p_provider_customer_id, provider_customer_id)
+   where id = v_order.id;
+
+  -- Paid, not delivered: fulfilment is the admin moving this to in_progress
+  -- and then completed. Payment never completes a campaign on its own.
+  update public.get_listed_campaigns
+     set status = 'active'
+   where id = v_order.campaign_id
+     and status in ('draft', 'awaiting_payment');
+
+  return query select true, 'ok'::text, v_order.campaign_id;
+end;
+$fn$;
+
+revoke all on function public.activate_get_listed_order(uuid, text, numeric, text) from public;

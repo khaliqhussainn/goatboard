@@ -56,6 +56,9 @@ export default async function AdminPage({
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-2xl font-black tracking-tight">Admin</h1>
+        <Link href="/admin/get-listed" className="text-sm underline underline-offset-4">
+          Get Listed campaigns
+        </Link>
         <form action="/api/admin/logout" method="post">
           <button type="submit" className="text-sm text-muted-foreground hover:text-foreground">
             Sign out

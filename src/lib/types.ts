@@ -77,6 +77,13 @@ export type Report = {
   created_at: string;
 };
 
+import type {
+  GetListedPackageKey,
+  GetListedCampaignStatus,
+  GetListedPaymentStatus,
+  GetListedSubmissionStatus,
+} from "@/lib/get-listed";
+
 export type AdSlotStatus = "pending" | "paid";
 export type AdSlotDuration = 7 | 14 | 30;
 
@@ -104,6 +111,59 @@ export type CurrentAd = {
   image_url: string | null;
   backdrop_url: string | null;
   ends_at: string;
+};
+
+// --- Get Listed (paid distribution service) --------------------------------
+// Separate from the billboard Campaign type above: these are never ranked,
+// voted on, or boosted.
+
+export type GetListedCampaign = {
+  id: string;
+  /** Anonymous goatboard_uid cookie value, not an authenticated user id. */
+  owner_id: string;
+  startup_name: string;
+  website_url: string;
+  description: string;
+  category: Category;
+  x_url: string | null;
+  linkedin_url: string | null;
+  other_url: string | null;
+  package_key: GetListedPackageKey;
+  submission_target: number;
+  status: GetListedCampaignStatus;
+  terms_accepted_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type GetListedOrder = {
+  id: string;
+  campaign_id: string;
+  owner_id: string;
+  provider: string;
+  provider_order_id: string | null;
+  provider_customer_id: string | null;
+  provider_variant_id: string | null;
+  package_key: GetListedPackageKey;
+  amount: number;
+  currency: string;
+  payment_status: GetListedPaymentStatus;
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type GetListedSubmission = {
+  id: string;
+  campaign_id: string;
+  directory_name: string;
+  directory_url: string | null;
+  status: GetListedSubmissionStatus;
+  listing_url: string | null;
+  notes: string | null;
+  submitted_at: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 /** Minimal hand-rolled Supabase Database type (kept in sync with supabase/schema.sql). */
@@ -141,6 +201,35 @@ export interface Database {
         Insert: Partial<AdSlot> &
           Pick<AdSlot, "name" | "description" | "destination_url" | "duration_days" | "amount">;
         Update: Partial<AdSlot>;
+        Relationships: [];
+      };
+      get_listed_campaigns: {
+        Row: GetListedCampaign;
+        Insert: Partial<GetListedCampaign> &
+          Pick<
+            GetListedCampaign,
+            | "owner_id"
+            | "startup_name"
+            | "website_url"
+            | "description"
+            | "package_key"
+            | "submission_target"
+          >;
+        Update: Partial<GetListedCampaign>;
+        Relationships: [];
+      };
+      get_listed_orders: {
+        Row: GetListedOrder;
+        Insert: Partial<GetListedOrder> &
+          Pick<GetListedOrder, "campaign_id" | "owner_id" | "package_key" | "amount">;
+        Update: Partial<GetListedOrder>;
+        Relationships: [];
+      };
+      get_listed_submissions: {
+        Row: GetListedSubmission;
+        Insert: Partial<GetListedSubmission> &
+          Pick<GetListedSubmission, "campaign_id" | "directory_name">;
+        Update: Partial<GetListedSubmission>;
         Relationships: [];
       };
     };
@@ -183,6 +272,15 @@ export interface Database {
       get_current_ad: {
         Args: Record<string, never>;
         Returns: CurrentAd[];
+      };
+      activate_get_listed_order: {
+        Args: {
+          p_order_id: string;
+          p_provider_order_id: string;
+          p_expected_amount: number;
+          p_provider_customer_id?: string | null;
+        };
+        Returns: { success: boolean; message: string; campaign_id: string | null }[];
       };
     };
     Enums: Record<string, never>;

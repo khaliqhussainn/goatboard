@@ -1,6 +1,7 @@
 import "server-only";
 import crypto from "node:crypto";
 import { AD_SLOT_VARIANT_NAMES } from "@/lib/validation";
+import { getListedPackage, type GetListedPackageKey } from "@/lib/get-listed";
 import type { AdSlotDuration } from "@/lib/types";
 
 const LEMONSQUEEZY_API = "https://api.lemonsqueezy.com/v1";
@@ -206,6 +207,67 @@ export async function createAdSlotCheckout({
     productDescription: `${durationDays}-day featured spot on GOATBOARD`,
     redirectUrl,
   });
+}
+
+/**
+ * The Lemon Squeezy variant a Get Listed package is sold as.
+ *
+ * Read from the environment rather than looked up by name: each package is
+ * its own single-variant product, and a single-variant product's variant is
+ * called "Default", so there is nothing distinctive to match on. Which env
+ * var holds which package is declared once in GET_LISTED_PACKAGES.
+ */
+export function resolveGetListedVariantId(packageKey: GetListedPackageKey): string {
+  const pkg = getListedPackage(packageKey);
+  const variantId = process.env[pkg.variantEnvVar]?.trim();
+
+  if (!variantId) {
+    throw new Error(
+      `${pkg.variantEnvVar} is not set - create the "${pkg.name}" variant in Lemon Squeezy and put its id there.`,
+    );
+  }
+  return variantId;
+}
+
+interface CreateGetListedCheckoutParams {
+  orderId: string;
+  campaignId: string;
+  packageKey: GetListedPackageKey;
+  startupName: string;
+  redirectUrl: string;
+}
+
+/**
+ * Creates the checkout for a Get Listed order.
+ *
+ * No price is sent: each package is its own fixed-price variant, so the
+ * variant decides what is charged and a client can't influence it. The order
+ * row's id rides along in custom_data, which is the only thing the webhook
+ * trusts when deciding what to activate.
+ */
+export async function createGetListedCheckout({
+  orderId,
+  campaignId,
+  packageKey,
+  startupName,
+  redirectUrl,
+}: CreateGetListedCheckoutParams): Promise<{ url: string; variantId: string }> {
+  const pkg = getListedPackage(packageKey);
+  const variantId = resolveGetListedVariantId(packageKey);
+
+  const url = await createCheckoutSession({
+    variantId,
+    customData: {
+      get_listed_order_id: orderId,
+      campaign_id: campaignId,
+      package_key: packageKey,
+    },
+    productName: `Get Listed - ${pkg.name}`,
+    productDescription: `${pkg.summary} for ${startupName}`,
+    redirectUrl,
+  });
+
+  return { url, variantId };
 }
 
 /** Verifies the X-Signature header on an incoming webhook using the raw body. */

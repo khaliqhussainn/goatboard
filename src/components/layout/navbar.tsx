@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_LINKS: { href: string; label: string; badge?: string }[] = [
   { href: "/explore", label: "Explore" },
-  { href: "/distribution", label: "Get Listed", badge: "Beta" },
+  { href: "/get-listed", label: "Get Listed", badge: "Beta" },
   { href: "/mine", label: "My Campaigns" },
   { href: "/how-it-works", label: "How it works" },
 ];

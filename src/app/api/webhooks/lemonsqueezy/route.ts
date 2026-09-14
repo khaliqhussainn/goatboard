@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyWebhookSignature } from "@/lib/lemonsqueezy";
 import { bookAdSlot } from "@/lib/ad-slots";
 import { AD_SLOT_PRICING } from "@/lib/validation";
+import { getListedPackage, isGetListedPackageKey } from "@/lib/get-listed";
 import type { AdSlotDuration } from "@/lib/types";
 
 interface LemonSqueezyWebhookBody {
@@ -16,6 +17,7 @@ interface LemonSqueezyWebhookBody {
       status: string;
       total: number;
       currency: string;
+      customer_id?: number | string | null;
     };
   };
 }
@@ -99,6 +101,61 @@ async function handleAdSlotOrder(adSlotId: string, durationDays: number, orderId
   return true;
 }
 
+/**
+ * Confirms a paid Get Listed order.
+ *
+ * The webhook decides nothing about money: it looks the package up from the
+ * order row written at checkout time, resolves that package's price from
+ * config, and hands both to activate_get_listed_order, which refuses the
+ * activation if the stored amount disagrees. Replays are absorbed by that
+ * function (the order only ever leaves 'pending' once) and by the unique
+ * constraint on provider_order_id.
+ */
+async function handleGetListedOrder(
+  orderRowId: string,
+  providerOrderId: string,
+  customerId: string | null,
+) {
+  const admin = createAdminClient();
+
+  const { data: order, error } = await admin
+    .from("get_listed_orders")
+    .select("id, package_key, amount, payment_status")
+    .eq("id", orderRowId)
+    .maybeSingle();
+
+  if (error || !order) {
+    console.error("get listed webhook: order row not found", orderRowId, error);
+    return false;
+  }
+
+  if (!isGetListedPackageKey(order.package_key)) {
+    console.error("get listed webhook: unknown package", order.package_key);
+    return false;
+  }
+
+  const expectedAmount = getListedPackage(order.package_key).priceUsd;
+
+  const { data, error: rpcError } = await admin.rpc("activate_get_listed_order", {
+    p_order_id: order.id,
+    p_provider_order_id: providerOrderId,
+    p_expected_amount: expectedAmount,
+    p_provider_customer_id: customerId,
+  });
+
+  if (rpcError) {
+    console.error("activate_get_listed_order failed", rpcError);
+    return false;
+  }
+
+  const result = data?.[0];
+  if (!result?.success) {
+    console.error("activate_get_listed_order rejected", result);
+    return false;
+  }
+  return true;
+}
+
 export async function POST(request: Request) {
   const rawBody = await request.text();
   const signature = request.headers.get("x-signature");
@@ -130,7 +187,14 @@ export async function POST(request: Request) {
   const customData = payload.meta.custom_data ?? {};
   let ok = true;
 
-  if (customData.ad_slot_id) {
+  if (customData.get_listed_order_id) {
+    const customerId = payload.data.attributes.customer_id;
+    ok = await handleGetListedOrder(
+      customData.get_listed_order_id,
+      orderId,
+      customerId === undefined || customerId === null ? null : String(customerId),
+    );
+  } else if (customData.ad_slot_id) {
     const durationDays = Number(customData.duration_days);
     if (customData.ad_slot_id && Number.isFinite(durationDays)) {
       ok = await handleAdSlotOrder(customData.ad_slot_id, durationDays, orderId);

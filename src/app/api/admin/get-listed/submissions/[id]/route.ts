@@ -1,0 +1,78 @@
+import { NextResponse } from "next/server";
+import { isAdminAuthed } from "@/lib/admin-auth";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getListedSubmissionUpdateSchema } from "@/lib/validation";
+import type { GetListedSubmission } from "@/lib/types";
+
+/** Admin-only: edit a submission's status, listing URL or notes. */
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await isAdminAuthed())) {
+    return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const body = await request.json().catch(() => null);
+  const parsed = getListedSubmissionUpdateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { message: parsed.error.issues[0]?.message ?? "Invalid input." },
+      { status: 400 },
+    );
+  }
+
+  const input = parsed.data;
+  const admin = createAdminClient();
+
+  const { data: existing } = await admin
+    .from("get_listed_submissions")
+    .select("id, status, submitted_at")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!existing) {
+    return NextResponse.json({ message: "Submission not found." }, { status: 404 });
+  }
+
+  const update: Partial<GetListedSubmission> = {};
+  if (input.directory_name !== undefined) update.directory_name = input.directory_name;
+  if (input.directory_url !== undefined) update.directory_url = input.directory_url || null;
+  if (input.listing_url !== undefined) update.listing_url = input.listing_url || null;
+  if (input.notes !== undefined) update.notes = input.notes || null;
+
+  if (input.status !== undefined) {
+    update.status = input.status;
+    // Stamp the first time it leaves "pending", and keep that original time
+    // through any later status change - it's when we submitted, not when the
+    // directory last replied.
+    if (input.status !== "pending" && !existing.submitted_at) {
+      update.submitted_at = new Date().toISOString();
+    }
+  }
+
+  const { error } = await admin.from("get_listed_submissions").update(update).eq("id", id);
+
+  if (error) {
+    console.error("get_listed submission update failed", error);
+    return NextResponse.json({ message: "Update failed." }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}
+
+/** Admin-only: remove a submission added by mistake. */
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await isAdminAuthed())) {
+    return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const admin = createAdminClient();
+  const { error } = await admin.from("get_listed_submissions").delete().eq("id", id);
+
+  if (error) {
+    console.error("get_listed submission delete failed", error);
+    return NextResponse.json({ message: "Delete failed." }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}
