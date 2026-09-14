@@ -38,11 +38,11 @@ const kalam = Kalam({
  * Campaign pages override this with their own opengraph-image route.
  */
 const SHARE_IMAGE = {
-  url: "/og-image.jpg",
+  url: "/og-image.png",
   width: 1200,
-  height: 630,
-  type: "image/jpeg",
-  alt: "GOATBOARD - get VOAT to become a GOAT",
+  height: 628,
+  type: "image/png",
+  alt: "GOATBOARD - get VOAT to become a GOAT. The billboard for startups.",
 };
 
 export const metadata: Metadata = {
@@ -54,18 +54,19 @@ export const metadata: Metadata = {
   description:
     "GOATBOARD is a public competitive billboard. Vote or boost anything - products, startups, ideas, memes - to the #1 spot. There's only one spotlight. Who's the GOAT?",
   openGraph: {
-    title: "GOATBOARD - Take the board.",
-    description:
-      "One #1 spotlight. Everyone's fighting for it. Vote for free or boost with Power to climb the leaderboard.",
-    siteName: "GOATBOARD",
+    title: "GoatBoard — Get VOAT to become a GOAT",
+    description: "The billboard for startups.",
+    siteName: "GoatBoard",
     type: "website",
+    // Relative, so metadataBase resolves it to the production origin rather
+    // than whichever host happened to render the page.
     url: "/",
     images: [SHARE_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
-    title: "GOATBOARD - Take the board.",
-    description: "One #1 spotlight. Everyone's fighting for it.",
+    title: "GoatBoard — Get VOAT to become a GOAT",
+    description: "The billboard for startups.",
     images: [SHARE_IMAGE],
   },
 };
