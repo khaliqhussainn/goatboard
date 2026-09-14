@@ -116,8 +116,8 @@ export default function GetListedPage() {
           <img
             src="/herogetlisted.png"
             alt="A GOATBOARD distribution machine feeding a startup out to directories, launch sites and founder communities"
-            width={1676}
-            height={794}
+            width={1812}
+            height={795}
             className="h-auto w-full 2xl:w-[112%] 2xl:max-w-none"
           />
         </div>
