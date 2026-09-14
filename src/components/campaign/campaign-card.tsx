@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
 import { Badge } from "@/components/ui/badge";
 import { GoatBadge } from "@/components/billboard/goat-badge";
+import { StreakBadge } from "@/components/billboard/streak-badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
 import { formatPower } from "@/lib/utils";
 import type { Campaign } from "@/lib/types";
@@ -21,6 +22,7 @@ export function CampaignCard({ campaign, rank }: { campaign: Campaign; rank: num
               {categoryLabel(campaign.category)}
             </Badge>
             {campaign.has_been_goat && <GoatBadge size="xs" />}
+            {campaign.held_24h_at && <StreakBadge size="xs" />}
           </div>
         </div>
         <span className="shrink-0 text-xs font-bold text-muted-foreground">#{rank}</span>

@@ -5,12 +5,17 @@ import { Leaderboard } from "@/components/billboard/leaderboard";
 import { AdPurchaseConfirmation } from "@/components/billboard/ad-purchase-confirmation";
 import { getVisitorStats } from "@/lib/queries/visitors";
 import { getCurrentAd } from "@/lib/queries/ad-slots";
+import { syncFirstPlace } from "@/lib/queries/first-place";
 import { MASCOT_IMAGES, pickHourlyMascot } from "@/lib/mascots";
 import type { Campaign } from "@/lib/types";
 
 export const revalidate = 0;
 
 async function getCampaigns(): Promise<Campaign[]> {
+  // Advance the #1 streak before reading, so the board and the clock can
+  // never disagree about who is top.
+  await syncFirstPlace();
+
   const supabase = await createClient();
   const { data } = await supabase
     .from("campaigns")

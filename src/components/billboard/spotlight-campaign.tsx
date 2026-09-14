@@ -9,6 +9,8 @@ import { VoteButton } from "@/components/billboard/vote-button";
 import { BoostButton } from "@/components/billboard/boost-button";
 import { ShareXButton } from "@/components/campaign/share-x-button";
 import { DownloadTileButton } from "@/components/campaign/download-tile-button";
+import { StreakBadge } from "@/components/billboard/streak-badge";
+import { FirstPlaceTimer } from "@/components/billboard/first-place-timer";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
 import { powerBreakdown } from "@/lib/utils";
@@ -32,9 +34,18 @@ export function SpotlightCampaign({
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-2.5 p-5 sm:p-7">
-        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-          GOAT right now
-        </span>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              GOAT right now
+            </span>
+            {campaign.held_24h_at && <StreakBadge size="xs" />}
+          </div>
+          <FirstPlaceTimer
+            since={campaign.first_place_since}
+            awarded={campaign.held_24h_at !== null}
+          />
+        </div>
 
         <Badge variant={categoryAccent(campaign.category)} className="w-fit">
           {categoryLabel(campaign.category)}

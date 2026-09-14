@@ -5,6 +5,7 @@ import { DestinationLink } from "@/components/campaign/destination-link";
 import { ClickCount } from "@/components/campaign/click-count";
 import { RankChip } from "@/components/billboard/rank-chip";
 import { GoatBadge } from "@/components/billboard/goat-badge";
+import { StreakBadge } from "@/components/billboard/streak-badge";
 import { PowerDisplay } from "@/components/billboard/power-display";
 import { VoteButton } from "@/components/billboard/vote-button";
 import { BoostButton } from "@/components/billboard/boost-button";
@@ -39,6 +40,7 @@ export function CampaignTile({
             {categoryLabel(campaign.category)}
           </Badge>
           {campaign.has_been_goat && <GoatBadge size="xs" />}
+          {campaign.held_24h_at && <StreakBadge size="xs" />}
         </div>
 
         <Link

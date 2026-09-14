@@ -30,6 +30,10 @@ export type Campaign = {
   paid_power: number;
   total_power: number;
   has_been_goat: boolean;
+  /** When the current leader took #1; null for everyone else. */
+  first_place_since: string | null;
+  /** Stamped once, the first time a campaign holds #1 for 24 hours. */
+  held_24h_at: string | null;
   click_count: number;
   x_handle: string | null;
   created_by: string | null;
@@ -272,6 +276,10 @@ export interface Database {
       get_current_ad: {
         Args: Record<string, never>;
         Returns: CurrentAd[];
+      };
+      sync_first_place: {
+        Args: Record<string, never>;
+        Returns: undefined;
       };
       activate_get_listed_order: {
         Args: {

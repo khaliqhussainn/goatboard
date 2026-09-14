@@ -5,6 +5,7 @@ import { getVisitorId } from "@/lib/visitor";
 import { AbstractBackdrop } from "@/components/layout/abstract-backdrop";
 import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
 import { GoatBadge } from "@/components/billboard/goat-badge";
+import { StreakBadge } from "@/components/billboard/streak-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
@@ -77,6 +78,7 @@ export default async function MinePage() {
                   <Badge variant={STATUS_VARIANT[c.status]}>{c.status}</Badge>
                   <Badge variant={categoryAccent(c.category)}>{categoryLabel(c.category)}</Badge>
                   {c.has_been_goat && <GoatBadge size="xs" />}
+                  {c.held_24h_at && <StreakBadge size="xs" />}
                 </div>
                 <p className="mt-0.5 truncate text-sm text-muted-foreground">{c.description}</p>
               </div>

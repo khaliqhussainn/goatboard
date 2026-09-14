@@ -759,3 +759,76 @@ end;
 $fn$;
 
 revoke all on function public.activate_get_listed_order(uuid, text, numeric, text) from public;
+
+-- ---------------------------------------------------------------------------
+-- 24-hour #1 streak
+--
+-- first_place_since is when the current leader took the top spot; it is
+-- cleared the moment anyone overtakes them, so the clock only ever counts
+-- consecutive time at #1. held_24h_at is the award, stamped once and never
+-- cleared - like has_been_goat, losing the spot afterwards doesn't take it
+-- back.
+--
+-- This can't be a trigger. A campaign stops being #1 because some *other*
+-- row's power changed, and the award depends on time passing rather than on
+-- any row changing at all, so there is no write to hang it off. Instead
+-- sync_first_place() reconciles the whole board and is called on every read
+-- of it (see lib/queries/campaign.ts), which means any visitor loading the
+-- page advances the state for everyone.
+-- ---------------------------------------------------------------------------
+alter table public.campaigns add column if not exists first_place_since timestamptz;
+alter table public.campaigns add column if not exists held_24h_at timestamptz;
+
+create index if not exists campaigns_first_place_idx
+  on public.campaigns (first_place_since)
+  where first_place_since is not null;
+
+create or replace function public.sync_first_place()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_leader uuid;
+begin
+  -- Same ordering the board itself uses, so the row that shows as #1 is the
+  -- row the clock runs for.
+  select id into v_leader
+  from public.campaigns
+  where status = 'active'
+  order by total_power desc, updated_at asc
+  limit 1;
+
+  -- Anyone else still holding a start time has been overtaken.
+  update public.campaigns
+     set first_place_since = null
+   where first_place_since is not null
+     and (v_leader is null or id <> v_leader);
+
+  if v_leader is null then
+    return;
+  end if;
+
+  -- Start the clock only if it isn't already running: the leader gaining more
+  -- power must not restart their own streak.
+  update public.campaigns
+     set first_place_since = now()
+   where id = v_leader
+     and first_place_since is null;
+
+  -- Award once, on the first read after 24 consecutive hours. The
+  -- held_24h_at is null guard is what stops a second award, and makes
+  -- concurrent callers idempotent - whichever gets there first wins and the
+  -- rest match no rows.
+  update public.campaigns
+     set held_24h_at = now()
+   where id = v_leader
+     and held_24h_at is null
+     and first_place_since is not null
+     and now() - first_place_since >= interval '24 hours';
+end;
+$fn$;
+
+revoke all on function public.sync_first_place() from public;
+grant execute on function public.sync_first_place() to anon, authenticated;
