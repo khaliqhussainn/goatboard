@@ -60,11 +60,11 @@ export default function GetListedPage() {
       <AbstractBackdrop />
 
       {/* ------------------------------------------------------------- Hero */}
-      <section className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-10">
+      <section className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.25fr)] lg:gap-8">
         <div className="flex flex-col items-start gap-5">
           <SectionTag>Get listed</SectionTag>
 
-          <h1 className="font-handwritten text-4xl uppercase leading-[1.02] tracking-tight sm:text-5xl lg:text-6xl">
+          <h1 className="font-handwritten text-4xl uppercase leading-[1.02] tracking-tight sm:text-5xl lg:text-[2.9rem] xl:text-5xl">
             Get your startup out there. <span aria-hidden>🐐</span>
           </h1>
 
@@ -104,15 +104,21 @@ export default function GetListedPage() {
         </div>
 
         {/* The illustration carries the whole "we submit it everywhere" idea,
-            so nothing is rebuilt around it in markup. */}
-        <div className="relative">
+            so nothing is rebuilt around it in markup. Cut out rather than
+            boxed, so it reads as sitting on the page instead of on a lighter
+            rectangle of its own. Its size comes from the grid rather than a
+            negative margin: bleeding into the gutter scrolled the page
+            sideways everywhere between 1024px and 1280px, where the container
+            is already as wide as the viewport allows. Only 2xl has gutter to
+            spare. */}
+        <div className="relative 2xl:-mr-[6%]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/herogetlisted.png"
             alt="A GOATBOARD distribution machine feeding a startup out to directories, launch sites and founder communities"
-            width={1775}
-            height={888}
-            className="h-auto w-full"
+            width={1676}
+            height={794}
+            className="h-auto w-full 2xl:w-[112%] 2xl:max-w-none"
           />
         </div>
       </section>
