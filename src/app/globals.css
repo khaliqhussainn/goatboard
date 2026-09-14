@@ -137,4 +137,50 @@ body {
   .on-backdrop {
     color: var(--foreground);
   }
+  /* Gold, used only by the ad slot. It is the one placement on the board
+     anyone pays for, so it gets a metallic treatment nothing else shares.
+
+     Real gold reads as metal because its highlights alternate rather than
+     ramp, so this is a multi-stop gradient that steps light/dark/light along
+     a diagonal instead of a two-colour fade. */
+  .gold-surface {
+    background-image: linear-gradient(
+      115deg,
+      #fdf7dd 0%,
+      #f1dc98 13%,
+      #fffdf4 26%,
+      #e7c359 42%,
+      #fff9e2 56%,
+      #edcf76 70%,
+      #faf0ca 85%,
+      #fdf7dd 100%
+    );
+  }
+
+  /* A softer mix for the sold state: an advertiser's logo and copy sit on
+     top of it, so it stays pale enough to read against. */
+  .gold-surface-soft {
+    background-image: linear-gradient(
+      115deg,
+      #fcf4d4 0%,
+      #f2e0a0 20%,
+      #fffdf2 42%,
+      #ecd486 66%,
+      #fbf2d2 100%
+    );
+  }
+
+  /* The highlight that travels across the metal. Lives in its own
+     overflow-hidden wrapper rather than on the banner, because the banner
+     must not clip - the goat breaks past its top and bottom edges. */
+  @keyframes gold-sweep {
+    0% {
+      transform: translateX(-140%) skewX(-18deg);
+    }
+    55%,
+    100% {
+      transform: translateX(340%) skewX(-18deg);
+    }
+  }
 }
+

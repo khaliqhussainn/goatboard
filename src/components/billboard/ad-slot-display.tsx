@@ -33,10 +33,27 @@ function AdSlotMascot({ src, className }: { src: string; className?: string }) {
       alt=""
       aria-hidden
       className={cn(
-        "pointer-events-none w-auto drop-shadow-[0_14px_22px_rgba(88,28,135,0.28)] sm:absolute sm:left-auto sm:right-8 sm:top-1/2 sm:mx-0 sm:-mt-20 sm:mb-0 sm:h-40 sm:transition-transform sm:duration-300 sm:group-hover:-translate-y-1.5",
+        "pointer-events-none w-auto drop-shadow-[0_14px_22px_rgba(146,105,16,0.32)] sm:absolute sm:left-auto sm:right-8 sm:top-1/2 sm:mx-0 sm:-mt-20 sm:mb-0 sm:h-40 sm:transition-transform sm:duration-300 sm:group-hover:-translate-y-1.5",
         className,
       )}
     />
+  );
+}
+
+/**
+ * The highlight that travels across the metal, in its own rounded clip so the
+ * banner itself never needs overflow-hidden - the goat breaks past its edges
+ * and would be cut off. Decorative only; the global reduced-motion rule stops
+ * it for anyone who asked for that.
+ */
+function GoldSheen() {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute inset-0 overflow-hidden rounded-[4rem]"
+    >
+      <span className="absolute inset-y-0 -left-1/3 w-1/3 animate-[gold-sweep_6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+    </span>
   );
 }
 
@@ -55,7 +72,7 @@ function AdSlotBackdrop({ src }: { src: string }) {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt="" className="size-full object-cover opacity-25" />
-      <span className="absolute inset-0 bg-gradient-to-r from-purple-50/85 via-purple-50/40 to-transparent" />
+      <span className="absolute inset-0 bg-gradient-to-r from-[#fffdf4]/90 via-[#fffdf4]/45 to-transparent" />
     </span>
   );
 }
@@ -74,14 +91,15 @@ export function AdSlotDisplay({
 
   return (
     <div className="relative mb-3 sm:mb-4">
-      <span className="absolute -top-3 left-7 z-10 inline-flex items-center gap-1 rounded-full bg-purple-600 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
+      <span className="gold-surface absolute -top-3 left-7 z-10 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-950 shadow-[0_4px_12px_-4px_rgba(146,105,16,0.6)] ring-1 ring-inset ring-white/60">
         {ad ? "Sponsored" : "Ad space · 7 days"}
       </span>
-      <Sparkle className="absolute -top-4 left-0 z-10 size-5 fill-purple-300 text-purple-300 sm:-left-1" />
+      <Sparkle className="absolute -top-4 left-0 z-10 size-5 fill-amber-400 text-amber-400 sm:-left-1" />
 
       {ad ? (
-        <div className="relative rounded-[4rem] border-2 border-purple-200 bg-gradient-to-br from-purple-50 via-white to-purple-100 px-6 py-8 shadow-[0_18px_50px_-28px_rgba(88,28,135,0.45)] ring-1 ring-inset ring-white/70 sm:px-10">
+        <div className="gold-surface-soft relative rounded-[4rem] border-2 border-amber-300/80 px-6 py-8 shadow-[0_18px_50px_-24px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70 sm:px-10">
           {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} />}
+          <GoldSheen />
           {mascot && <AdSlotMascot src={mascot} className="mx-auto mb-5 block h-24" />}
           <div className="relative flex flex-col items-center gap-4 text-center sm:flex-row sm:pr-44 sm:text-left">
             <CampaignAvatar
@@ -97,7 +115,7 @@ export function AdSlotDisplay({
               href={ad.destination_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-purple-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-purple-700"
+              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-950 px-4 py-2 text-sm font-bold text-amber-50 shadow-sm transition-colors hover:bg-amber-900"
             >
               Visit <ExternalLink className="size-3.5" />
             </a>
@@ -107,12 +125,14 @@ export function AdSlotDisplay({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="group relative w-full rounded-[4rem] border-2 border-dashed border-purple-300 bg-gradient-to-br from-purple-50 via-white to-purple-100 px-5 py-6 text-left shadow-[0_18px_50px_-28px_rgba(88,28,135,0.4)] ring-1 ring-inset ring-white/70 transition-colors hover:border-purple-400 hover:from-purple-100/70 hover:to-purple-200/60 sm:px-10 sm:py-8"
+          className="gold-surface group relative w-full rounded-[4rem] border-2 border-amber-300/90 px-5 py-6 text-left shadow-[0_18px_50px_-22px_rgba(146,105,16,0.65)] ring-1 ring-inset ring-white/60 transition-shadow hover:shadow-[0_22px_60px_-20px_rgba(146,105,16,0.8)] sm:px-10 sm:py-8"
         >
+          <GoldSheen />
+
           {SPARKLES.map((cls, i) => (
             <Sparkle
               key={i}
-              className={cn(cls, "fill-purple-300/70 text-purple-300/70")}
+              className={cn(cls, "fill-amber-200/90 text-amber-200/90")}
               aria-hidden
             />
           ))}
@@ -123,11 +143,11 @@ export function AdSlotDisplay({
           {mascot && <AdSlotMascot src={mascot} className="absolute right-1 top-1/2 -mt-16 h-32" />}
 
           <div className="relative flex flex-col items-start gap-3 pr-20 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:pr-44">
-            <p className="font-handwritten text-xl leading-tight text-purple-700 sm:text-3xl">
+            <p className="font-handwritten text-xl leading-tight text-amber-950 drop-shadow-[0_1px_0_rgba(255,255,255,0.6)] sm:text-3xl">
               Your product could be here
             </p>
 
-            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-purple-100 px-4 py-2 text-sm font-bold text-purple-700 transition-colors group-hover:bg-purple-200 sm:px-5 sm:py-2.5">
+            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-amber-950 px-4 py-2 text-sm font-bold text-amber-50 shadow-sm transition-colors group-hover:bg-amber-900 sm:px-5 sm:py-2.5">
               Get noticed →
             </span>
           </div>
