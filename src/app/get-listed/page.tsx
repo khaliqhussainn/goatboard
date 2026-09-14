@@ -64,7 +64,7 @@ export default function GetListedPage() {
         <div className="flex flex-col items-start gap-5">
           <SectionTag>Get listed</SectionTag>
 
-          <h1 className="font-handwritten text-4xl uppercase leading-[1.02] tracking-tight sm:text-5xl lg:text-[2.9rem] xl:text-5xl">
+          <h1 className="font-rounded text-4xl font-black uppercase leading-[1.02] tracking-[-0.01em] sm:text-5xl lg:text-[2.35rem] xl:text-[2.7rem]">
             Get your startup out there.
           </h1>
 
@@ -127,7 +127,7 @@ export default function GetListedPage() {
       <section id="how-it-works" className="scroll-mt-24 bg-card/70 py-12 backdrop-blur-sm sm:py-16">
         <div className="mx-auto flex max-w-6xl flex-col items-center px-4 text-center sm:px-6">
           <SectionTag>How it works</SectionTag>
-          <h2 className="mt-4 font-handwritten text-3xl uppercase leading-tight tracking-tight sm:text-4xl">
+          <h2 className="mt-4 font-rounded text-3xl font-black uppercase leading-tight tracking-[-0.01em] sm:text-4xl">
             You build. We submit.
           </h2>
           <p className="mt-2 max-w-md text-sm text-muted-foreground">
@@ -179,7 +179,7 @@ export default function GetListedPage() {
       <section id="packages" className="mx-auto max-w-6xl scroll-mt-24 px-4 py-12 sm:px-6 sm:py-16">
         <div className="flex flex-col items-start gap-3">
           <SectionTag>Our packages</SectionTag>
-          <h2 className="font-handwritten text-3xl uppercase leading-tight tracking-tight sm:text-4xl">
+          <h2 className="font-rounded text-3xl font-black uppercase leading-tight tracking-[-0.01em] sm:text-4xl">
             Pick your goat
           </h2>
           <p className="max-w-md text-sm text-muted-foreground">
@@ -279,7 +279,7 @@ export default function GetListedPage() {
           )}
 
           <SectionTag>Ready to get started?</SectionTag>
-          <p className="font-handwritten text-2xl leading-tight tracking-tight sm:text-3xl">
+          <p className="font-rounded text-2xl font-black leading-tight tracking-[-0.01em] sm:text-3xl">
             Get your startup discovered.
           </p>
           <p className="max-w-md text-sm text-muted-foreground">
