@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { XLogo } from "@/components/icons/x-logo";
 
+/** Who built it, and where to find them. Edit here, not in the markup. */
+const FOUNDER = { name: "Maryam", xHandle: "mrymonx" };
+
 /**
- * Site footer. Internal routes use Link so navigation stays client-side;
- * anything that isn't a real route yet is deliberately absent rather than
- * linked to a page that 404s.
+ * Columns of the site footer. Internal routes use Link so navigation stays
+ * client-side; anything that isn't a real route yet is deliberately absent
+ * rather than linked to a page that 404s.
  */
 const COLUMNS: { heading: string; links: { label: string; href: string }[] }[] = [
   {
@@ -60,19 +63,26 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border pt-5">
           <p className="text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} GOATBOARD. There is one spot everyone wants.
           </p>
-          <a
-            href="https://x.com/goatboardlol"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="GOATBOARD on X"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <XLogo className="size-4" />
-          </a>
+
+          <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
+            <span>
+              Built by <span className="font-semibold text-foreground">{FOUNDER.name}</span>
+            </span>
+            <a
+              href={`https://x.com/${FOUNDER.xHandle}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${FOUNDER.name} on X (@${FOUNDER.xHandle})`}
+              className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
+            >
+              <XLogo className="size-3.5" />
+              <span>@{FOUNDER.xHandle}</span>
+            </a>
+          </p>
         </div>
       </div>
     </footer>
