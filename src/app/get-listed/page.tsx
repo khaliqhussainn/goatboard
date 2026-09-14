@@ -267,26 +267,38 @@ export default function GetListedPage() {
 
       {/* -------------------------------------------------------- Final CTA */}
       <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
-        <div className="billboard-surface relative flex flex-col items-center gap-3 overflow-hidden rounded-[2rem] bg-gradient-to-r from-[#f3ecfd] via-[#f7f2fe] to-[#f3ecfd] px-6 py-10 text-center ring-1 ring-inset ring-white/70 sm:px-10">
-          {mascot && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={mascot}
-              alt=""
-              aria-hidden
-              className="pointer-events-none absolute -bottom-2 left-4 hidden h-32 w-auto lg:block"
-            />
-          )}
+        {/* The artwork carries the badge, the heading, the subtitle and the
+            mascot, so only the action is markup. Its own lavender is set on
+            the wrapper too, so the rounded corners cut into the same colour
+            instead of showing the page through them.
 
-          <SectionTag>Ready to get started?</SectionTag>
-          <p className="font-rounded text-2xl font-black leading-tight tracking-[-0.01em] sm:text-3xl">
-            Get your startup discovered.
-          </p>
-          <p className="max-w-md text-sm text-muted-foreground">
-            Choose a package and let us handle the submissions.
-          </p>
-          <Link href="/get-listed/start">
-            <Button size="lg" variant="abstract">
+            The copy is in the alt text rather than repeated as hidden markup:
+            duplicating it would mean two sources for one sentence, and this
+            way a screen reader gets it once. */}
+        <div className="relative overflow-hidden rounded-[2rem] bg-[#f5f0fd] ring-1 ring-inset ring-white/70">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/bannerbottom.png"
+            alt="Get your startup discovered. Choose a package and let us handle the submissions."
+            width={2172}
+            height={724}
+            // 3:1 is the artwork's own ratio, kept from sm up. A phone at that
+            // ratio renders the headline at about twelve pixels, so the frame
+            // goes taller there and object-cover trims the sides - the copy is
+            // centred, so what gets cut is margin and part of the mascot.
+            className="block aspect-[7/4] w-full object-cover object-center md:aspect-[3/1]"
+          />
+
+          {/* The artwork's copy ends at 78% of its height, leaving a clear band
+              for this to sit in from sm up. On a phone that band is only about
+              forty pixels tall and the button covered the subtitle, so below md
+              it drops into normal flow underneath instead - one element changing
+              position, rather than two taking turns being hidden. */}
+          <Link
+            href="/get-listed/start"
+            className="mx-auto mb-6 mt-4 flex w-fit md:absolute md:left-1/2 md:top-[88%] md:mx-0 md:mb-0 md:mt-0 md:-translate-x-1/2 md:-translate-y-1/2"
+          >
+            <Button variant="abstract" className="shadow-lg lg:h-12 lg:rounded-2xl lg:px-6 lg:text-base">
               Start a campaign <ArrowRight className="size-4" />
             </Button>
           </Link>
