@@ -37,13 +37,11 @@ export const GET_LISTED_PACKAGES: Record<GetListedPackageKey, GetListedPackage> 
     variantEnvVar: "GET_LISTED_BABY_GOAT_VARIANT_ID",
     summary: "30+ submissions",
     includes: [
-      "30+ directory submissions",
-      "Relevant startup directories",
-      "GOATBOARD listing",
+      "Relevant directories",
+      "Manual submission",
       "Submission tracking",
-      "Submission report",
-    ],
-  },
+      "Final report",
+    ],  },
   big_goat: {
     key: "big_goat",
     name: "Big Goat",
@@ -53,15 +51,11 @@ export const GET_LISTED_PACKAGES: Record<GetListedPackageKey, GetListedPackage> 
     variantEnvVar: "GET_LISTED_BIG_GOAT_VARIANT_ID",
     summary: "60+ submissions",
     includes: [
-      "60+ directory submissions",
-      "Relevant startup directories",
-      "Niche and vertical directories",
-      "Startup and founder communities",
-      "GOATBOARD listing",
+      "Relevant directories",
+      "Manual submission",
       "Submission tracking",
-      "Submission report",
-    ],
-  },
+      "Final report",
+    ],  },
   goat_mode: {
     key: "goat_mode",
     name: "Goat Mode",
@@ -71,17 +65,11 @@ export const GET_LISTED_PACKAGES: Record<GetListedPackageKey, GetListedPackage> 
     variantEnvVar: "GET_LISTED_GOAT_MODE_VARIANT_ID",
     summary: "100+ submissions",
     includes: [
-      "100+ directory submissions",
-      "Relevant startup directories",
-      "Niche and vertical directories",
-      "Startup and founder communities",
-      "Launch and discovery platforms",
-      "GOATBOARD listing",
-      "Priority processing",
+      "Relevant directories",
+      "Manual submission",
       "Submission tracking",
-      "Submission report",
-    ],
-  },
+      "Final report",
+    ],  },
 };
 
 /** Display order for the pricing list. */
@@ -113,18 +101,27 @@ export const GET_LISTED_DISCLOSURES = [
 export const GET_LISTED_STEPS = [
   {
     step: "01",
-    title: "Pick a package and tell us about your startup",
-    body: "Name, website, a short description and your links. Takes a couple of minutes.",
+    icon: "FileText",
+    title: "Tell us about your startup",
+    body: "Share your basic info - name, website, description, category and more.",
   },
   {
     step: "02",
-    title: "Pay and we start submitting",
-    body: "Once payment clears, your campaign is queued and we begin working through the directories by hand.",
+    icon: "Search",
+    title: "We find relevant platforms",
+    body: "We select the directories and discovery channels that actually fit what you built.",
   },
   {
     step: "03",
-    title: "Track it as it happens",
-    body: "Every submission appears in your campaign with its real status - submitted, accepted or rejected - and a final report when we're done.",
+    icon: "Send",
+    title: "We submit",
+    body: "Your startup gets manually submitted to each platform by our team.",
+  },
+  {
+    step: "04",
+    icon: "BarChart3",
+    title: "Track everything",
+    body: "See your submission progress and get a final report when it's done.",
   },
 ] as const;
 

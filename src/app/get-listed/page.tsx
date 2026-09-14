@@ -1,138 +1,290 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Check } from "lucide-react";
+import {
+  Check,
+  ArrowRight,
+  Zap,
+  FileText,
+  Search,
+  Send,
+  BarChart3,
+} from "lucide-react";
 import { AbstractBackdrop } from "@/components/layout/abstract-backdrop";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   GET_LISTED_PACKAGE_LIST,
   GET_LISTED_STEPS,
   GET_LISTED_DISCLOSURES,
 } from "@/lib/get-listed";
-import { formatMoney } from "@/lib/utils";
+import { pickHourlyMascot } from "@/lib/mascots";
+import { formatMoney, cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Get Listed",
   description:
-    "We manually submit your startup to relevant directories and discovery platforms, and track every submission for you.",
+    "We submit your startup to relevant directories and discovery platforms so you can spend less time filling forms and more time building.",
 };
 
-export default function GetListedPage() {
+const STEP_ICONS = { FileText, Search, Send, BarChart3 } as const;
+
+/** Pastel circle per step, cycling the accent palette. */
+const STEP_ACCENTS = [
+  "bg-accent-yellow text-yellow-800",
+  "bg-accent-purple text-purple-700",
+  "bg-accent-green text-green-700",
+  "bg-accent-pink text-red-500",
+];
+
+const HERO_STATS = [
+  { value: "30+", label: "Directories", chip: "bg-accent-blue text-blue-700" },
+  { value: "Manual", label: "Submissions", chip: "bg-accent-yellow text-yellow-800" },
+  { value: "Tracked", label: "Every listing", chip: "bg-accent-green text-green-700" },
+];
+
+/** The small uppercase pill that introduces each section. */
+function SectionTag({ children }: { children: React.ReactNode }) {
   return (
-    <div className="on-backdrop mx-auto max-w-4xl px-4 py-10 sm:px-6">
+    <span className="inline-flex w-fit items-center gap-1 rounded-full bg-accent-yellow px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-yellow-900">
+      <Zap className="size-3 fill-current" />
+      {children}
+    </span>
+  );
+}
+
+export default function GetListedPage() {
+  const mascot = pickHourlyMascot();
+  const popularKey = "big_goat";
+
+  return (
+    <div className="on-backdrop">
       <AbstractBackdrop />
 
-      <header className="flex flex-col items-start gap-3">
-        <Badge variant="yellow">Beta</Badge>
-        <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Get Listed</h1>
-        <p className="max-w-xl text-sm text-muted-foreground sm:text-base">
-          We manually submit your startup to relevant directories, communities and discovery
-          platforms, list it on GOATBOARD, and track every submission so you can see exactly where
-          it went and what happened.
-        </p>
-      </header>
+      {/* ------------------------------------------------------------- Hero */}
+      <section className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-10">
+        <div className="flex flex-col items-start gap-5">
+          <SectionTag>Get listed</SectionTag>
 
-      {/* Packages */}
-      <section className="mt-10">
-        <h2 className="text-xl font-black tracking-tight">Packages</h2>
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {GET_LISTED_PACKAGE_LIST.map((pkg) => (
-            <div
-              key={pkg.key}
-              className="billboard-surface flex flex-col gap-3 rounded-[1.75rem] p-5"
-            >
-              <div className="flex flex-col gap-0.5">
-                <h3 className="text-lg font-black tracking-tight">{pkg.name}</h3>
-                <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
-                  {pkg.summary}
-                </span>
+          <h1 className="font-handwritten text-4xl uppercase leading-[1.02] tracking-tight sm:text-5xl lg:text-6xl">
+            Get your startup out there. <span aria-hidden>🐐</span>
+          </h1>
+
+          <p className="max-w-md text-base text-muted-foreground">
+            We submit your startup to relevant directories and discovery platforms so you can spend
+            less time filling forms and more time building.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/get-listed/start">
+              <Button size="lg" variant="abstract">
+                Start a campaign <ArrowRight className="size-4" />
+              </Button>
+            </Link>
+            <a href="#how-it-works">
+              <Button size="lg" variant="outline" className="border border-border bg-card text-foreground hover:bg-muted hover:opacity-100">
+                See how it works
+              </Button>
+            </a>
+          </div>
+
+          <dl className="flex flex-wrap gap-x-8 gap-y-3 pt-1">
+            {HERO_STATS.map((stat) => (
+              <div key={stat.label} className="flex flex-col items-start gap-1">
+                <dd
+                  className={cn(
+                    "rounded-full px-3 py-1 text-sm font-black tracking-tight",
+                    stat.chip,
+                  )}
+                >
+                  {stat.value}
+                </dd>
+                <dt className="text-xs text-muted-foreground">{stat.label}</dt>
               </div>
+            ))}
+          </dl>
+        </div>
 
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-3xl font-black tracking-tight tabular-nums">
-                  {formatMoney(pkg.priceUsd)}
-                </span>
-                <span className="text-sm text-muted-foreground">one-time</span>
-              </div>
-
-              <ul className="flex flex-1 flex-col gap-1.5">
-                {pkg.includes.map((item) => (
-                  <li key={item} className="flex items-start gap-2 text-sm">
-                    <Check className="mt-0.5 size-4 shrink-0 text-green-600" />
-                    <span className="min-w-0">{item}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Link href={`/get-listed/start?package=${pkg.key}`} className="mt-auto">
-                <Button variant="abstract" className="w-full">
-                  Choose {pkg.name}
-                </Button>
-              </Link>
-            </div>
-          ))}
+        {/* The illustration carries the whole "we submit it everywhere" idea,
+            so nothing is rebuilt around it in markup. */}
+        <div className="relative">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/herogetlisted.png"
+            alt="A GOATBOARD distribution machine feeding a startup out to directories, launch sites and founder communities"
+            width={1775}
+            height={888}
+            className="h-auto w-full"
+          />
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="mt-10">
-        <h2 className="text-xl font-black tracking-tight">How it works</h2>
-        <ol className="mt-4 flex flex-col gap-3">
-          {GET_LISTED_STEPS.map((step) => (
-            <li
-              key={step.step}
-              className="billboard-surface flex gap-4 rounded-[1.75rem] p-5"
-            >
-              <span className="text-xl font-black tracking-tight tabular-nums text-muted-foreground">
-                {step.step}
-              </span>
-              <div className="min-w-0">
-                <h3 className="font-black tracking-tight">{step.title}</h3>
-                <p className="mt-0.5 text-sm text-muted-foreground">{step.body}</p>
+      {/* ----------------------------------------------------- How it works */}
+      <section id="how-it-works" className="scroll-mt-24 bg-card/70 py-12 backdrop-blur-sm sm:py-16">
+        <div className="mx-auto flex max-w-6xl flex-col items-center px-4 text-center sm:px-6">
+          <SectionTag>How it works</SectionTag>
+          <h2 className="mt-4 font-handwritten text-3xl uppercase leading-tight tracking-tight sm:text-4xl">
+            You build. We submit.
+          </h2>
+          <p className="mt-2 max-w-md text-sm text-muted-foreground">
+            A simple process. Real submissions. More visibility.
+          </p>
+
+          <ol className="mt-10 grid w-full grid-cols-1 gap-x-4 gap-y-8 text-left sm:grid-cols-2 lg:grid-cols-4">
+            {GET_LISTED_STEPS.map((step, i) => {
+              const Icon = STEP_ICONS[step.icon];
+              return (
+                <li key={step.step} className="relative flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-black",
+                        STEP_ACCENTS[i % STEP_ACCENTS.length],
+                      )}
+                    >
+                      {step.step}
+                    </span>
+                    <span
+                      className={cn(
+                        "flex size-9 shrink-0 items-center justify-center rounded-full",
+                        STEP_ACCENTS[i % STEP_ACCENTS.length],
+                      )}
+                    >
+                      <Icon className="size-4" />
+                    </span>
+                  </div>
+
+                  <h3 className="text-base font-black tracking-tight">{step.title}</h3>
+                  <p className="text-sm text-muted-foreground">{step.body}</p>
+
+                  {/* Connector, only where the steps actually sit side by side. */}
+                  {i < GET_LISTED_STEPS.length - 1 && (
+                    <ArrowRight
+                      aria-hidden
+                      className="absolute -right-3 top-4 hidden size-4 text-muted-foreground lg:block"
+                    />
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </section>
+
+      {/* --------------------------------------------------------- Packages */}
+      <section id="packages" className="mx-auto max-w-6xl scroll-mt-24 px-4 py-12 sm:px-6 sm:py-16">
+        <div className="flex flex-col items-start gap-3">
+          <SectionTag>Our packages</SectionTag>
+          <h2 className="font-handwritten text-3xl uppercase leading-tight tracking-tight sm:text-4xl">
+            Pick your goat
+          </h2>
+          <p className="max-w-md text-sm text-muted-foreground">
+            Choose the package that fits your goals. All plans include manual submissions, relevant
+            directories and a final report.
+          </p>
+        </div>
+
+        <div className="mt-8 grid grid-cols-1 items-start gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {GET_LISTED_PACKAGE_LIST.map((pkg) => {
+            const popular = pkg.key === popularKey;
+            return (
+              <div
+                key={pkg.key}
+                className={cn(
+                  "relative flex flex-col gap-4 rounded-[1.75rem] p-6",
+                  popular
+                    ? "billboard-surface-lg bg-gradient-to-b from-[#fdf8e3] to-[#fdfbf2] ring-2 ring-accent-yellow lg:-mt-4 lg:pb-10"
+                    : "billboard-surface",
+                )}
+              >
+                {popular && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-accent-yellow px-3 py-1 text-[10px] font-bold text-yellow-900">
+                    Most Popular
+                  </span>
+                )}
+
+                <div className="flex items-center gap-3">
+                  {mascot && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={mascot} alt="" aria-hidden className="h-10 w-auto shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-black uppercase tracking-wide">
+                      {pkg.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">{pkg.summary}</p>
+                  </div>
+                </div>
+
+                <div className="text-4xl font-black tracking-tight tabular-nums">
+                  {formatMoney(pkg.priceUsd)}
+                </div>
+
+                <ul className="flex flex-1 flex-col gap-2">
+                  {pkg.includes.map((item) => (
+                    <li key={item} className="flex items-start gap-2 text-sm">
+                      <Check className="mt-0.5 size-4 shrink-0 text-green-600" />
+                      <span className="min-w-0">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link href={`/get-listed/start?package=${pkg.key}`} className="mt-auto">
+                  <Button
+                    variant={popular ? "abstract" : "outline"}
+                    className={cn(
+                      "w-full",
+                      !popular &&
+                        "border border-border bg-card text-foreground hover:bg-muted hover:opacity-100",
+                    )}
+                  >
+                    Choose {pkg.name}
+                  </Button>
+                </Link>
               </div>
-            </li>
-          ))}
-        </ol>
+            );
+          })}
+        </div>
+
+        {/* What the packages do and don't promise. Same text as the Terms. */}
+        <details className="billboard-surface mt-6 rounded-[1.75rem] p-5">
+          <summary className="cursor-pointer text-sm font-bold">
+            What you&apos;re buying (and what isn&apos;t guaranteed)
+          </summary>
+          <ul className="mt-3 flex flex-col gap-2">
+            {GET_LISTED_DISCLOSURES.map((line) => (
+              <li key={line} className="text-sm text-muted-foreground">
+                {line}
+              </li>
+            ))}
+          </ul>
+        </details>
       </section>
 
-      {/* What this is and isn't. Same text the Terms uses. */}
-      <section className="mt-10">
-        <h2 className="text-xl font-black tracking-tight">What you&apos;re buying</h2>
-        <ul className="billboard-surface mt-4 flex flex-col gap-2 rounded-[1.75rem] p-5">
-          {GET_LISTED_DISCLOSURES.map((line) => (
-            <li key={line} className="text-sm text-muted-foreground">
-              {line}
-            </li>
-          ))}
-        </ul>
-      </section>
+      {/* -------------------------------------------------------- Final CTA */}
+      <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
+        <div className="billboard-surface relative flex flex-col items-center gap-3 overflow-hidden rounded-[2rem] bg-gradient-to-r from-[#f3ecfd] via-[#f7f2fe] to-[#f3ecfd] px-6 py-10 text-center ring-1 ring-inset ring-white/70 sm:px-10">
+          {mascot && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={mascot}
+              alt=""
+              aria-hidden
+              className="pointer-events-none absolute -bottom-2 left-4 hidden h-32 w-auto lg:block"
+            />
+          )}
 
-      <section className="mt-10 flex flex-col items-start gap-3">
-        <Link href="/get-listed/start">
-          <Button size="lg" variant="abstract">
-            Start a campaign
-          </Button>
-        </Link>
-        <p className="text-sm text-muted-foreground">
-          Already bought one?{" "}
-          <Link href="/my-campaigns" className="font-semibold underline underline-offset-4">
-            View your campaigns
+          <SectionTag>Ready to get started?</SectionTag>
+          <p className="font-handwritten text-2xl leading-tight tracking-tight sm:text-3xl">
+            Get your startup discovered.
+          </p>
+          <p className="max-w-md text-sm text-muted-foreground">
+            Choose a package and let us handle the submissions.
+          </p>
+          <Link href="/get-listed/start">
+            <Button size="lg" variant="abstract">
+              Start a campaign <ArrowRight className="size-4" />
+            </Button>
           </Link>
-          .
-        </p>
-        <p className="text-xs text-muted-foreground">
-          <Link href="/terms" className="underline underline-offset-4">
-            Terms of Service
-          </Link>
-          {" · "}
-          <Link href="/privacy" className="underline underline-offset-4">
-            Privacy Policy
-          </Link>
-          {" · "}
-          <Link href="/refund-policy" className="underline underline-offset-4">
-            Refund Policy
-          </Link>
-        </p>
+        </div>
       </section>
     </div>
   );
