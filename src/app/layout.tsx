@@ -46,10 +46,13 @@ const nunito = Nunito({
  * Campaign pages override this with their own opengraph-image route.
  */
 const SHARE_IMAGE = {
-  url: "/og-image.png",
+  url: "/og-image.jpg",
   width: 1200,
   height: 628,
-  type: "image/png",
+  // JPEG, not PNG: the same card as a PNG is 503KB, and WhatsApp drops the
+  // preview entirely somewhere above ~300KB. At q90 this is 135KB and the
+  // difference is invisible at card size.
+  type: "image/jpeg",
   alt: "GOATBOARD - get VOAT to become a GOAT. The billboard for startups.",
 };
 
