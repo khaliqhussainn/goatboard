@@ -9,27 +9,39 @@ const EMPTY_STATS: VisitorStats = {
 };
 
 /**
- * Everything actually taken in money: boost purchases plus rented ad slots.
+ * Everything actually taken in money, across all three things the site sells:
+ * boosts, rented ad slots, and Get Listed campaigns. Those are the only
+ * tables in the schema that hold an amount.
  *
- * Ad slots the admin created for free are excluded - they carry a list price
- * in `amount` like any other row, but no Lemon Squeezy order behind it, so
- * counting them would inflate this by whatever was only ever a test.
+ * Each is filtered to its own paid state, which is also what keeps refunded
+ * and cancelled rows out - a Get Listed order that was refunded carries the
+ * amount it was sold at, and counting it would report money we gave back.
+ *
+ * Ad slots the admin created for free are excluded too: they carry a list
+ * price like any other row but no Lemon Squeezy order behind it, so counting
+ * them would inflate this by whatever was only ever a test.
  */
 async function getTotalEarnings(
   admin: ReturnType<typeof createAdminClient>,
 ): Promise<number> {
-  const [purchases, adSlots] = await Promise.all([
+  const [purchases, adSlots, getListed] = await Promise.all([
     admin.from("purchases").select("amount").eq("status", "paid"),
-    admin.from("ad_slots").select("amount").eq("status", "paid").not("lemon_squeezy_order_id", "is", null),
+    admin
+      .from("ad_slots")
+      .select("amount")
+      .eq("status", "paid")
+      .not("lemon_squeezy_order_id", "is", null),
+    admin.from("get_listed_orders").select("amount").eq("payment_status", "paid"),
   ]);
 
   if (purchases.error) console.error("earnings: purchases read failed", purchases.error);
   if (adSlots.error) console.error("earnings: ad_slots read failed", adSlots.error);
+  if (getListed.error) console.error("earnings: get_listed_orders read failed", getListed.error);
 
   const sum = (rows: { amount: number | string }[] | null) =>
     (rows ?? []).reduce((total, row) => total + Number(row.amount ?? 0), 0);
 
-  return sum(purchases.data) + sum(adSlots.data);
+  return sum(purchases.data) + sum(adSlots.data) + sum(getListed.data);
 }
 
 /**
