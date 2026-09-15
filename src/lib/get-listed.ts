@@ -102,7 +102,7 @@ export function getListedPackage(key: GetListedPackageKey): GetListedPackage {
 export const GET_LISTED_PROMO = {
   percentOff: 50,
   /** The instant the sale stops. Change this to extend or end it early. */
-  endsAt: "2026-09-21T23:59:59.000Z",
+  endsAt: "2026-09-22T23:59:59.000Z",
   label: "Launch week",
 } as const;
 
