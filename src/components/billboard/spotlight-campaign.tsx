@@ -14,7 +14,8 @@ import { StreakBadge } from "@/components/billboard/streak-badge";
 import { FirstPlaceTimer } from "@/components/billboard/first-place-timer";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
-import { powerBreakdown } from "@/lib/utils";
+import { PaidAmount } from "@/components/billboard/paid-amount";
+import { votesLabel } from "@/lib/utils";
 import type { Campaign } from "@/lib/types";
 
 export function SpotlightCampaign({
@@ -73,14 +74,15 @@ export function SpotlightCampaign({
           <ClickCount count={campaign.click_count} className="text-xs" />
         </div>
 
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <PowerDisplay power={campaign.total_power} size="lg" />
+          <PaidAmount paidPower={campaign.paid_power} size="lg" />
           <span className="text-sm text-muted-foreground">
-            {powerBreakdown(campaign.paid_power, campaign.vote_power)}
+            {votesLabel(campaign.vote_power)}
           </span>
         </div>
 
-        <div className="mt-auto flex flex-wrap items-center gap-3 pt-1">
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
           <VoteButton campaignId={campaign.id} onVoted={onVoted} />
           <BoostButton campaignId={campaign.id} campaignName={campaign.name} variant="outline" />
           <ShareXButton
@@ -91,7 +93,7 @@ export function SpotlightCampaign({
             size="default"
             variant="outline"
           />
-          <CommentButton slug={campaign.slug} count={campaign.comment_count} size="lg" />
+          <CommentButton slug={campaign.slug} count={campaign.comment_count} />
         </div>
       </div>
     </div>

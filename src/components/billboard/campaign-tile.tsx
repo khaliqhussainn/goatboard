@@ -13,7 +13,8 @@ import { ShareXButton } from "@/components/campaign/share-x-button";
 import { CommentButton } from "@/components/campaign/comment-button";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
-import { powerBreakdown } from "@/lib/utils";
+import { PaidAmount } from "@/components/billboard/paid-amount";
+import { votesLabel } from "@/lib/utils";
 import type { Campaign } from "@/lib/types";
 
 export function CampaignTile({
@@ -64,9 +65,10 @@ export function CampaignTile({
         </div>
 
         <PowerDisplay power={campaign.total_power} size="lg" className="mt-1" />
-        <p className="text-xs text-muted-foreground">
-          {powerBreakdown(campaign.paid_power, campaign.vote_power)}
-        </p>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <PaidAmount paidPower={campaign.paid_power} />
+          <span className="text-xs text-muted-foreground">{votesLabel(campaign.vote_power)}</span>
+        </div>
 
         <div className="mt-auto flex items-center gap-2 pt-2">
           <VoteButton campaignId={campaign.id} onVoted={onVoted} size="sm" />
@@ -84,7 +86,7 @@ export function CampaignTile({
             size="sm"
             variant="outline"
           />
-          <CommentButton slug={campaign.slug} count={campaign.comment_count} />
+          <CommentButton slug={campaign.slug} count={campaign.comment_count} size="sm" />
         </div>
       </div>
     </div>

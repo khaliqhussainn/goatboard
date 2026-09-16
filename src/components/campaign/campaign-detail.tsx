@@ -10,7 +10,8 @@ import { XHandleLink } from "@/components/campaign/x-handle-link";
 import { ClickCount } from "@/components/campaign/click-count";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
-import { formatMoney, ordinal, getSiteUrl, cn } from "@/lib/utils";
+import { PaidAmount } from "@/components/billboard/paid-amount";
+import { ordinal, getSiteUrl, votesLabel, cn } from "@/lib/utils";
 import { CampaignComments } from "@/components/campaign/campaign-comments";
 import { getCampaignBySlug, getCampaignRank, getCampaignComments } from "@/lib/queries/campaign";
 
@@ -29,7 +30,6 @@ export async function CampaignDetail({
     getCampaignRank(campaign),
     getCampaignComments(campaign.id),
   ]);
-  const dollars = Math.round(campaign.paid_power / 3);
   const url = `${getSiteUrl()}/campaign/${campaign.slug}`;
 
   return (
@@ -55,9 +55,10 @@ export async function CampaignDetail({
 
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-2xl bg-muted/60 px-4 py-3">
         <PowerDisplay power={campaign.total_power} size="lg" />
-        <span className="text-sm text-muted-foreground">
-          {formatMoney(dollars)} · {campaign.vote_power.toLocaleString("en-US")} votes
-        </span>
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+          <PaidAmount paidPower={campaign.paid_power} size="lg" />
+          <span className="text-sm text-muted-foreground">{votesLabel(campaign.vote_power)}</span>
+        </div>
       </div>
 
       <p className={cn("wrap-break-word text-sm text-muted-foreground", compact && "line-clamp-3")}>

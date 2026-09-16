@@ -44,7 +44,12 @@ export function RankingRow({
         {formatPower(campaign.total_power)}
       </span>
       <div className="flex shrink-0 items-center gap-1.5">
-        <CommentButton slug={campaign.slug} count={campaign.comment_count} className="hidden sm:inline-flex" />
+        <CommentButton
+          slug={campaign.slug}
+          count={campaign.comment_count}
+          size="sm"
+          className="hidden sm:inline-flex"
+        />
         <VoteButton campaignId={campaign.id} onVoted={onVoted} size="sm" compact />
         <BoostButton
           campaignId={campaign.id}

@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /**
  * The comment affordance on a board card: an icon and a count, nothing more.
+ *
+ * It renders through the shared Button so it is indistinguishable from Vote,
+ * Boost and Share beside it - same fill, height and radius - instead of being
+ * the one pale link in a row of solid black controls.
  *
  * It navigates to the campaign rather than opening an input in place, which
  * is what puts the field inside the card that opens - the same intercepted
@@ -16,13 +21,15 @@ import { cn } from "@/lib/utils";
 export function CommentButton({
   slug,
   count,
-  size = "sm",
+  size = "default",
+  variant = "outline",
   className,
 }: {
   slug: string;
   /** Undefined until the comments migration has been applied. */
   count?: number | null;
-  size?: "sm" | "lg";
+  size?: ButtonProps["size"];
+  variant?: ButtonProps["variant"];
   className?: string;
 }) {
   // Coerced rather than trusted: the column is absent until the migration
@@ -31,19 +38,23 @@ export function CommentButton({
   const label = total === 0 ? "Be the first to comment" : `${total} comment${total === 1 ? "" : "s"}`;
 
   return (
-    <Link
-      href={`/campaign/${slug}`}
-      aria-label={label}
-      title={label}
+    <Button
+      asChild
+      size={size}
+      variant={variant}
       className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-xl font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-        size === "lg" ? "h-12 px-4 text-base" : "h-8 px-2.5 text-[13px]",
+        // Square while there is nothing to count, so the bare icon doesn't
+        // carry the side padding meant for a word. That reclaimed width is
+        // what keeps the four actions on one line on the #1 card.
+        total === 0 && (size === "sm" ? "w-8 px-0" : "w-10 px-0"),
         className,
       )}
     >
-      <MessageCircle className={size === "lg" ? "size-4" : "size-3.5"} />
-      {total > 0 && <span className="tabular-nums">{total}</span>}
-    </Link>
+      <Link href={`/campaign/${slug}`} aria-label={label} title={label}>
+        <MessageCircle />
+        {total > 0 && <span className="tabular-nums">{total}</span>}
+      </Link>
+    </Button>
   );
 }
 

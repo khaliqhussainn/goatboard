@@ -67,12 +67,21 @@ export function ordinal(n: number): string {
   }
 }
 
-export function powerBreakdown(paidPower: number, votePower: number): string {
-  const dollars = Math.round(paidPower / 3);
-  const votes = votePower.toLocaleString("en-US");
-  const votesLabel = votePower === 1 ? "vote" : "votes";
-  if (dollars <= 0) return `${votes} ${votesLabel}`;
-  return `${formatMoney(dollars)} · ${votes} ${votesLabel}`;
+/**
+ * The dollars behind a campaign's paid Power, inverting POWER_PER_DOLLAR.
+ *
+ * Kept apart from the vote count rather than folded into one breakdown
+ * string, because money and votes are read differently on a card: the cash a
+ * founder has actually put in is the thing worth showing off, so it needs to
+ * be its own element the card can colour.
+ */
+export function paidDollars(paidPower: number): number {
+  return Math.round(paidPower / 3);
+}
+
+/** "1 vote" / "42 votes" - the free half of a campaign's Power. */
+export function votesLabel(votePower: number): string {
+  return `${votePower.toLocaleString("en-US")} ${votePower === 1 ? "vote" : "votes"}`;
 }
 
 /** "https://www.example.com/path" -> "example.com" */
