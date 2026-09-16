@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { Navbar } from "@/components/layout/navbar";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { SplashScreen } from "@/components/layout/splash-screen";
 import { getSiteUrl } from "@/lib/utils";
 import "./globals.css";
 
@@ -93,12 +94,23 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${kalam.variable} ${nunito.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <SplashScreen />
         <AnnouncementBar />
         <Navbar />
         <main className="flex-1">{children}</main>
         <SiteFooter />
         {modal}
         <Toaster position="bottom-center" richColors closeButton />
+        {/* Last resort for the splash. Inline, so it runs even if the app
+            bundle never loads - in which case hydration never happens and
+            SplashReady would never clear it. Eight seconds is far past a
+            normal hydration, so this only ever fires when something broke. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "setTimeout(function(){document.documentElement.classList.add('app-ready')},8000)",
+          }}
+        />
       </body>
     </html>
   );

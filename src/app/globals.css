@@ -239,3 +239,70 @@ body {
   }
 }
 
+
+/* The splash screen, rendered by the root layout on every response.
+
+   It is in the markup from the first byte, so it paints with the page rather
+   than waiting on JavaScript, and SplashReady clears it at hydration - the
+   point where the page actually starts responding to clicks.
+
+   visibility, not just opacity, so the finished splash stops intercepting
+   pointer events and leaves the accessibility tree. */
+.splash-screen {
+  transition: opacity 420ms ease;
+}
+
+:root.app-ready .splash-screen {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  /* visibility flips only once the fade has finished, so the splash stops
+     intercepting clicks and leaves the a11y tree without popping. */
+  transition:
+    opacity 420ms ease,
+    visibility 0s linear 420ms;
+}
+
+/* Scripting off: hydration never runs, so nothing would clear the splash.
+   The page underneath is server-rendered and perfectly readable - hand it
+   over rather than covering it forever. (The bundle failing to load is
+   covered by the timeout in layout.tsx, which cannot live in CSS: an active
+   animation outranks the transition above and would block the normal fade.) */
+@media (scripting: none) {
+  .splash-screen {
+    display: none;
+  }
+}
+
+/* Staggered by inline animation-delay, one step per dot. */
+.splash-dot {
+  animation: splash-bounce 1.05s ease-in-out infinite;
+}
+
+@keyframes splash-bounce {
+  0%,
+  75%,
+  100% {
+    transform: translateY(0) scale(0.85);
+    opacity: 0.55;
+  }
+  30% {
+    transform: translateY(-0.7rem) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Soft colour behind the mark. Decorative, and well clear of the logo so the
+   wordmark's own white backing never reads as a box. */
+.splash-blob {
+  animation: splash-drift 9s ease-in-out infinite alternate;
+}
+
+@keyframes splash-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(1.5rem, -1.25rem, 0) scale(1.12);
+  }
+}
