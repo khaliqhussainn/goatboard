@@ -73,10 +73,14 @@ export function Leaderboard({
 
         {/* Third in the reading order everywhere: on a phone it follows the
             spotlight and the counters rather than pushing them down, and it
-            keeps that position once the row goes three-up. */}
+            keeps that position once the row goes three-up.
+
+            No self-start: as the third column it stretches to the row, so its
+            foot lines up with the visitor chart and the ad slot instead of
+            stopping short and leaving a notch in the layout. */}
         <DistributionPromo
           mascot={promoMascot}
-          className="order-3 self-start lg:col-span-2 xl:col-span-1"
+          className="order-3 lg:col-span-2 xl:col-span-1"
         />
       </div>
 
