@@ -107,9 +107,15 @@ export function AdSlotDisplay({
               name={ad.name}
               className="size-16 shrink-0 rounded-2xl text-xl shadow-sm ring-2 ring-white"
             />
+            {/* Nothing is clipped here. The advertiser paid for this space and
+                the schema already caps them at 60 and 140 characters, so the
+                banner grows to fit rather than trailing off in an ellipsis.
+                break-words is what stops a single long unbroken word (a URL
+                pasted into the name, say) pushing the row wider than the
+                banner instead of wrapping. */}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-lg font-black tracking-tight">{ad.name}</p>
-              <p className="line-clamp-1 text-sm text-muted-foreground">{ad.description}</p>
+              <p className="break-words text-lg font-black tracking-tight">{ad.name}</p>
+              <p className="break-words text-sm text-muted-foreground">{ad.description}</p>
             </div>
             <a
               href={ad.destination_url}
