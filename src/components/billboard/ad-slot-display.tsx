@@ -115,7 +115,10 @@ export function AdSlotDisplay({
                 banner instead of wrapping. */}
             <div className="min-w-0 flex-1">
               <p className="break-words text-lg font-black tracking-tight">{ad.name}</p>
-              <p className="break-words text-sm text-muted-foreground">{ad.description}</p>
+              {/* Full-strength foreground rather than the muted grey: this sits on gold,
+                  and often on top of an advertiser backdrop as well, where grey-on-
+                  gold stopped being comfortably legible. */}
+              <p className="break-words text-sm text-foreground">{ad.description}</p>
             </div>
             <a
               href={ad.destination_url}
