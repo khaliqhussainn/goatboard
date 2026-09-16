@@ -52,6 +52,25 @@ export const campaignSchema = z.object({
     "game",
     "other",
   ]),
+  // The creator's own opening comment, posted with the campaign. Optional -
+  // an empty string means they skipped it.
+  first_comment: z
+    .string()
+    .trim()
+    .max(500, "Keep it under 500 characters.")
+    .optional()
+    .nullable(),
+});
+
+export const COMMENT_MAX = 500;
+
+export const commentSchema = z.object({
+  campaignId: z.string().uuid(),
+  body: z
+    .string()
+    .trim()
+    .min(1, "Say something first.")
+    .max(COMMENT_MAX, `Keep it under ${COMMENT_MAX} characters.`),
 });
 
 export type CampaignInput = z.infer<typeof campaignSchema>;

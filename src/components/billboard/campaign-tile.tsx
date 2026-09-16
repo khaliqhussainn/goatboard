@@ -10,6 +10,7 @@ import { PowerDisplay } from "@/components/billboard/power-display";
 import { VoteButton } from "@/components/billboard/vote-button";
 import { BoostButton } from "@/components/billboard/boost-button";
 import { ShareXButton } from "@/components/campaign/share-x-button";
+import { CommentButton } from "@/components/campaign/comment-button";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
 import { powerBreakdown } from "@/lib/utils";
@@ -83,6 +84,7 @@ export function CampaignTile({
             size="sm"
             variant="outline"
           />
+          <CommentButton slug={campaign.slug} count={campaign.comment_count} />
         </div>
       </div>
     </div>

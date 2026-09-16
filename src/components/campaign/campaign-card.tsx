@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
 import { Badge } from "@/components/ui/badge";
 import { GoatBadge } from "@/components/billboard/goat-badge";
+import { CommentCount } from "@/components/campaign/comment-button";
 import { StreakBadge } from "@/components/billboard/streak-badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
 import { formatPower } from "@/lib/utils";
@@ -30,7 +31,10 @@ export function CampaignCard({ campaign, rank }: { campaign: Campaign; rank: num
       <p className="line-clamp-2 wrap-break-word text-sm text-muted-foreground">
         {campaign.description}
       </p>
-      <p className="text-lg font-black tabular-nums">{formatPower(campaign.total_power)} Power</p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-lg font-black tabular-nums">{formatPower(campaign.total_power)} Power</p>
+        <CommentCount count={campaign.comment_count} />
+      </div>
     </Link>
   );
 }

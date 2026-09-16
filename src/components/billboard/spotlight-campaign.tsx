@@ -8,6 +8,7 @@ import { PowerDisplay } from "@/components/billboard/power-display";
 import { VoteButton } from "@/components/billboard/vote-button";
 import { BoostButton } from "@/components/billboard/boost-button";
 import { ShareXButton } from "@/components/campaign/share-x-button";
+import { CommentButton } from "@/components/campaign/comment-button";
 import { DownloadTileButton } from "@/components/campaign/download-tile-button";
 import { StreakBadge } from "@/components/billboard/streak-badge";
 import { FirstPlaceTimer } from "@/components/billboard/first-place-timer";
@@ -90,6 +91,7 @@ export function SpotlightCampaign({
             size="default"
             variant="outline"
           />
+          <CommentButton slug={campaign.slug} count={campaign.comment_count} size="lg" />
         </div>
       </div>
     </div>

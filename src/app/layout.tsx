@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Kalam, Nunito } from "next/font/google";
 import { Toaster } from "sonner";
+import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { Navbar } from "@/components/layout/navbar";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { getSiteUrl } from "@/lib/utils";
@@ -92,6 +93,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${kalam.variable} ${nunito.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <AnnouncementBar />
         <Navbar />
         <main className="flex-1">{children}</main>
         <SiteFooter />

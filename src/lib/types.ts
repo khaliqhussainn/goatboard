@@ -35,6 +35,8 @@ export type Campaign = {
   /** Stamped once, the first time a campaign holds #1 for 24 hours. */
   held_24h_at: string | null;
   click_count: number;
+  /** Kept by trigger so the board doesn't count per card. */
+  comment_count: number;
   x_handle: string | null;
   created_by: string | null;
   created_at: string;
@@ -52,6 +54,15 @@ export type VisitorStats = {
   /** Gross USD taken across boosts and ad slots. */
   totalEarnings: number;
   activity: VisitorActivityPoint[];
+};
+
+export type CampaignComment = {
+  id: string;
+  campaign_id: string;
+  /** Anonymous goatboard_uid cookie value, not an authenticated user. */
+  author_id: string;
+  body: string;
+  created_at: string;
 };
 
 export type Vote = {
@@ -179,6 +190,13 @@ export interface Database {
         Insert: Partial<Campaign> &
           Pick<Campaign, "slug" | "name" | "description" | "destination_url">;
         Update: Partial<Campaign>;
+        Relationships: [];
+      };
+      campaign_comments: {
+        Row: CampaignComment;
+        Insert: Partial<CampaignComment> &
+          Pick<CampaignComment, "campaign_id" | "author_id" | "body">;
+        Update: Partial<CampaignComment>;
         Relationships: [];
       };
       votes: {

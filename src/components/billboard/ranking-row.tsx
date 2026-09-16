@@ -4,6 +4,7 @@ import { VoteButton } from "@/components/billboard/vote-button";
 import { BoostButton } from "@/components/billboard/boost-button";
 import { ShareXButton } from "@/components/campaign/share-x-button";
 import { GoatBadge } from "@/components/billboard/goat-badge";
+import { CommentButton } from "@/components/campaign/comment-button";
 import { StreakBadge } from "@/components/billboard/streak-badge";
 import { ClickCount } from "@/components/campaign/click-count";
 import { formatPower, cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ export function RankingRow({
         {formatPower(campaign.total_power)}
       </span>
       <div className="flex shrink-0 items-center gap-1.5">
+        <CommentButton slug={campaign.slug} count={campaign.comment_count} className="hidden sm:inline-flex" />
         <VoteButton campaignId={campaign.id} onVoted={onVoted} size="sm" compact />
         <BoostButton
           campaignId={campaign.id}

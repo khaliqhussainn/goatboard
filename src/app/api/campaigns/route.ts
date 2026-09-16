@@ -58,10 +58,23 @@ export async function POST(request: Request) {
           category: parsed.data.category,
           created_by: visitorId,
         })
-        .select("slug")
+        .select("id, slug")
         .single();
 
       if (!error && data) {
+        // The creator's opening comment, if they wrote one. Best effort: a
+        // campaign that published shouldn't fail because its first comment
+        // didn't, so this never changes the response.
+        const firstComment = parsed.data.first_comment?.trim();
+        if (firstComment) {
+          const { error: commentError } = await admin.from("campaign_comments").insert({
+            campaign_id: data.id,
+            author_id: visitorId,
+            body: firstComment,
+          });
+          if (commentError) console.error("first comment insert failed", commentError);
+        }
+
         return NextResponse.json({ slug: data.slug }, { status: 201 });
       }
 

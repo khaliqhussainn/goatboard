@@ -832,3 +832,75 @@ $fn$;
 
 revoke all on function public.sync_first_place() from public;
 grant execute on function public.sync_first_place() to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- campaign_comments  (public feedback on a listed campaign)
+--
+-- Authored by the same anonymous goatboard_uid cookie everything else uses, so
+-- leaving a comment needs no account. Reads are public - comments are the
+-- point - but there is no client insert policy: every write goes through
+-- /api/comments, which is rate limited and stamps the author itself.
+--
+-- campaigns.comment_count is kept by trigger rather than counted on read: the
+-- board renders every card with a comment icon, and counting per card would be
+-- a query per card on the busiest page on the site.
+-- ---------------------------------------------------------------------------
+create table if not exists public.campaign_comments (
+  id uuid primary key default gen_random_uuid(),
+  campaign_id uuid not null references public.campaigns (id) on delete cascade,
+  -- Anonymous visitor id, not an authenticated user.
+  author_id uuid not null,
+  body text not null check (char_length(body) between 1 and 500),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists campaign_comments_campaign_idx
+  on public.campaign_comments (campaign_id, created_at desc);
+
+alter table public.campaign_comments enable row level security;
+
+drop policy if exists "comments are publicly readable" on public.campaign_comments;
+create policy "comments are publicly readable"
+  on public.campaign_comments for select
+  using (true);
+-- Deliberately no insert/update/delete policy: writes go through the service
+-- role in /api/comments so they can be rate limited and attributed.
+
+alter table public.campaigns
+  add column if not exists comment_count integer not null default 0;
+
+create or replace function public.touch_comment_count()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+begin
+  if tg_op = 'INSERT' then
+    update public.campaigns
+       set comment_count = comment_count + 1
+     where id = new.campaign_id;
+    return new;
+  end if;
+
+  update public.campaigns
+     set comment_count = greatest(0, comment_count - 1)
+   where id = old.campaign_id;
+  return old;
+end;
+$fn$;
+
+drop trigger if exists campaign_comments_count on public.campaign_comments;
+create trigger campaign_comments_count
+  after insert or delete on public.campaign_comments
+  for each row
+  execute function public.touch_comment_count();
+
+-- Converge any rows that predate the counter (or the trigger being added).
+update public.campaigns c
+   set comment_count = (
+     select count(*) from public.campaign_comments cc where cc.campaign_id = c.id
+   )
+ where c.comment_count is distinct from (
+     select count(*) from public.campaign_comments cc where cc.campaign_id = c.id
+   );

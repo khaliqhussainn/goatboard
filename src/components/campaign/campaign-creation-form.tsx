@@ -29,6 +29,7 @@ export function CampaignCreationForm() {
   const [destinationUrl, setDestinationUrl] = React.useState("");
   const [xHandle, setXHandle] = React.useState("");
   const [category, setCategory] = React.useState<Category>("product");
+  const [firstComment, setFirstComment] = React.useState("");
   const [imageUrl, setImageUrl] = React.useState<string | null>(null);
   const [imageSource, setImageSource] = React.useState<"upload" | "site" | null>(null);
   const [uploading, setUploading] = React.useState(false);
@@ -114,6 +115,7 @@ export function CampaignCreationForm() {
       image_url: imageUrl,
       x_handle: xHandle,
       category,
+      first_comment: firstComment,
     });
 
     if (!parsed.success) {
@@ -207,6 +209,26 @@ export function CampaignCreationForm() {
             />
           </div>
           {errors.x_handle && <p className="text-xs text-red-500">{errors.x_handle}</p>}
+        </div>
+
+        {/* Posted as the campaign's opening comment the moment it publishes,
+            so a new listing doesn't land with an empty thread under it. */}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="first-comment">First comment (optional)</Label>
+          <Textarea
+            id="first-comment"
+            value={firstComment}
+            onChange={(e) => setFirstComment(e.target.value.slice(0, 500))}
+            placeholder="Kick off the thread - what should people know, try, or tell you?"
+            rows={2}
+            className="resize-none"
+          />
+          <p className="text-xs text-muted-foreground">
+            Starts the comment thread on your campaign.
+          </p>
+          {errors.first_comment && (
+            <p className="text-xs text-red-500">{errors.first_comment}</p>
+          )}
         </div>
 
         <div className="flex flex-col gap-1.5">

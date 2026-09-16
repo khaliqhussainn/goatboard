@@ -11,7 +11,8 @@ import { ClickCount } from "@/components/campaign/click-count";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
 import { formatMoney, ordinal, getSiteUrl, cn } from "@/lib/utils";
-import { getCampaignBySlug, getCampaignRank } from "@/lib/queries/campaign";
+import { CampaignComments } from "@/components/campaign/campaign-comments";
+import { getCampaignBySlug, getCampaignRank, getCampaignComments } from "@/lib/queries/campaign";
 
 export async function CampaignDetail({
   slug,
@@ -24,7 +25,10 @@ export async function CampaignDetail({
   const campaign = await getCampaignBySlug(slug);
   if (!campaign) notFound();
 
-  const rank = await getCampaignRank(campaign);
+  const [rank, comments] = await Promise.all([
+    getCampaignRank(campaign),
+    getCampaignComments(campaign.id),
+  ]);
   const dollars = Math.round(campaign.paid_power / 3);
   const url = `${getSiteUrl()}/campaign/${campaign.slug}`;
 
@@ -82,6 +86,12 @@ export async function CampaignDetail({
           size="lg"
           compact
         />
+      </div>
+
+      {/* Below the actions and above the report link: the feedback belongs
+          with the campaign, but voting is still the primary thing to do. */}
+      <div className="border-t border-border pt-4">
+        <CampaignComments campaignId={campaign.id} initialComments={comments} />
       </div>
 
       <ReportButton campaignId={campaign.id} />
