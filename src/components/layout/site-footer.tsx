@@ -5,6 +5,24 @@ import { XLogo } from "@/components/icons/x-logo";
 const FOUNDER = { name: "Maryam", xHandle: "mrymonx" };
 
 /**
+ * Directories that have featured us, shown as their own badge artwork.
+ *
+ * The image is served from the lister rather than copied into public/ - it is
+ * their mark, and they get to restyle it. It is fixed-size and lazy so a slow
+ * third party can neither shift the footer nor hold up the page.
+ */
+const FEATURED_ON = [
+  {
+    name: "Nick Launches",
+    href: "https://nicklaunches.com/products/goatboard/?utm_source=goatboard.lol&utm_medium=badge&utm_campaign=featured",
+    // Twice the rendered size: the source is a 480x112 retina asset.
+    src: "https://nicklaunches.com/badges/featured-dark.png",
+    width: 244,
+    height: 56,
+  },
+];
+
+/**
  * Columns of the site footer. Internal routes use Link so navigation stays
  * client-side; anything that isn't a real route yet is deliberately absent
  * rather than linked to a page that 404s.
@@ -43,6 +61,36 @@ export function SiteFooter() {
               One public billboard, one #1 spotlight - plus a distribution service that gets your
               startup in front of the rest of the web.
             </p>
+
+            <div className="mt-2 flex flex-col gap-2">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
+                Goatboard is featured on
+              </h2>
+              <div className="flex flex-wrap items-center gap-3">
+                {FEATURED_ON.map((badge) => (
+                  <a
+                    key={badge.href}
+                    href={badge.href}
+                    target="_blank"
+                    // Not "noreferrer": the listing counts referrals from here,
+                    // and noopener alone is what closes the security hole.
+                    rel="noopener"
+                    className="w-fit transition-opacity hover:opacity-80"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={badge.src}
+                      alt={`Goatboard on ${badge.name}`}
+                      width={badge.width}
+                      height={badge.height}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-14 w-auto max-w-full"
+                    />
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
 
           {COLUMNS.map((column) => (
