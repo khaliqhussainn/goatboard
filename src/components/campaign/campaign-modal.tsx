@@ -31,7 +31,7 @@ export function CampaignModal({ children }: { children: React.ReactNode }) {
               itself — an absolutely-positioned child of a scrolling element
               scrolls away with it, which would carry the Close button off
               along with tall content. */}
-          <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden rounded-[1.75rem]">
+          <div className="pretty-scroll max-h-[85vh] overflow-y-auto overflow-x-hidden overscroll-contain rounded-[1.75rem]">
             {children}
           </div>
           <DialogPrimitive.Close

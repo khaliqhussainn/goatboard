@@ -116,6 +116,61 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* A scrollbar that stays inside the card.
+
+   The platform default is drawn hard against the container's edge with
+   stepper arrows on Windows, which cuts straight across a rounded corner and
+   reads as a browser chrome rather than part of the card. This replaces it
+   with a thin pill inset from the edge, so a tall modal still scrolls without
+   a grey gutter down its side.
+
+   The inset comes from a transparent border plus background-clip rather than
+   a wrapper element: ::-webkit-scrollbar-thumb takes no padding, so the
+   border is the only way to keep the pill clear of the edge. */
+/* Firefox only. Chrome honours these too, but from 121 it drops every
+   ::-webkit-scrollbar rule the moment either is set - so applying them
+   unconditionally would trade the inset pill below for a plain thin bar.
+   Chrome supports selector(::-webkit-scrollbar), so this block skips it. */
+@supports not selector(::-webkit-scrollbar) {
+  .pretty-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--foreground) 25%, transparent) transparent;
+  }
+}
+
+.pretty-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.pretty-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  /* Keeps the thumb clear of the card's 1.75rem corners, which would
+     otherwise clip the top and bottom of the pill into a wedge. */
+  margin-block: 1.25rem;
+}
+
+.pretty-scroll::-webkit-scrollbar-thumb {
+  background-color: color-mix(in oklab, var(--foreground) 18%, transparent);
+  background-clip: content-box;
+  border: 3px solid transparent;
+  border-radius: 9999px;
+}
+
+.pretty-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in oklab, var(--foreground) 34%, transparent);
+}
+
+/* Windows Chrome draws stepper buttons unless they are explicitly removed -
+   they are what makes the default bar look like a 1998 list box. */
+.pretty-scroll::-webkit-scrollbar-button {
+  display: none;
+}
+
+.pretty-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 /* The billboard surface: frosted glass over the abstract backdrop, always
    borderless. Separation comes from translucency + blur + a soft shadow,
    never a stroke. Used by every campaign card. */
