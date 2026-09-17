@@ -871,6 +871,27 @@ alter table public.campaign_comments
 alter table public.campaign_comments
   add column if not exists is_founder boolean not null default false;
 
+-- Backfill for every comment written before is_founder existed.
+--
+-- The founder's comment is the earliest one on a campaign written by that
+-- campaign's own creator: exactly what /api/campaigns inserts at publish
+-- time, and it also catches the founders who typed theirs into the comment
+-- box a few minutes after publishing instead of into the create form.
+--
+-- Safe to re-run. It only ever touches rows still sitting at false, and
+-- anything created from here on sets the flag at insert.
+update public.campaign_comments c
+   set is_founder = true
+  from (
+    select distinct on (cc.campaign_id) cc.id
+      from public.campaign_comments cc
+      join public.campaigns ca on ca.id = cc.campaign_id
+     where cc.author_id = ca.created_by
+     order by cc.campaign_id, cc.created_at
+  ) first_by_creator
+ where c.id = first_by_creator.id
+   and c.is_founder = false;
+
 create index if not exists campaign_comments_campaign_idx
   on public.campaign_comments (campaign_id, created_at desc);
 

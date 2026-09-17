@@ -49,7 +49,10 @@ export function CampaignComments({
   // heading: it is the campaign talking about itself, which is a different
   // thing from the feedback underneath and should not be mistaken for it.
   const founderComment = comments.find((c) => c.is_founder) ?? null;
-  const visitorComments = comments.filter((c) => !c.is_founder);
+  // Split by id rather than by the flag, so that if a second row ever came
+  // back flagged it would still appear in the thread instead of vanishing
+  // from the card altogether.
+  const visitorComments = comments.filter((c) => c.id !== founderComment?.id);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -93,7 +96,13 @@ export function CampaignComments({
           {label("Founder's first comment")}
           <div className="rounded-2xl bg-accent-yellow/35 px-4 py-3">
             <p className="wrap-break-word text-sm">{founderComment.body}</p>
-            <span className="text-[11px] text-muted-foreground">
+            <span className="flex flex-wrap items-center gap-x-1.5 text-[11px] text-muted-foreground">
+              {/* Null when it came from the create form, which never asked
+                  for a name, and on everything backfilled. */}
+              {founderComment.author_name && (
+                <span className="font-semibold text-foreground">{founderComment.author_name}</span>
+              )}
+              {founderComment.author_name && now !== null && <span aria-hidden>·</span>}
               {now === null ? "" : ago(founderComment.created_at, now)}
             </span>
           </div>

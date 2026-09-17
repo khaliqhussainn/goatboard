@@ -47,13 +47,28 @@ export async function POST(request: Request) {
     // shouldn't collect new ones while it's hidden.
     const { data: campaign } = await admin
       .from("campaigns")
-      .select("id")
+      .select("id, created_by")
       .eq("id", parsed.data.campaignId)
       .eq("status", "active")
       .maybeSingle();
 
     if (!campaign) {
       return NextResponse.json({ message: "Campaign not found." }, { status: 404 });
+    }
+
+    // A founder who skipped the field on the create form and wrote their
+    // opening comment here instead still gets the heading - otherwise whether
+    // it appears depends on which box they happened to type into. Only the
+    // first one, and only from the campaign's own creator, so the label can
+    // never be claimed by a visitor or repeated down the thread.
+    let isFounder = false;
+    if (campaign.created_by === visitorId) {
+      const { count } = await admin
+        .from("campaign_comments")
+        .select("id", { count: "exact", head: true })
+        .eq("campaign_id", parsed.data.campaignId)
+        .eq("is_founder", true);
+      isFounder = (count ?? 0) === 0;
     }
 
     const { data, error } = await admin
@@ -63,10 +78,7 @@ export async function POST(request: Request) {
         author_id: visitorId,
         author_name: parsed.data.authorName,
         body: parsed.data.body,
-        // Only /api/campaigns sets this, when a campaign publishes with an
-        // opening comment. Pinned false here so the heading cannot be claimed
-        // by anyone posting through the public form.
-        is_founder: false,
+        is_founder: isFounder,
       })
       .select("id, campaign_id, body, created_at, author_id, author_name, is_founder")
       .single();
