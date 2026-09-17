@@ -19,9 +19,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LISTING_PRICE_USD } from "@/lib/listing";
 import type { Category } from "@/lib/types";
 
-export function CampaignCreationForm() {
+export function CampaignCreationForm({
+  onVoteRequired,
+}: {
+  /** Called when the server rejects the listing for want of a vote, so the
+   *  flow can put the visitor back on that step instead of stranding them. */
+  onVoteRequired?: () => void;
+} = {}) {
   const router = useRouter();
 
   const [name, setName] = React.useState("");
@@ -139,7 +146,19 @@ export function CampaignCreationForm() {
 
       if (!res.ok) {
         toast.error(data.message ?? "Couldn't publish your campaign.");
+        // The vote gate is checked server-side too. If it says no, the step
+        // is genuinely unmet - send them back rather than leaving them on a
+        // form whose submit button will keep failing.
+        if (data.code === "vote_required") onVoteRequired?.();
         setSubmitting(false);
+        return;
+      }
+
+      if (data.checkoutUrl) {
+        // Saved, but not on the board: the campaign is pending_payment until
+        // the webhook confirms. A full navigation, not router.push - this is
+        // leaving the app for Lemon Squeezy.
+        window.location.href = data.checkoutUrl;
         return;
       }
 
@@ -311,9 +330,15 @@ export function CampaignCreationForm() {
           />
         </div>
 
-        <Button type="submit" size="lg" variant="abstract" disabled={submitting || uploading}>
-          {submitting ? "Publishing…" : "Publish campaign"}
-        </Button>
+        <div className="flex flex-col gap-1.5">
+          <Button type="submit" size="lg" variant="abstract" disabled={submitting || uploading}>
+            {submitting ? "Opening checkout…" : `Continue to payment · $${LISTING_PRICE_USD}`}
+          </Button>
+          <p className="text-center text-xs text-muted-foreground">
+            One-time ${LISTING_PRICE_USD} to put your campaign on the board. It goes live the
+            moment the payment clears.
+          </p>
+        </div>
       </form>
 
       <div className="lg:sticky lg:top-24">

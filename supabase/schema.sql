@@ -761,6 +761,148 @@ $fn$;
 revoke all on function public.activate_get_listed_order(uuid, text, numeric, text) from public;
 
 -- ---------------------------------------------------------------------------
+-- Paid campaign listings
+--
+-- A new campaign costs $1. It is inserted as 'pending_payment' and stays
+-- invisible - every public read filters status = 'active', and cast_vote
+-- refuses anything else - until the Lemon Squeezy webhook confirms the
+-- payment. Nothing the browser does can publish a campaign.
+--
+-- Campaigns that existed before this are already 'active' and are never
+-- touched by any of it: the charge applies to new listings only.
+-- ---------------------------------------------------------------------------
+
+-- 'pending_payment' has to join the status constraint. The original was
+-- written inline in create table, so its generated name is not guaranteed -
+-- drop whichever check constraint on the table mentions the old values, then
+-- re-add it by an explicit name. Re-running is safe: the new constraint also
+-- mentions 'suspended', so the loop drops it before adding it back.
+do $mig$
+declare
+  c record;
+begin
+  for c in
+    select con.conname
+      from pg_constraint con
+      join pg_class rel on rel.oid = con.conrelid
+      join pg_namespace ns on ns.oid = rel.relnamespace
+     where ns.nspname = 'public'
+       and rel.relname = 'campaigns'
+       and con.contype = 'c'
+       and pg_get_constraintdef(con.oid) like '%suspended%'
+  loop
+    execute format('alter table public.campaigns drop constraint %I', c.conname);
+  end loop;
+end
+$mig$;
+
+alter table public.campaigns
+  add constraint campaigns_status_check
+  check (status in ('active', 'pending_payment', 'suspended', 'removed'));
+
+create table if not exists public.listing_orders (
+  id uuid primary key default gen_random_uuid(),
+  campaign_id uuid not null references public.campaigns (id) on delete cascade,
+  -- The anonymous goatboard_uid that started it, so /mine can find the
+  -- unfinished ones and offer to resume them.
+  owner_id uuid not null,
+  provider text not null default 'lemonsqueezy',
+  -- Unique: the second delivery of a replayed webhook cannot create a second
+  -- paid order even if the RPC's status check were somehow bypassed.
+  provider_order_id text unique,
+  provider_customer_id text,
+  provider_variant_id text,
+  -- Set server-side from LISTING_PRICE_USD, never from the client.
+  amount numeric(10, 2) not null check (amount > 0),
+  currency text not null default 'USD',
+  payment_status text not null default 'pending'
+    check (payment_status in ('pending', 'paid', 'failed', 'refunded', 'cancelled')),
+  paid_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists listing_orders_campaign_idx
+  on public.listing_orders (campaign_id, created_at desc);
+create index if not exists listing_orders_owner_idx
+  on public.listing_orders (owner_id, created_at desc);
+
+alter table public.listing_orders enable row level security;
+-- No policy at all: orders are money. Every read and write goes through the
+-- service role in the API routes.
+
+drop trigger if exists listing_orders_touch_updated_at on public.listing_orders;
+create trigger listing_orders_touch_updated_at
+  before update on public.listing_orders
+  for each row
+  execute function public.touch_updated_at();
+
+-- ---------------------------------------------------------------------------
+-- activate_listing_order(order_id, provider_order_id, expected_amount, customer)
+--
+-- The only path from 'pending_payment' to 'active'. Idempotent in both
+-- directions that matter: a replayed webhook finds the order already paid and
+-- reports success without publishing anything twice, and the campaign update
+-- is guarded on status so a suspended campaign is never quietly revived.
+-- ---------------------------------------------------------------------------
+create or replace function public.activate_listing_order(
+  p_order_id uuid,
+  p_provider_order_id text,
+  p_expected_amount numeric,
+  p_provider_customer_id text default null
+)
+returns table(success boolean, message text, campaign_id uuid)
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_order public.listing_orders%rowtype;
+begin
+  select * into v_order from public.listing_orders where id = p_order_id for update;
+
+  if not found then
+    return query select false, 'order_not_found'::text, null::uuid;
+    return;
+  end if;
+
+  if v_order.payment_status = 'paid' then
+    return query select true, 'already_processed'::text, v_order.campaign_id;
+    return;
+  end if;
+
+  if v_order.payment_status <> 'pending' then
+    return query
+      select false, ('unexpected_status:' || v_order.payment_status)::text, v_order.campaign_id;
+    return;
+  end if;
+
+  if v_order.amount <> p_expected_amount then
+    return query select false, 'amount_mismatch'::text, v_order.campaign_id;
+    return;
+  end if;
+
+  update public.listing_orders
+     set payment_status = 'paid',
+         paid_at = now(),
+         provider_order_id = p_provider_order_id,
+         provider_customer_id = coalesce(p_provider_customer_id, provider_customer_id)
+   where id = v_order.id;
+
+  -- updated_at is left to the trigger, which is also the board's tie-break
+  -- for equal Power: a campaign's clock starts when it goes public.
+  update public.campaigns
+     set status = 'active'
+   where id = v_order.campaign_id
+     and status = 'pending_payment';
+
+  return query select true, 'ok'::text, v_order.campaign_id;
+end;
+$fn$;
+
+revoke all on function public.activate_listing_order(uuid, text, numeric, text) from public;
+
+-- ---------------------------------------------------------------------------
 -- 24-hour #1 streak
 --
 -- first_place_since is when the current leader took the top spot; it is

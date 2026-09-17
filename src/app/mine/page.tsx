@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
 import { formatPower } from "@/lib/utils";
+import { ResumeListingButton } from "@/components/campaign/resume-listing-button";
 
 export const metadata: Metadata = {
   title: "My Campaigns",
@@ -19,8 +20,16 @@ export const metadata: Metadata = {
 
 const STATUS_VARIANT = {
   active: "green",
+  pending_payment: "yellow",
   suspended: "yellow",
   removed: "pink",
+} as const;
+
+const STATUS_LABEL = {
+  active: "active",
+  pending_payment: "awaiting payment",
+  suspended: "suspended",
+  removed: "removed",
 } as const;
 
 export default async function MinePage() {
@@ -65,28 +74,54 @@ export default async function MinePage() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {campaigns.map((c) => (
-            <Link
-              key={c.id}
-              href={`/campaign/${c.slug}`}
-              className="billboard-surface-sm flex items-center gap-4 rounded-2xl p-4 transition-transform hover:-translate-y-0.5"
-            >
-              <CampaignAvatar src={c.image_url} name={c.name} className="size-14 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="truncate font-bold">{c.name}</p>
-                  <Badge variant={STATUS_VARIANT[c.status]}>{c.status}</Badge>
-                  <Badge variant={categoryAccent(c.category)}>{categoryLabel(c.category)}</Badge>
-                  {c.has_been_goat && <GoatBadge size="xs" />}
-                  {c.held_24h_at && <StreakBadge size="xs" />}
+          {campaigns.map((c) => {
+            // An unpaid campaign has no public page to link to - every read
+            // of /campaign/[slug] filters on active - so it renders as a
+            // plain card offering the way back to checkout instead.
+            const pending = c.status === "pending_payment";
+
+            const inner = (
+              <>
+                <CampaignAvatar src={c.image_url} name={c.name} className="size-14 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="truncate font-bold">{c.name}</p>
+                    <Badge variant={STATUS_VARIANT[c.status]}>{STATUS_LABEL[c.status]}</Badge>
+                    <Badge variant={categoryAccent(c.category)}>{categoryLabel(c.category)}</Badge>
+                    {c.has_been_goat && <GoatBadge size="xs" />}
+                    {c.held_24h_at && <StreakBadge size="xs" />}
+                  </div>
+                  <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                    {pending ? "Not on the board yet - finish the $1 listing to publish it." : c.description}
+                  </p>
                 </div>
-                <p className="mt-0.5 truncate text-sm text-muted-foreground">{c.description}</p>
+                {pending ? (
+                  <ResumeListingButton campaignId={c.id} />
+                ) : (
+                  <p className="shrink-0 text-lg font-black tabular-nums">
+                    {formatPower(c.total_power)}
+                  </p>
+                )}
+              </>
+            );
+
+            return pending ? (
+              <div
+                key={c.id}
+                className="billboard-surface-sm flex flex-col items-start gap-3 rounded-2xl p-4 sm:flex-row sm:items-center sm:gap-4"
+              >
+                {inner}
               </div>
-              <p className="shrink-0 text-lg font-black tabular-nums">
-                {formatPower(c.total_power)}
-              </p>
-            </Link>
-          ))}
+            ) : (
+              <Link
+                key={c.id}
+                href={`/campaign/${c.slug}`}
+                className="billboard-surface-sm flex items-center gap-4 rounded-2xl p-4 transition-transform hover:-translate-y-0.5"
+              >
+                {inner}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

@@ -4,6 +4,10 @@ import { campaignSchema } from "@/lib/validation";
 import { slugify } from "@/lib/utils";
 import { getVisitorId } from "@/lib/visitor";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { createListingCheckout } from "@/lib/lemonsqueezy";
+import { isVoteGateSatisfied } from "@/lib/queries/vote-gate";
+import { LISTING_CURRENCY, LISTING_PRICE_USD } from "@/lib/listing";
+import { getSiteUrl } from "@/lib/utils";
 
 export async function POST(request: Request) {
   const visitorId = await getVisitorId();
@@ -28,6 +32,16 @@ export async function POST(request: Request) {
   });
   if (!ipLimit.success) {
     return NextResponse.json({ message: "Too many requests." }, { status: 429 });
+  }
+
+  // The vote gate, enforced here rather than in the browser. The UI locks
+  // Continue until a vote lands, but that is a courtesy - this is the check
+  // that actually holds, and it runs before anything is written.
+  if (!(await isVoteGateSatisfied(visitorId))) {
+    return NextResponse.json(
+      { message: "Vote for a startup before listing yours.", code: "vote_required" },
+      { status: 403 },
+    );
   }
 
   const body = await request.json().catch(() => null);
@@ -57,6 +71,10 @@ export async function POST(request: Request) {
           x_handle: parsed.data.x_handle || null,
           category: parsed.data.category,
           created_by: visitorId,
+          // Invisible until the webhook says it was paid for. Every public
+          // read filters on 'active', and cast_vote refuses anything else,
+          // so nothing here is on the board yet.
+          status: "pending_payment",
         })
         .select("id, slug")
         .single();
@@ -79,7 +97,49 @@ export async function POST(request: Request) {
           if (commentError) console.error("first comment insert failed", commentError);
         }
 
-        return NextResponse.json({ slug: data.slug }, { status: 201 });
+        // From here the campaign exists but is not public. If any of this
+        // fails the row is removed again rather than left as a draft nobody
+        // can see, finish or find.
+        try {
+          const { data: order, error: orderError } = await admin
+            .from("listing_orders")
+            .insert({
+              campaign_id: data.id,
+              owner_id: visitorId,
+              provider: "lemonsqueezy",
+              amount: LISTING_PRICE_USD,
+              currency: LISTING_CURRENCY,
+              payment_status: "pending",
+            })
+            .select("id")
+            .single();
+
+          if (orderError || !order) {
+            throw new Error(`listing order insert failed: ${orderError?.message}`);
+          }
+
+          const siteUrl = getSiteUrl(new URL(request.url).origin);
+          const { url, variantId } = await createListingCheckout({
+            orderId: order.id,
+            campaignId: data.id,
+            campaignName: parsed.data.name,
+            redirectUrl: `${siteUrl}/mine?listing=complete`,
+          });
+
+          await admin
+            .from("listing_orders")
+            .update({ provider_variant_id: variantId })
+            .eq("id", order.id);
+
+          return NextResponse.json({ slug: data.slug, checkoutUrl: url }, { status: 201 });
+        } catch (checkoutError) {
+          console.error("listing checkout failed", checkoutError);
+          await admin.from("campaigns").delete().eq("id", data.id);
+          return NextResponse.json(
+            { message: "Couldn't start checkout. Nothing was charged - try again." },
+            { status: 502 },
+          );
+        }
       }
 
       if (error && error.code !== "23505") {

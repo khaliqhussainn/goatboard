@@ -4,6 +4,7 @@ import { verifyWebhookSignature } from "@/lib/lemonsqueezy";
 import { bookAdSlot } from "@/lib/ad-slots";
 import { AD_SLOT_PRICING } from "@/lib/validation";
 import { allowedGetListedAmounts, isGetListedPackageKey } from "@/lib/get-listed";
+import { LISTING_PRICE_USD } from "@/lib/listing";
 import type { AdSlotDuration } from "@/lib/types";
 
 interface LemonSqueezyWebhookBody {
@@ -164,6 +165,60 @@ async function handleGetListedOrder(
   return true;
 }
 
+/**
+ * Confirms a paid campaign listing and publishes the campaign.
+ *
+ * Like the Get Listed handler, this decides nothing about money: it reads the
+ * amount off the order row written at checkout time, checks it is still the
+ * listing price, and lets activate_listing_order do the rest. Replays are
+ * absorbed there - the order only ever leaves 'pending' once - and again by
+ * the unique constraint on provider_order_id, so no amount of duplicate
+ * deliveries can publish a campaign twice or publish a second one.
+ */
+async function handleListingOrder(
+  orderRowId: string,
+  providerOrderId: string,
+  customerId: string | null,
+) {
+  const admin = createAdminClient();
+
+  const { data: order, error } = await admin
+    .from("listing_orders")
+    .select("id, amount, payment_status")
+    .eq("id", orderRowId)
+    .maybeSingle();
+
+  if (error || !order) {
+    console.error("listing webhook: order row not found", orderRowId, error);
+    return false;
+  }
+
+  const stored = Number(order.amount);
+  if (stored !== LISTING_PRICE_USD) {
+    console.error("listing webhook: amount is not the listing price", stored);
+    return false;
+  }
+
+  const { data, error: rpcError } = await admin.rpc("activate_listing_order", {
+    p_order_id: order.id,
+    p_provider_order_id: providerOrderId,
+    p_expected_amount: stored,
+    p_provider_customer_id: customerId,
+  });
+
+  if (rpcError) {
+    console.error("activate_listing_order failed", rpcError);
+    return false;
+  }
+
+  const result = data?.[0];
+  if (!result?.success) {
+    console.error("activate_listing_order rejected", result);
+    return false;
+  }
+  return true;
+}
+
 export async function POST(request: Request) {
   const rawBody = await request.text();
   const signature = request.headers.get("x-signature");
@@ -195,7 +250,17 @@ export async function POST(request: Request) {
   const customData = payload.meta.custom_data ?? {};
   let ok = true;
 
-  if (customData.get_listed_order_id) {
+  // Ordered most specific first. A listing order also carries a campaign id,
+  // so it has to be recognised before the boost branch below, which would
+  // otherwise try to grant Power for it.
+  if (customData.listing_order_id) {
+    const customerId = payload.data.attributes.customer_id;
+    ok = await handleListingOrder(
+      customData.listing_order_id,
+      orderId,
+      customerId === undefined || customerId === null ? null : String(customerId),
+    );
+  } else if (customData.get_listed_order_id) {
     const customerId = payload.data.attributes.customer_id;
     ok = await handleGetListedOrder(
       customData.get_listed_order_id,

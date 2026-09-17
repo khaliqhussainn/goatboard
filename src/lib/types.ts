@@ -1,4 +1,26 @@
-export type CampaignStatus = "active" | "suspended" | "removed";
+/** "pending_payment" is a new listing that has not been paid for yet. It is
+ *  excluded from every public read, so it is not on the board. */
+export type CampaignStatus = "active" | "pending_payment" | "suspended" | "removed";
+
+export type ListingPaymentStatus = "pending" | "paid" | "failed" | "refunded" | "cancelled";
+
+/** The $1 that puts a campaign on the board. */
+export type ListingOrder = {
+  id: string;
+  campaign_id: string;
+  /** Anonymous goatboard_uid of whoever started the listing. */
+  owner_id: string;
+  provider: string;
+  provider_order_id: string | null;
+  provider_customer_id: string | null;
+  provider_variant_id: string | null;
+  amount: number;
+  currency: string;
+  payment_status: ListingPaymentStatus;
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
 export type PurchaseStatus = "pending" | "paid" | "refunded" | "failed";
 export type ReportStatus = "open" | "resolved" | "dismissed";
 
@@ -244,6 +266,12 @@ export interface Database {
         Update: Partial<GetListedCampaign>;
         Relationships: [];
       };
+      listing_orders: {
+        Row: ListingOrder;
+        Insert: Partial<ListingOrder> & Pick<ListingOrder, "campaign_id" | "owner_id" | "amount">;
+        Update: Partial<ListingOrder>;
+        Relationships: [];
+      };
       get_listed_orders: {
         Row: GetListedOrder;
         Insert: Partial<GetListedOrder> &
@@ -304,6 +332,15 @@ export interface Database {
         Returns: undefined;
       };
       activate_get_listed_order: {
+        Args: {
+          p_order_id: string;
+          p_provider_order_id: string;
+          p_expected_amount: number;
+          p_provider_customer_id?: string | null;
+        };
+        Returns: { success: boolean; message: string; campaign_id: string | null }[];
+      };
+      activate_listing_order: {
         Args: {
           p_order_id: string;
           p_provider_order_id: string;

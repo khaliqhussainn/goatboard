@@ -2,6 +2,7 @@ import "server-only";
 import crypto from "node:crypto";
 import { AD_SLOT_VARIANT_NAMES } from "@/lib/validation";
 import { getListedPackage, type GetListedPackageKey } from "@/lib/get-listed";
+import { LISTING_PRICE_USD, LISTING_VARIANT_ENV_VAR } from "@/lib/listing";
 import type { AdSlotDuration } from "@/lib/types";
 
 const LEMONSQUEEZY_API = "https://api.lemonsqueezy.com/v1";
@@ -288,4 +289,55 @@ export function verifyWebhookSignature(rawBody: string, signature: string | null
 
   if (sigBuffer.length !== digestBuffer.length) return false;
   return crypto.timingSafeEqual(sigBuffer, digestBuffer);
+}
+
+/**
+ * The Lemon Squeezy variant a $1 campaign listing is sold as.
+ *
+ * Read from the environment for the same reason the Get Listed packages are:
+ * a single-variant product's variant is called "Default", so there is nothing
+ * to match on by name.
+ */
+export function resolveListingVariantId(): string {
+  const variantId = process.env[LISTING_VARIANT_ENV_VAR]?.trim();
+
+  if (!variantId) {
+    throw new Error(
+      `${LISTING_VARIANT_ENV_VAR} is not set - create the "GoatBoard Campaign Listing" product in Lemon Squeezy and put its variant id there.`,
+    );
+  }
+  return variantId;
+}
+
+/**
+ * Creates the checkout that publishes a campaign.
+ *
+ * The listing order's id rides along in custom_data and is the only thing the
+ * webhook trusts when deciding which campaign to make public. The price is
+ * sent explicitly rather than left to the variant, so the one number that
+ * matters is the one this codebase declares.
+ */
+export async function createListingCheckout({
+  orderId,
+  campaignId,
+  campaignName,
+  redirectUrl,
+}: {
+  orderId: string;
+  campaignId: string;
+  campaignName: string;
+  redirectUrl: string;
+}): Promise<{ url: string; variantId: string }> {
+  const variantId = resolveListingVariantId();
+
+  const url = await createCheckoutSession({
+    variantId,
+    customPriceCents: Math.round(LISTING_PRICE_USD * 100),
+    customData: { listing_order_id: orderId, listing_campaign_id: campaignId },
+    productName: "GoatBoard Campaign Listing",
+    productDescription: `Put "${campaignName}" on the GOATBOARD billboard`,
+    redirectUrl,
+  });
+
+  return { url, variantId };
 }
