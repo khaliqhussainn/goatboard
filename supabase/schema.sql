@@ -854,6 +854,23 @@ create table if not exists public.campaign_comments (
   created_at timestamptz not null default now()
 );
 
+-- Added after the table shipped, so these are separate statements rather than
+-- columns in the create above - an existing deployment has already run it.
+--
+-- author_name: who is speaking. Commenters type it themselves; there are no
+-- accounts to read it from. Null on the founder's own opening comment, which
+-- is labelled by its relationship to the campaign, not by a name.
+alter table public.campaign_comments
+  add column if not exists author_name text
+  check (author_name is null or char_length(author_name) between 1 and 40);
+
+-- is_founder: set only by /api/campaigns when a campaign publishes with an
+-- opening comment. Stored rather than derived from author_id = created_by,
+-- because a founder who comments again later would match that test too and
+-- every one of those would claim the heading.
+alter table public.campaign_comments
+  add column if not exists is_founder boolean not null default false;
+
 create index if not exists campaign_comments_campaign_idx
   on public.campaign_comments (campaign_id, created_at desc);
 

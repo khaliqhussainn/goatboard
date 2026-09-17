@@ -194,7 +194,7 @@ export function CampaignCreationForm() {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="x-handle">X account (optional)</Label>
+          <Label htmlFor="x-handle">X account</Label>
           <div className="relative">
             <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
               @
@@ -208,6 +208,9 @@ export function CampaignCreationForm() {
               className="pl-7"
             />
           </div>
+          <p className="text-xs text-muted-foreground">
+            Required - it is how people reach you about your listing.
+          </p>
           {errors.x_handle && <p className="text-xs text-red-500">{errors.x_handle}</p>}
         </div>
 

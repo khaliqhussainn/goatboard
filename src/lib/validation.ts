@@ -33,13 +33,14 @@ export const campaignSchema = z.object({
     .refine((v) => v === "" || isSafeUrl(v), "Enter a valid image URL.")
     .optional()
     .nullable(),
+  // Required: every listing has to be traceable to an account that can be
+  // replied to. It is also the only contact detail the board collects.
   x_handle: z
-    .string()
+    .string({ error: "An X handle is required." })
     .trim()
     .transform((v) => v.replace(/^@/, ""))
-    .refine((v) => v === "" || /^[A-Za-z0-9_]{1,15}$/.test(v), "Enter a valid X handle.")
-    .optional()
-    .nullable(),
+    .refine((v) => v.length > 0, "An X handle is required.")
+    .refine((v) => v === "" || /^[A-Za-z0-9_]{1,15}$/.test(v), "Enter a valid X handle."),
   category: z.enum([
     "product",
     "startup",
@@ -63,9 +64,18 @@ export const campaignSchema = z.object({
 });
 
 export const COMMENT_MAX = 500;
+export const COMMENT_NAME_MAX = 40;
 
 export const commentSchema = z.object({
   campaignId: z.string().uuid(),
+  // Typed by the commenter - there are no accounts to take it from - so it is
+  // a display label, not an identity. Attribution still runs on the visitor
+  // cookie in author_id.
+  authorName: z
+    .string({ error: "Add your name." })
+    .trim()
+    .min(1, "Add your name.")
+    .max(COMMENT_NAME_MAX, `Keep it under ${COMMENT_NAME_MAX} characters.`),
   body: z
     .string()
     .trim()

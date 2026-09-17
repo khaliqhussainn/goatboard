@@ -61,9 +61,14 @@ export async function POST(request: Request) {
       .insert({
         campaign_id: parsed.data.campaignId,
         author_id: visitorId,
+        author_name: parsed.data.authorName,
         body: parsed.data.body,
+        // Only /api/campaigns sets this, when a campaign publishes with an
+        // opening comment. Pinned false here so the heading cannot be claimed
+        // by anyone posting through the public form.
+        is_founder: false,
       })
-      .select("id, body, created_at, author_id")
+      .select("id, campaign_id, body, created_at, author_id, author_name, is_founder")
       .single();
 
     if (error || !data) {

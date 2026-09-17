@@ -70,6 +70,10 @@ export async function POST(request: Request) {
           const { error: commentError } = await admin.from("campaign_comments").insert({
             campaign_id: data.id,
             author_id: visitorId,
+            // No name: this one is labelled by who wrote it relative to the
+            // campaign, which is what is_founder records.
+            author_name: null,
+            is_founder: true,
             body: firstComment,
           });
           if (commentError) console.error("first comment insert failed", commentError);
