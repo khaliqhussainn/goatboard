@@ -83,10 +83,14 @@ export type CampaignComment = {
   campaign_id: string;
   /** Anonymous goatboard_uid cookie value, not an authenticated user. */
   author_id: string;
-  /** Self-typed display name. Null on the founder's opening comment. */
+  /** Legacy free-text name, from before author_x_handle was required. Null on anything newer. */
   author_name: string | null;
+  /** Without the leading "@". Required on every comment written since this shipped. */
+  author_x_handle: string | null;
   /** True only for the comment posted with the campaign by its creator. */
   is_founder: boolean;
+  /** The top-level comment this replies to; null for a top-level comment itself. */
+  parent_id: string | null;
   body: string;
   created_at: string;
 };

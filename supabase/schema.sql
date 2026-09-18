@@ -1013,6 +1013,26 @@ alter table public.campaign_comments
 alter table public.campaign_comments
   add column if not exists is_founder boolean not null default false;
 
+-- author_x_handle replaces author_name going forward: every new comment
+-- names a real, checkable X account instead of an unverifiable free-text
+-- name, same requirement campaigns.x_handle already puts on the listing
+-- itself. author_name stays as-is on rows written before this so they keep
+-- rendering; nothing new writes to it.
+alter table public.campaign_comments
+  add column if not exists author_x_handle text
+  check (author_x_handle is null or author_x_handle ~ '^[A-Za-z0-9_]{1,15}$');
+
+-- parent_id: lets a comment reply to another one. Always points at a
+-- top-level comment (a row whose own parent_id is null) - /api/comments
+-- walks a reply-to-a-reply up to its parent's parent before inserting, so
+-- threads never nest past one level and the UI only ever has to render two
+-- tiers.
+alter table public.campaign_comments
+  add column if not exists parent_id uuid references public.campaign_comments (id) on delete cascade;
+
+create index if not exists campaign_comments_parent_idx
+  on public.campaign_comments (parent_id, created_at);
+
 -- Backfill for every comment written before is_founder existed.
 --
 -- The founder's comment is the earliest one on a campaign written by that

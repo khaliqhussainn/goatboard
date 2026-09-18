@@ -88,9 +88,8 @@ export async function POST(request: Request) {
           const { error: commentError } = await admin.from("campaign_comments").insert({
             campaign_id: data.id,
             author_id: visitorId,
-            // No name: this one is labelled by who wrote it relative to the
-            // campaign, which is what is_founder records.
-            author_name: null,
+            // The campaign's own required handle - no need to ask again.
+            author_x_handle: parsed.data.x_handle,
             is_founder: true,
             body: firstComment,
           });

@@ -64,23 +64,27 @@ export const campaignSchema = z.object({
 });
 
 export const COMMENT_MAX = 500;
-export const COMMENT_NAME_MAX = 40;
+export const COMMENT_HANDLE_MAX = 15;
 
 export const commentSchema = z.object({
   campaignId: z.string().uuid(),
-  // Typed by the commenter - there are no accounts to take it from - so it is
-  // a display label, not an identity. Attribution still runs on the visitor
-  // cookie in author_id.
-  authorName: z
-    .string({ error: "Add your name." })
+  // Required, same as campaignSchema.x_handle above: a real, checkable
+  // account instead of a free-text name nobody can verify. Attribution still
+  // runs on the visitor cookie in author_id - this is just the label shown.
+  authorXHandle: z
+    .string({ error: "An X handle is required." })
     .trim()
-    .min(1, "Add your name.")
-    .max(COMMENT_NAME_MAX, `Keep it under ${COMMENT_NAME_MAX} characters.`),
+    .transform((v) => v.replace(/^@/, ""))
+    .refine((v) => v.length > 0, "An X handle is required.")
+    .refine((v) => v === "" || /^[A-Za-z0-9_]{1,15}$/.test(v), "Enter a valid X handle."),
   body: z
     .string()
     .trim()
     .min(1, "Say something first.")
     .max(COMMENT_MAX, `Keep it under ${COMMENT_MAX} characters.`),
+  // Set when replying to another comment. /api/comments flattens a reply to
+  // a reply so this always ends up pointing at a top-level comment.
+  parentId: z.string().uuid().optional().nullable(),
 });
 
 export type CampaignInput = z.infer<typeof campaignSchema>;

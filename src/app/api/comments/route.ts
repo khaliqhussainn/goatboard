@@ -56,13 +56,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Campaign not found." }, { status: 404 });
     }
 
+    // A reply always attaches to a top-level comment. If the target is
+    // itself a reply, walk up to its parent rather than nesting further -
+    // threads only ever go one level deep, so the UI never has to render a
+    // third tier.
+    let parentId: string | null = null;
+    if (parsed.data.parentId) {
+      const { data: parent } = await admin
+        .from("campaign_comments")
+        .select("id, parent_id")
+        .eq("id", parsed.data.parentId)
+        .eq("campaign_id", parsed.data.campaignId)
+        .maybeSingle();
+
+      if (!parent) {
+        return NextResponse.json({ message: "That comment no longer exists." }, { status: 404 });
+      }
+      parentId = parent.parent_id ?? parent.id;
+    }
+
     // A founder who skipped the field on the create form and wrote their
     // opening comment here instead still gets the heading - otherwise whether
     // it appears depends on which box they happened to type into. Only the
-    // first one, and only from the campaign's own creator, so the label can
-    // never be claimed by a visitor or repeated down the thread.
+    // first one, only a top-level comment (a reply is never the campaign's
+    // opening statement), and only from the campaign's own creator, so the
+    // label can never be claimed by a visitor or repeated down the thread.
     let isFounder = false;
-    if (campaign.created_by === visitorId) {
+    if (!parentId && campaign.created_by === visitorId) {
       const { count } = await admin
         .from("campaign_comments")
         .select("id", { count: "exact", head: true })
@@ -76,11 +96,14 @@ export async function POST(request: Request) {
       .insert({
         campaign_id: parsed.data.campaignId,
         author_id: visitorId,
-        author_name: parsed.data.authorName,
+        author_x_handle: parsed.data.authorXHandle,
         body: parsed.data.body,
         is_founder: isFounder,
+        parent_id: parentId,
       })
-      .select("id, campaign_id, body, created_at, author_id, author_name, is_founder")
+      .select(
+        "id, campaign_id, body, created_at, author_id, author_name, author_x_handle, is_founder, parent_id",
+      )
       .single();
 
     if (error || !data) {
