@@ -59,6 +59,10 @@ in `supabase/schema.sql` — the server route is the trust boundary, not RLS.
    - A Lemon Squeezy store, a single "pay what you want" variant used for
      every boost (the checkout overrides its price per purchase), your API
      key, and the webhook signing secret
+   - `VISITOR_TOKEN_SECRET` — signs the anonymous visitor cookie so it can't
+     be forged or edited client-side. Generate one with `openssl rand -hex
+     32`. Required: without it, voting/commenting/creating a campaign all
+     fail closed rather than accept an unsigned identity.
    - `ADMIN_PASSWORD` for the `/admin` moderation area
 3. In Lemon Squeezy, point a webhook at `/api/webhooks/lemonsqueezy`
    subscribed to the `order_created` event.
