@@ -277,18 +277,49 @@ export async function createGetListedCheckout({
   return { url, variantId };
 }
 
-/** Verifies the X-Signature header on an incoming webhook using the raw body. */
+/**
+ * Verifies the X-Signature header on an incoming webhook using the raw body.
+ *
+ * Every failure path logs *why* - a missing secret (deployment misconfigured
+ * a payment just got silently dropped over) looks nothing like a signature
+ * that plain doesn't match, and neither shows up anywhere in Lemon Squeezy's
+ * own dashboard beyond "delivery failed". Without a line here, tracking down
+ * why a real, received payment never activated its order means guessing.
+ */
 export function verifyWebhookSignature(rawBody: string, signature: string | null): boolean {
   const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
-  if (!secret || !signature) return false;
+  if (!secret) {
+    console.error(
+      "lemonsqueezy webhook: LEMONSQUEEZY_WEBHOOK_SECRET is not set - every incoming webhook " +
+        "is being rejected. Set it to the signing secret shown in Lemon Squeezy's webhook settings.",
+    );
+    return false;
+  }
+  if (!signature) {
+    console.error("lemonsqueezy webhook: request had no X-Signature header");
+    return false;
+  }
 
   const digest = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
 
-  const sigBuffer = Buffer.from(signature, "hex");
+  let sigBuffer: Buffer;
+  try {
+    sigBuffer = Buffer.from(signature, "hex");
+  } catch {
+    console.error("lemonsqueezy webhook: X-Signature header is not valid hex");
+    return false;
+  }
   const digestBuffer = Buffer.from(digest, "hex");
 
-  if (sigBuffer.length !== digestBuffer.length) return false;
-  return crypto.timingSafeEqual(sigBuffer, digestBuffer);
+  if (sigBuffer.length !== digestBuffer.length || !crypto.timingSafeEqual(sigBuffer, digestBuffer)) {
+    console.error(
+      "lemonsqueezy webhook: signature did not match - LEMONSQUEEZY_WEBHOOK_SECRET likely " +
+        "doesn't match the secret configured in Lemon Squeezy's dashboard for this endpoint",
+    );
+    return false;
+  }
+
+  return true;
 }
 
 /**
