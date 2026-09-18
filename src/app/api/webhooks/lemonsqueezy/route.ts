@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyWebhookSignature } from "@/lib/lemonsqueezy";
 import { bookAdSlot } from "@/lib/ad-slots";
-import { AD_SLOT_PRICING } from "@/lib/validation";
+import { AD_SLOT_PRICING, POWER_PER_DOLLAR } from "@/lib/validation";
 import { allowedGetListedAmounts, isGetListedPackageKey } from "@/lib/get-listed";
 import { LISTING_PRICE_USD } from "@/lib/listing";
 import type { AdSlotDuration } from "@/lib/types";
@@ -23,13 +23,27 @@ interface LemonSqueezyWebhookBody {
   };
 }
 
-async function handleBoostOrder(
-  campaignId: string,
-  power: number,
-  orderId: string,
-  amountUsd: number,
-  currency: string,
-) {
+/**
+ * Grants Power for a paid boost.
+ *
+ * Power is computed here from `amountUsd` - what Lemon Squeezy's own
+ * `total` field says was actually charged - rather than trusted from the
+ * `power` custom_data baked in when the checkout session was created. The
+ * boost variant is "pay what you want": a buyer can edit the amount on
+ * Lemon Squeezy's own checkout page before paying, so a value fixed at
+ * session-creation time can diverge from what was really paid. Recomputing
+ * it here is what makes "never trust vote power from the client" hold even
+ * though nothing in this request is literally client-submitted - it's
+ * still client-influenced, several steps upstream, unless it's re-derived
+ * from the one field Lemon Squeezy's signed payload actually guarantees.
+ */
+async function handleBoostOrder(campaignId: string, orderId: string, amountUsd: number, currency: string) {
+  const power = Math.floor(amountUsd * POWER_PER_DOLLAR);
+  if (power <= 0) {
+    console.error("boost webhook: computed power is zero or negative", { amountUsd });
+    return false;
+  }
+
   const admin = createAdminClient();
   const { data, error } = await admin.rpc("grant_purchase_power", {
     p_order_id: orderId,
@@ -273,16 +287,7 @@ export async function POST(request: Request) {
       ok = await handleAdSlotOrder(customData.ad_slot_id, durationDays, orderId);
     }
   } else if (customData.campaign_id) {
-    const power = Number(customData.power);
-    if (Number.isFinite(power) && power > 0) {
-      ok = await handleBoostOrder(
-        customData.campaign_id,
-        power,
-        orderId,
-        total / 100,
-        currency ?? "USD",
-      );
-    }
+    ok = await handleBoostOrder(customData.campaign_id, orderId, total / 100, currency ?? "USD");
   }
 
   if (!ok) {
