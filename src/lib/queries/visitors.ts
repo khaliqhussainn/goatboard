@@ -9,9 +9,10 @@ const EMPTY_STATS: VisitorStats = {
 };
 
 /**
- * Everything actually taken in money, across all three things the site sells:
- * boosts, rented ad slots, and Get Listed campaigns. Those are the only
- * tables in the schema that hold an amount.
+ * Everything actually taken in money, across all four things the site
+ * sells: boosts, rented ad slots, Get Listed campaigns, and the $1 charge
+ * to publish a new campaign listing. Those are the only tables in the
+ * schema that hold an amount.
  *
  * Each is filtered to its own paid state, which is also what keeps refunded
  * and cancelled rows out - a Get Listed order that was refunded carries the
@@ -24,7 +25,7 @@ const EMPTY_STATS: VisitorStats = {
 async function getTotalEarnings(
   admin: ReturnType<typeof createAdminClient>,
 ): Promise<number> {
-  const [purchases, adSlots, getListed] = await Promise.all([
+  const [purchases, adSlots, getListed, listings] = await Promise.all([
     admin.from("purchases").select("amount").eq("status", "paid"),
     admin
       .from("ad_slots")
@@ -32,16 +33,18 @@ async function getTotalEarnings(
       .eq("status", "paid")
       .not("lemon_squeezy_order_id", "is", null),
     admin.from("get_listed_orders").select("amount").eq("payment_status", "paid"),
+    admin.from("listing_orders").select("amount").eq("payment_status", "paid"),
   ]);
 
   if (purchases.error) console.error("earnings: purchases read failed", purchases.error);
   if (adSlots.error) console.error("earnings: ad_slots read failed", adSlots.error);
   if (getListed.error) console.error("earnings: get_listed_orders read failed", getListed.error);
+  if (listings.error) console.error("earnings: listing_orders read failed", listings.error);
 
   const sum = (rows: { amount: number | string }[] | null) =>
     (rows ?? []).reduce((total, row) => total + Number(row.amount ?? 0), 0);
 
-  return sum(purchases.data) + sum(adSlots.data) + sum(getListed.data);
+  return sum(purchases.data) + sum(adSlots.data) + sum(getListed.data) + sum(listings.data);
 }
 
 /**
