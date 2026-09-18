@@ -1,5 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { VISITOR_COOKIE, signVisitorId, VisitorTokenConfigError } from "@/lib/visitor";
+import {
+  VISITOR_COOKIE,
+  signVisitorId,
+  verifyVisitorToken,
+  VisitorTokenConfigError,
+} from "@/lib/visitor";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
@@ -18,13 +23,34 @@ const ONE_YEAR = 60 * 60 * 24 * 365;
  * and getting a fresh signed identity on the next request — that's an
  * inherent property of a login-free system minting identities on demand, so
  * /api/votes also rate-limits by IP rather than relying on identity alone.
+ *
+ * Re-mints the cookie whenever the existing one fails verification, not just
+ * when it's missing entirely — anyone still carrying a pre-signing plain
+ * UUID (or a token signed under an old/rotated secret) would otherwise be
+ * stuck forever: the site would see "a cookie is present" and never replace
+ * it, while every route that verifies it keeps rejecting it. This is what
+ * makes that self-heal automatically instead of requiring everyone to clear
+ * their cookies by hand.
  */
 export function proxy(request: NextRequest) {
-  if (request.cookies.has(VISITOR_COOKIE)) {
-    return NextResponse.next();
-  }
+  const existingToken = request.cookies.get(VISITOR_COOKIE)?.value;
 
-  const visitorId = crypto.randomUUID();
+  let visitorId: string;
+  try {
+    // verifyVisitorToken needs VISITOR_TOKEN_SECRET too, and throws the
+    // same VisitorTokenConfigError signVisitorId below can throw - only
+    // reached when there's an existing cookie to check.
+    if (existingToken && verifyVisitorToken(existingToken)) {
+      return NextResponse.next();
+    }
+    visitorId = crypto.randomUUID();
+  } catch (error) {
+    if (error instanceof VisitorTokenConfigError) {
+      console.error(error.message);
+      return NextResponse.next();
+    }
+    throw error;
+  }
 
   let token: string;
   try {
