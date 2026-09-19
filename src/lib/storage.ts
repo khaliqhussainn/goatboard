@@ -37,3 +37,31 @@ export async function uploadCampaignImage(
   const { data } = admin.storage.from("campaign-images").getPublicUrl(path);
   return data.publicUrl;
 }
+
+const VIDEO_EXT_BY_TYPE: Record<string, string> = {
+  "video/mp4": "mp4",
+  "video/webm": "webm",
+};
+
+export function extensionForVideoType(contentType: string): string | null {
+  return VIDEO_EXT_BY_TYPE[contentType.split(";")[0].trim().toLowerCase()] ?? null;
+}
+
+/** Uploads video bytes to the ad-videos bucket and returns its public URL. */
+export async function uploadAdVideo(
+  admin: SupabaseClient<Database>,
+  ownerId: string,
+  bytes: ArrayBuffer,
+  contentType: string,
+): Promise<string> {
+  const ext = extensionForVideoType(contentType);
+  if (!ext) throw new Error("Unsupported video type.");
+
+  const path = `${ownerId}/${nanoid()}.${ext}`;
+  const { error } = await admin.storage.from("ad-videos").upload(path, bytes, { contentType });
+
+  if (error) throw error;
+
+  const { data } = admin.storage.from("ad-videos").getPublicUrl(path);
+  return data.publicUrl;
+}

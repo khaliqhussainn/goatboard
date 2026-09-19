@@ -5,21 +5,24 @@ import { LayoutGroup } from "motion/react";
 import { useRealtimeLeaderboard } from "@/hooks/use-realtime-leaderboard";
 import { CampaignSlot } from "@/components/billboard/campaign-slot";
 import { AdSlotDisplay } from "@/components/billboard/ad-slot-display";
+import { VideoAdDisplay } from "@/components/billboard/video-ad-display";
 import { VisitorStatsCard } from "@/components/billboard/visitor-stats-card";
 import { DistributionPromo } from "@/components/distribution/distribution-promo";
 import { EmptyBoard } from "@/components/billboard/empty-board";
-import type { Campaign, CurrentAd, VisitorStats } from "@/lib/types";
+import type { Campaign, CurrentAd, CurrentVideoAd, VisitorStats } from "@/lib/types";
 
 export function Leaderboard({
   initialCampaigns,
   adSlot,
   adSlotMascot,
+  videoAd,
   promoMascot,
   visitorStats,
 }: {
   initialCampaigns: Campaign[];
   adSlot: CurrentAd | null;
   adSlotMascot: string | null;
+  videoAd: CurrentVideoAd | null;
   promoMascot: string | null;
   visitorStats: VisitorStats;
 }) {
@@ -56,7 +59,7 @@ export function Leaderboard({
           <VisitorStatsCard initial={visitorStats} />
         </div>
 
-        <div className="order-1 flex flex-col gap-4 lg:order-2">
+        <div className="order-1 lg:order-2">
           {first ? (
             <CampaignSlot
               key={first.id}
@@ -68,7 +71,6 @@ export function Leaderboard({
           ) : (
             <EmptyBoard />
           )}
-          <AdSlotDisplay ad={adSlot} mascot={adSlotMascot} />
         </div>
 
         {/* Third in the reading order everywhere: on a phone it follows the
@@ -76,12 +78,23 @@ export function Leaderboard({
             keeps that position once the row goes three-up.
 
             No self-start: as the third column it stretches to the row, so its
-            foot lines up with the visitor chart and the ad slot instead of
-            stopping short and leaving a notch in the layout. */}
+            foot lines up with the spotlight instead of stopping short and
+            leaving a notch in the layout. Now that the ad slot and video spot
+            live in their own row below (rather than stacked under the
+            spotlight in this column), this stretch is to the spotlight's
+            height alone — a shorter, tighter banner. */}
         <DistributionPromo
           mascot={promoMascot}
           className="order-3 lg:col-span-2 xl:col-span-1"
         />
+      </div>
+
+      {/* Ad slot + video spot, side by side: the ad banner compressed down to
+          a narrower share so the continuously-playing video gets most of the
+          width. Stacks on a phone, where neither has room to shrink further. */}
+      <div className="mt-4 flex flex-col gap-4 sm:flex-row">
+        <AdSlotDisplay ad={adSlot} mascot={adSlotMascot} className="sm:w-2/5 sm:shrink-0" />
+        <VideoAdDisplay videoAd={videoAd} className="sm:flex-1" />
       </div>
 
       {rest.length > 0 && (

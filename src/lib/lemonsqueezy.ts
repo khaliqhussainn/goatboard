@@ -278,6 +278,53 @@ export async function createGetListedCheckout({
 }
 
 /**
+ * The Lemon Squeezy variant the video ad spot is sold as.
+ *
+ * Read from the environment, same reasoning as the listing/Get Listed
+ * variants: it's a single-variant product, and a single-variant product's
+ * variant is called "Default" — there's nothing to match on by name.
+ */
+export function resolveVideoAdVariantId(): string {
+  const variantId = process.env.LEMONSQUEEZY_VIDEO_AD_VARIANT_ID?.trim();
+
+  if (!variantId) {
+    throw new Error(
+      "LEMONSQUEEZY_VIDEO_AD_VARIANT_ID is not set - create a $10 \"GoatBoard Video Ad (7 days)\" " +
+        "product in Lemon Squeezy and put its variant id there.",
+    );
+  }
+  return variantId;
+}
+
+/**
+ * Creates a Lemon Squeezy checkout for the video ad spot, with the video_ads
+ * row id baked into custom_data so the webhook can trust nothing from the
+ * client and still know which row to book. Fixed price - no custom_price is
+ * sent, the variant's own $10 price is what gets charged.
+ */
+export async function createVideoAdCheckout({
+  videoAdId,
+  videoAdName,
+  redirectUrl,
+}: {
+  videoAdId: string;
+  videoAdName: string;
+  redirectUrl: string;
+}): Promise<{ url: string; variantId: string }> {
+  const variantId = resolveVideoAdVariantId();
+
+  const url = await createCheckoutSession({
+    variantId,
+    customData: { video_ad_id: videoAdId },
+    productName: `Video Ad (7 days) - ${videoAdName}`,
+    productDescription: "7-day autoplay video spot on GOATBOARD",
+    redirectUrl,
+  });
+
+  return { url, variantId };
+}
+
+/**
  * Verifies the X-Signature header on an incoming webhook using the raw body.
  *
  * Every failure path logs *why* - a missing secret (deployment misconfigured

@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CampaignStatusActions, ReportActions } from "@/components/admin/admin-actions";
 import { AdSlotAdminPanel } from "@/components/admin/ad-slot-admin-panel";
+import { VideoAdAdminPanel } from "@/components/admin/video-ad-admin-panel";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { formatMoney, formatPower } from "@/lib/utils";
@@ -29,7 +30,7 @@ export default async function AdminPage({
     campaignsQuery = campaignsQuery.ilike("name", `%${q}%`);
   }
 
-  const [{ data: campaigns }, { data: reports }, { data: purchases }, { data: adSlots }] =
+  const [{ data: campaigns }, { data: reports }, { data: purchases }, { data: adSlots }, { data: videoAds }] =
     await Promise.all([
       campaignsQuery,
       admin
@@ -40,6 +41,7 @@ export default async function AdminPage({
         .limit(50),
       admin.from("purchases").select("*").order("created_at", { ascending: false }).limit(50),
       admin.from("ad_slots").select("*").order("created_at", { ascending: false }).limit(20),
+      admin.from("video_ads").select("*").order("created_at", { ascending: false }).limit(20),
     ]);
 
   const referencedIds = Array.from(
@@ -162,6 +164,15 @@ export default async function AdminPage({
           delete one below.
         </p>
         <AdSlotAdminPanel adSlots={adSlots ?? []} />
+      </section>
+
+      <section className="mt-12">
+        <h2 className="mb-3 text-lg font-bold">Video ad</h2>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Create a video spot for free to test the homepage player without going through checkout,
+          or end/delete one below.
+        </p>
+        <VideoAdAdminPanel videoAds={videoAds ?? []} />
       </section>
     </div>
   );

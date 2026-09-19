@@ -5,6 +5,7 @@ import { Leaderboard } from "@/components/billboard/leaderboard";
 import { AdPurchaseConfirmation } from "@/components/billboard/ad-purchase-confirmation";
 import { getVisitorStats } from "@/lib/queries/visitors";
 import { getCurrentAd } from "@/lib/queries/ad-slots";
+import { getCurrentVideoAd } from "@/lib/queries/video-ads";
 import { syncFirstPlace } from "@/lib/queries/first-place";
 import { MASCOT_IMAGES, pickHourlyMascot } from "@/lib/mascots";
 import type { Campaign } from "@/lib/types";
@@ -28,10 +29,11 @@ async function getCampaigns(): Promise<Campaign[]> {
 }
 
 export default async function Home() {
-  const [campaigns, visitorStats, adSlot] = await Promise.all([
+  const [campaigns, visitorStats, adSlot, videoAd] = await Promise.all([
     getCampaigns(),
     getVisitorStats(),
     getCurrentAd(),
+    getCurrentVideoAd(),
   ]);
 
   // The promo stands next to the ad slot, so it takes a different pose -
@@ -55,6 +57,7 @@ export default async function Home() {
           initialCampaigns={campaigns}
           adSlot={adSlot}
           adSlotMascot={adSlotMascot}
+          videoAd={videoAd}
           promoMascot={promoMascot}
           visitorStats={visitorStats}
         />

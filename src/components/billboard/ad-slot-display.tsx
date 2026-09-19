@@ -80,17 +80,19 @@ function AdSlotBackdrop({ src }: { src: string }) {
 export function AdSlotDisplay({
   ad,
   mascot,
+  className,
 }: {
   ad: CurrentAd | null;
   /** The ad slot's own goat, distinct from the sponsor's logo — rotates once
    * per hour (see pickHourlyMascot in lib/mascots.ts). Null only if no
    * mascot art exists at all. */
   mascot: string | null;
+  className?: string;
 }) {
   const [open, setOpen] = React.useState(false);
 
   return (
-    <div className="relative mb-3 sm:mb-4">
+    <div className={cn("relative mb-3 sm:mb-4", className)}>
       <span className="gold-surface absolute -top-3 left-7 z-10 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-950 shadow-[0_4px_12px_-4px_rgba(146,105,16,0.6)] ring-1 ring-inset ring-white/60">
         {ad ? "Sponsored" : "Ad space · 7 days"}
       </span>

@@ -1104,3 +1104,91 @@ update public.campaigns c
  where c.comment_count is distinct from (
      select count(*) from public.campaign_comments cc where cc.campaign_id = c.id
    );
+
+-- ---------------------------------------------------------------------------
+-- video_ads  (a single paid, time-boxed autoplay video spot beside the ad slot)
+--
+-- Same booking-queue shape as ad_slots (one row per purchase attempt, a
+-- pending draft that never got paid is harmless clutter, live is purely a
+-- function of starts_at/ends_at) but with no duration column: every row is
+-- sold as the same fixed 7-day window, so there's nothing to track per row.
+-- ---------------------------------------------------------------------------
+create table if not exists public.video_ads (
+  id uuid primary key default gen_random_uuid(),
+  name text not null check (char_length(name) between 1 and 60),
+  destination_url text not null,
+  video_url text not null,
+  amount numeric(10, 2) not null check (amount > 0),
+  lemon_squeezy_order_id text unique,
+  status text not null default 'pending' check (status in ('pending', 'paid')),
+  starts_at timestamptz,
+  ends_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists video_ads_live_idx
+  on public.video_ads (starts_at, ends_at)
+  where status = 'paid';
+
+-- Same queueing guarantee as ad_slots_no_overlap: two paid rows can never
+-- share a moment, which is what bookVideoAd's retry loop relies on.
+do $$
+begin
+  alter table public.video_ads
+    add constraint video_ads_no_overlap
+    exclude using gist (tstzrange(starts_at, ends_at) with &&)
+    where (status = 'paid' and starts_at is not null and ends_at is not null);
+exception
+  when duplicate_table then null;
+  when duplicate_object then null;
+end $$;
+
+alter table public.video_ads enable row level security;
+-- No public policies - creation goes through /api/video-ads and activation
+-- through the Lemon Squeezy webhook, both service-role. The only public
+-- read is get_current_video_ad() below, which never exposes a pending
+-- draft, the order id, or the amount.
+
+drop function if exists public.get_current_video_ad();
+
+create or replace function public.get_current_video_ad()
+returns table(
+  name text,
+  destination_url text,
+  video_url text,
+  ends_at timestamptz
+)
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select name, destination_url, video_url, ends_at
+  from public.video_ads
+  where status = 'paid' and starts_at <= now() and ends_at > now()
+  order by starts_at desc
+  limit 1;
+$$;
+
+revoke all on function public.get_current_video_ad() from public;
+grant execute on function public.get_current_video_ad() to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Storage: video ad uploads
+-- ---------------------------------------------------------------------------
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'ad-videos',
+  'ad-videos',
+  true,
+  26214400,
+  array['video/mp4', 'video/webm']
+)
+on conflict (id) do update
+  set file_size_limit = excluded.file_size_limit,
+      allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "ad videos are publicly readable" on storage.objects;
+create policy "ad videos are publicly readable"
+  on storage.objects for select
+  using (bucket_id = 'ad-videos');

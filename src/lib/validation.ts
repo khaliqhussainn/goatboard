@@ -161,6 +161,35 @@ export const adCheckoutSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// Video ads — a single fixed $10/7-day autoplay video spot beside the ad slot.
+// ---------------------------------------------------------------------------
+export const VIDEO_AD_PRICE_USD = 10;
+
+export const videoAdSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Give it a name (2+ characters).")
+    .max(60, "Keep it under 60 characters."),
+  destination_url: z
+    .string()
+    .trim()
+    .min(1, "A destination link is required.")
+    .refine(isSafeUrl, "Enter a valid http(s) URL."),
+  video_url: z
+    .string()
+    .trim()
+    .min(1, "Upload a video first.")
+    .refine(isSafeUrl, "Enter a valid video URL."),
+});
+
+export type VideoAdInput = z.infer<typeof videoAdSchema>;
+
+export const videoCheckoutSchema = z.object({
+  videoAdId: z.string().uuid(),
+});
+
+// ---------------------------------------------------------------------------
 // Get Listed (paid startup distribution service)
 //
 // The client sends a package key and never a price. Every amount charged is

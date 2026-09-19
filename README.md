@@ -63,6 +63,12 @@ in `supabase/schema.sql` — the server route is the trust boundary, not RLS.
      be forged or edited client-side. Generate one with `openssl rand -hex
      32`. Required: without it, voting/commenting/creating a campaign all
      fail closed rather than accept an unsigned identity.
+   - `LEMONSQUEEZY_VIDEO_AD_VARIANT_ID` — the variant id for a fixed $10
+     "GoatBoard Video Ad (7 days)" product/variant in your Lemon Squeezy
+     store (unlike the boost variant, this one is a normal fixed price, not
+     "pay what you want"). Required for the video ad spot's checkout to work;
+     the homepage still renders without it, just with the video checkout
+     route failing.
    - `ADMIN_PASSWORD` for the `/admin` moderation area
 3. In Lemon Squeezy, point a webhook at `/api/webhooks/lemonsqueezy`
    subscribed to the `order_created` event.

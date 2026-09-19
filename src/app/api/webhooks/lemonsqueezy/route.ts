@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyWebhookSignature } from "@/lib/lemonsqueezy";
 import { bookAdSlot } from "@/lib/ad-slots";
+import { bookVideoAd } from "@/lib/video-ads";
 import { AD_SLOT_PRICING, POWER_PER_DOLLAR } from "@/lib/validation";
 import { allowedGetListedAmounts, isGetListedPackageKey } from "@/lib/get-listed";
 import { LISTING_PRICE_USD } from "@/lib/listing";
@@ -111,6 +112,23 @@ async function handleAdSlotOrder(adSlotId: string, durationDays: number, orderId
 
   if (!result.ok) {
     console.error("ad slot webhook: booking failed", adSlotId, result.reason);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Confirms a paid video ad, booking it into the next free window in the
+ * queue — same shape as handleAdSlotOrder, but there's no per-duration price
+ * to cross-check since the video spot only ever sells as one fixed $10/7-day
+ * variant.
+ */
+async function handleVideoAdOrder(videoAdId: string, orderId: string) {
+  const admin = createAdminClient();
+  const result = await bookVideoAd(admin, { videoAdId, orderId });
+
+  if (!result.ok) {
+    console.error("video ad webhook: booking failed", videoAdId, result.reason);
     return false;
   }
   return true;
@@ -286,6 +304,8 @@ export async function POST(request: Request) {
     if (customData.ad_slot_id && Number.isFinite(durationDays)) {
       ok = await handleAdSlotOrder(customData.ad_slot_id, durationDays, orderId);
     }
+  } else if (customData.video_ad_id) {
+    ok = await handleVideoAdOrder(customData.video_ad_id, orderId);
   } else if (customData.campaign_id) {
     ok = await handleBoostOrder(customData.campaign_id, orderId, total / 100, currency ?? "USD");
   }

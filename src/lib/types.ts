@@ -158,6 +158,29 @@ export type CurrentAd = {
   ends_at: string;
 };
 
+export type VideoAdStatus = "pending" | "paid";
+
+export type VideoAd = {
+  id: string;
+  name: string;
+  destination_url: string;
+  video_url: string;
+  amount: number;
+  lemon_squeezy_order_id: string | null;
+  status: VideoAdStatus;
+  starts_at: string | null;
+  ends_at: string | null;
+  created_at: string;
+};
+
+/** The public-safe shape get_current_video_ad() returns — never a pending draft, order id, or amount. */
+export type CurrentVideoAd = {
+  name: string;
+  destination_url: string;
+  video_url: string;
+  ends_at: string;
+};
+
 // --- Get Listed (paid distribution service) --------------------------------
 // Separate from the billboard Campaign type above: these are never ranked,
 // voted on, or boosted.
@@ -255,6 +278,13 @@ export interface Database {
         Update: Partial<AdSlot>;
         Relationships: [];
       };
+      video_ads: {
+        Row: VideoAd;
+        Insert: Partial<VideoAd> &
+          Pick<VideoAd, "name" | "destination_url" | "video_url" | "amount">;
+        Update: Partial<VideoAd>;
+        Relationships: [];
+      };
       get_listed_campaigns: {
         Row: GetListedCampaign;
         Insert: Partial<GetListedCampaign> &
@@ -330,6 +360,10 @@ export interface Database {
       get_current_ad: {
         Args: Record<string, never>;
         Returns: CurrentAd[];
+      };
+      get_current_video_ad: {
+        Args: Record<string, never>;
+        Returns: CurrentVideoAd[];
       };
       sync_first_place: {
         Args: Record<string, never>;

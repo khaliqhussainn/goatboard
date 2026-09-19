@@ -9,6 +9,7 @@ export function AdPurchaseConfirmation() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const adPurchased = searchParams.get("ad_purchased");
+  const videoAdPurchased = searchParams.get("video_ad_purchased");
 
   React.useEffect(() => {
     if (!adPurchased) return;
@@ -16,6 +17,13 @@ export function AdPurchaseConfirmation() {
     router.replace(pathname);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adPurchased]);
+
+  React.useEffect(() => {
+    if (!videoAdPurchased) return;
+    toast.success("You're renting the video spot for 7 days.");
+    router.replace(pathname);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoAdPurchased]);
 
   return null;
 }
