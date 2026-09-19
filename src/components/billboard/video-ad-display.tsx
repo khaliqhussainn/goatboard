@@ -37,7 +37,7 @@ export function VideoAdDisplay({
   return (
     <div className={cn("relative", className)}>
       {videoAd ? (
-        <div className="group relative aspect-video w-full overflow-hidden rounded-3xl bg-black shadow-[0_18px_50px_-24px_rgba(0,0,0,0.6)] ring-1 ring-inset ring-white/10">
+        <div className="group relative mx-auto aspect-video h-40 w-auto max-w-full overflow-hidden rounded-2xl bg-black shadow-[0_12px_32px_-18px_rgba(0,0,0,0.6)] ring-1 ring-inset ring-white/10 sm:mx-0 sm:h-44">
           <video
             ref={videoRef}
             src={videoAd.video_url}
@@ -47,37 +47,35 @@ export function VideoAdDisplay({
             playsInline
             className="size-full object-cover"
           />
-          <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white/90 backdrop-blur-sm">
+          <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/90 backdrop-blur-sm">
             Sponsored
           </span>
           <button
             type="button"
             onClick={toggleFullscreen}
             aria-label="Fullscreen"
-            className="absolute bottom-3 left-3 inline-flex items-center justify-center rounded-full bg-black/60 p-2 text-white backdrop-blur-sm transition-colors hover:bg-black/80"
+            className="absolute bottom-2 left-2 inline-flex items-center justify-center rounded-full bg-black/60 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/80"
           >
-            <Maximize className="size-4" />
+            <Maximize className="size-3.5" />
           </button>
           <a
             href={videoAd.destination_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-black shadow-sm transition-colors hover:bg-white/90"
+            className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-black shadow-sm transition-colors hover:bg-white/90"
           >
-            Visit <ExternalLink className="size-3.5" />
+            Visit <ExternalLink className="size-3" />
           </a>
         </div>
       ) : (
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="group relative flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-white/15 bg-black/90 text-center shadow-[0_18px_50px_-24px_rgba(0,0,0,0.6)] transition-colors hover:border-white/30"
+          className="group relative mx-auto flex aspect-video h-40 w-auto max-w-full flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-white/15 bg-black/90 text-center shadow-[0_12px_32px_-18px_rgba(0,0,0,0.6)] transition-colors hover:border-white/30 sm:mx-0 sm:h-44"
         >
-          <Film className="size-6 text-white/50" />
-          <p className="font-handwritten text-lg text-white/90 sm:text-xl">
-            Your video could be here
-          </p>
-          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-black shadow-sm transition-colors group-hover:bg-white/90">
+          <Film className="size-5 text-white/50" />
+          <p className="font-handwritten text-base text-white/90">Your video could be here</p>
+          <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-black shadow-sm transition-colors group-hover:bg-white/90">
             $10 · 7 days →
           </span>
         </button>

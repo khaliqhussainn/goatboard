@@ -23,7 +23,8 @@ const SPARKLES = [
  * row's flex flow (absolute) from sm up so the banner's height stays set by
  * its text, not by however tall this particular pose happens to be; on
  * mobile, where the banner stacks, it drops back into normal flow instead of
- * overlapping the stacked content.
+ * overlapping the stacked content. Not used in compact mode — there isn't
+ * room for it once the banner is this narrow.
  */
 function AdSlotMascot({ src, className }: { src: string; className?: string }) {
   return (
@@ -44,14 +45,12 @@ function AdSlotMascot({ src, className }: { src: string; className?: string }) {
  * The highlight that travels across the metal, in its own rounded clip so the
  * banner itself never needs overflow-hidden - the goat breaks past its edges
  * and would be cut off. Decorative only; the global reduced-motion rule stops
- * it for anyone who asked for that.
+ * it for anyone who asked for that. `rounded` matches whatever radius the
+ * banner itself is using (the compact banner is a much gentler curve).
  */
-function GoldSheen() {
+function GoldSheen({ rounded = "rounded-[4rem]" }: { rounded?: string }) {
   return (
-    <span
-      aria-hidden
-      className="pointer-events-none absolute inset-0 overflow-hidden rounded-[4rem]"
-    >
+    <span aria-hidden className={cn("pointer-events-none absolute inset-0 overflow-hidden", rounded)}>
       <span className="absolute inset-y-0 -left-1/3 w-1/3 animate-[gold-sweep_6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/70 to-transparent" />
     </span>
   );
@@ -64,12 +63,9 @@ function GoldSheen() {
  * opacity, with a scrim that's heaviest behind the copy and clears toward
  * the goat, so any uploaded image stays readable underneath the text.
  */
-function AdSlotBackdrop({ src }: { src: string }) {
+function AdSlotBackdrop({ src, rounded = "rounded-[4rem]" }: { src: string; rounded?: string }) {
   return (
-    <span
-      aria-hidden
-      className="pointer-events-none absolute inset-0 overflow-hidden rounded-[4rem]"
-    >
+    <span aria-hidden className={cn("pointer-events-none absolute inset-0 overflow-hidden", rounded)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt="" className="size-full object-cover opacity-25" />
       <span className="absolute inset-0 bg-gradient-to-r from-[#fffdf4]/90 via-[#fffdf4]/45 to-transparent" />
@@ -81,24 +77,71 @@ export function AdSlotDisplay({
   ad,
   mascot,
   className,
+  compact,
 }: {
   ad: CurrentAd | null;
   /** The ad slot's own goat, distinct from the sponsor's logo — rotates once
    * per hour (see pickHourlyMascot in lib/mascots.ts). Null only if no
-   * mascot art exists at all. */
+   * mascot art exists at all. Ignored in compact mode. */
   mascot: string | null;
   className?: string;
+  /** A short, tight rectangle instead of the tall gold pill — for when the
+   * banner is sharing a row with the video spot and doesn't have the width
+   * (or the height budget) for the full treatment. */
+  compact?: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
 
   return (
-    <div className={cn("relative mb-3 sm:mb-4", className)}>
-      <span className="gold-surface absolute -top-3 left-7 z-10 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-950 shadow-[0_4px_12px_-4px_rgba(146,105,16,0.6)] ring-1 ring-inset ring-white/60">
+    <div className={cn("relative", compact ? "" : "mb-3 sm:mb-4", className)}>
+      <span className="gold-surface absolute -top-3 left-5 z-10 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-950 shadow-[0_4px_12px_-4px_rgba(146,105,16,0.6)] ring-1 ring-inset ring-white/60">
         {ad ? "Sponsored" : "Ad space · 7 days"}
       </span>
-      <Sparkle className="absolute -top-4 left-0 z-10 size-5 fill-amber-400 text-amber-400 sm:-left-1" />
+      {!compact && (
+        <Sparkle className="absolute -top-4 left-0 z-10 size-5 fill-amber-400 text-amber-400 sm:-left-1" />
+      )}
 
-      {ad ? (
+      {compact ? (
+        ad ? (
+          <div className="gold-surface-soft relative overflow-hidden rounded-2xl border-2 border-amber-300/80 px-4 pb-3 pt-5 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70">
+            {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} rounded="rounded-2xl" />}
+            <GoldSheen rounded="rounded-2xl" />
+            <div className="relative flex items-center gap-3">
+              <CampaignAvatar
+                src={ad.image_url}
+                name={ad.name}
+                className="size-10 shrink-0 rounded-xl text-sm shadow-sm ring-2 ring-white"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-black tracking-tight">{ad.name}</p>
+                <p className="truncate text-xs text-foreground">{ad.description}</p>
+              </div>
+            </div>
+            <a
+              href={ad.destination_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative mt-2.5 flex items-center justify-center gap-1 rounded-full bg-amber-950 px-3 py-1.5 text-xs font-bold text-amber-50 shadow-sm transition-colors hover:bg-amber-900"
+            >
+              Visit <ExternalLink className="size-3" />
+            </a>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="gold-surface group relative flex w-full flex-col items-center gap-2 rounded-2xl border-2 border-amber-300/90 px-4 pb-3 pt-5 text-center shadow-[0_12px_32px_-16px_rgba(146,105,16,0.65)] ring-1 ring-inset ring-white/60 transition-shadow hover:shadow-[0_16px_38px_-16px_rgba(146,105,16,0.8)]"
+          >
+            <GoldSheen rounded="rounded-2xl" />
+            <p className="font-handwritten text-base leading-tight text-amber-950 drop-shadow-[0_1px_0_rgba(255,255,255,0.6)]">
+              Your product could be here
+            </p>
+            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-amber-950 px-3 py-1.5 text-xs font-bold text-amber-50 shadow-sm transition-colors group-hover:bg-amber-900">
+              Get noticed →
+            </span>
+          </button>
+        )
+      ) : ad ? (
         <div className="gold-surface-soft relative rounded-[4rem] border-2 border-amber-300/80 px-6 py-8 shadow-[0_18px_50px_-24px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70 sm:px-10">
           {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} />}
           <GoldSheen />

@@ -89,12 +89,12 @@ export function Leaderboard({
         />
       </div>
 
-      {/* Ad slot + video spot, side by side: the ad banner compressed down to
-          a narrower share so the continuously-playing video gets most of the
-          width. Stacks on a phone, where neither has room to shrink further. */}
-      <div className="mt-4 flex flex-col gap-4 sm:flex-row">
-        <AdSlotDisplay ad={adSlot} mascot={adSlotMascot} className="sm:w-2/5 sm:shrink-0" />
-        <VideoAdDisplay videoAd={videoAd} className="sm:flex-1" />
+      {/* Ad slot + video spot, side by side: both kept short and compact
+          (compact AdSlotDisplay, a smaller fixed-height 16:9 video) rather
+          than stretching to fill the row. Stacks on a phone. */}
+      <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
+        <AdSlotDisplay ad={adSlot} mascot={adSlotMascot} compact className="w-full sm:w-2/5 sm:shrink-0" />
+        <VideoAdDisplay videoAd={videoAd} />
       </div>
 
       {rest.length > 0 && (
