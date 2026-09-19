@@ -103,7 +103,7 @@ export function AdSlotDisplay({
 
       {compact ? (
         ad ? (
-          <div className="gold-surface-soft relative flex h-full flex-col justify-center overflow-hidden rounded-2xl border-2 border-amber-300/80 px-4 py-3 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70">
+          <div className="gold-surface-soft relative flex h-full flex-col justify-center overflow-hidden rounded-2xl border-2 border-amber-300/80 px-4 py-2.5 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70">
             {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} rounded="rounded-2xl" />}
             <GoldSheen rounded="rounded-2xl" />
             <div className="relative flex items-center gap-3">
@@ -121,7 +121,7 @@ export function AdSlotDisplay({
               href={ad.destination_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="relative mt-2.5 flex items-center justify-center gap-1 rounded-full bg-amber-950 px-3 py-1.5 text-xs font-bold text-amber-50 shadow-sm transition-colors hover:bg-amber-900"
+              className="relative mt-2 flex items-center justify-center gap-1 rounded-full bg-amber-950 px-3 py-1.5 text-xs font-bold text-amber-50 shadow-sm transition-colors hover:bg-amber-900"
             >
               Visit <ExternalLink className="size-3" />
             </a>
