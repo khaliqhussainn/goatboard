@@ -50,7 +50,11 @@ export function DistributionPromo({
           Startup distribution
         </span>
 
-        <h2 className="font-handwritten text-2xl uppercase leading-[1.05] tracking-tight text-foreground sm:text-3xl xl:text-2xl">
+        {/* Plain sans, same as every other heading on the board ("Nobody's the
+            GOAT yet.", the campaign names): the handwritten face this used to
+            run in was the only one of its kind up here and read as a sticker
+            dropped onto the layout rather than part of it. */}
+        <h2 className="text-2xl font-black leading-[1.1] tracking-tight text-foreground sm:text-3xl xl:text-2xl">
           Get your startup out there.
         </h2>
 

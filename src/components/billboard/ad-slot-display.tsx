@@ -42,6 +42,25 @@ function AdSlotMascot({ src, className }: { src: string; className?: string }) {
 }
 
 /**
+ * The compact banner's goat, standing in the bottom-right corner. Unlike the
+ * full-size AdSlotMascot it stays inside the card's bounds - the compact
+ * banner is part of the board's collage, where anything breaking past an edge
+ * lands in the gap between cards. Sized off the bottom edge so it reads as
+ * standing on it, and clipped by the card's own overflow-hidden.
+ */
+function CompactMascot({ src }: { src: string }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      aria-hidden
+      className="pointer-events-none absolute -bottom-1 right-2 h-28 w-auto drop-shadow-[0_14px_22px_rgba(146,105,16,0.32)] transition-transform duration-300 group-hover:-translate-y-1 sm:h-40"
+    />
+  );
+}
+
+/**
  * The highlight that travels across the metal, in its own rounded clip so the
  * banner itself never needs overflow-hidden - the goat breaks past its edges
  * and would be cut off. Decorative only; the global reduced-motion rule stops
@@ -114,40 +133,49 @@ export function AdSlotDisplay({
 
       {compact ? (
         ad ? (
-          <div className="gold-surface-soft relative flex h-full flex-col justify-center gap-3 overflow-hidden rounded-2xl border-2 border-amber-300/80 px-5 py-4 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70">
+          <div className="gold-surface-soft relative flex h-full flex-col justify-center overflow-hidden rounded-2xl border-2 border-amber-300/80 px-5 py-4 pr-28 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70 sm:pr-40">
             {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} rounded="rounded-2xl" />}
             <GoldSheen rounded="rounded-2xl" />
-            <div className="relative flex items-center gap-3">
-              <CampaignAvatar
-                src={ad.image_url}
-                name={ad.name}
-                className="size-12 shrink-0 rounded-xl text-base shadow-sm ring-2 ring-white"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-base font-black tracking-tight">{ad.name}</p>
-                <p className="line-clamp-2 text-xs text-foreground">{ad.description}</p>
+            {mascot && <CompactMascot src={mascot} />}
+            <div className="relative flex flex-col gap-2">
+              <div className="flex items-center gap-2.5">
+                <CampaignAvatar
+                  src={ad.image_url}
+                  name={ad.name}
+                  className="size-11 shrink-0 rounded-xl text-base shadow-sm ring-2 ring-white"
+                />
+                <p className="min-w-0 truncate text-xl font-black tracking-tight text-amber-950 sm:text-2xl">
+                  {ad.name}
+                </p>
               </div>
+              {/* Full-strength amber rather than muted grey, and a size up from
+                  the old caption: this sits on gold, often over an advertiser
+                  backdrop, where anything lighter stopped being legible. */}
+              <p className="line-clamp-2 text-sm font-medium leading-snug text-amber-950">
+                {ad.description}
+              </p>
+              <a
+                href={ad.destination_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex w-fit items-center gap-1.5 rounded-full bg-amber-950 px-4 py-2 text-sm font-bold text-amber-50 shadow-sm transition-colors hover:bg-amber-900"
+              >
+                Visit site <ExternalLink className="size-3.5" />
+              </a>
             </div>
-            <a
-              href={ad.destination_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="relative flex items-center justify-center gap-1 rounded-full bg-amber-950 px-3 py-2 text-xs font-bold text-amber-50 shadow-sm transition-colors hover:bg-amber-900"
-            >
-              Visit <ExternalLink className="size-3" />
-            </a>
           </div>
         ) : (
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="gold-surface group relative flex h-full w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-amber-300/90 px-5 py-4 text-center shadow-[0_12px_32px_-16px_rgba(146,105,16,0.65)] ring-1 ring-inset ring-white/60 transition-shadow hover:shadow-[0_16px_38px_-16px_rgba(146,105,16,0.8)]"
+            className="gold-surface group relative flex h-full w-full flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl border-2 border-amber-300/90 px-5 py-4 pr-28 text-center shadow-[0_12px_32px_-16px_rgba(146,105,16,0.65)] ring-1 ring-inset ring-white/60 transition-shadow hover:shadow-[0_16px_38px_-16px_rgba(146,105,16,0.8)] sm:pr-40"
           >
             <GoldSheen rounded="rounded-2xl" />
-            <p className="font-handwritten text-xl leading-tight text-amber-950 drop-shadow-[0_1px_0_rgba(255,255,255,0.6)]">
+            {mascot && <CompactMascot src={mascot} />}
+            <p className="relative text-xl font-black leading-tight tracking-tight text-amber-950 sm:text-2xl">
               Your product could be here
             </p>
-            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-amber-950 px-4 py-2 text-xs font-bold text-amber-50 shadow-sm transition-colors group-hover:bg-amber-900">
+            <span className="relative inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-amber-950 px-4 py-2 text-sm font-bold text-amber-50 shadow-sm transition-colors group-hover:bg-amber-900">
               Get noticed →
             </span>
           </button>

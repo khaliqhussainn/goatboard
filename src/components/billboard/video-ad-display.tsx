@@ -81,7 +81,7 @@ export function VideoAdDisplay({
           className="group relative mx-auto flex aspect-video h-40 w-auto max-w-full flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-white/15 bg-black/90 text-center shadow-[0_12px_32px_-18px_rgba(0,0,0,0.6)] transition-colors hover:border-white/30 sm:mx-0 sm:aspect-auto sm:h-full sm:w-full"
         >
           <Film className="size-5 text-white/50" />
-          <p className="font-handwritten text-base text-white/90">Your video could be here</p>
+          <p className="text-lg font-black tracking-tight text-white/90">Your video could be here</p>
           <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-black shadow-sm transition-colors group-hover:bg-white/90">
             $10 · 7 days →
           </span>
