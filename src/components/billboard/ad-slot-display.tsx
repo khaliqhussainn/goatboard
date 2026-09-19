@@ -103,7 +103,7 @@ export function AdSlotDisplay({
 
       {compact ? (
         ad ? (
-          <div className="gold-surface-soft relative overflow-hidden rounded-2xl border-2 border-amber-300/80 px-4 pb-3 pt-5 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70">
+          <div className="gold-surface-soft relative flex h-full flex-col justify-center overflow-hidden rounded-2xl border-2 border-amber-300/80 px-4 py-3 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70">
             {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} rounded="rounded-2xl" />}
             <GoldSheen rounded="rounded-2xl" />
             <div className="relative flex items-center gap-3">
@@ -130,7 +130,7 @@ export function AdSlotDisplay({
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="gold-surface group relative flex w-full flex-col items-center gap-2 rounded-2xl border-2 border-amber-300/90 px-4 pb-3 pt-5 text-center shadow-[0_12px_32px_-16px_rgba(146,105,16,0.65)] ring-1 ring-inset ring-white/60 transition-shadow hover:shadow-[0_16px_38px_-16px_rgba(146,105,16,0.8)]"
+            className="gold-surface group relative flex h-full w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-amber-300/90 px-4 py-3 text-center shadow-[0_12px_32px_-16px_rgba(146,105,16,0.65)] ring-1 ring-inset ring-white/60 transition-shadow hover:shadow-[0_16px_38px_-16px_rgba(146,105,16,0.8)]"
           >
             <GoldSheen rounded="rounded-2xl" />
             <p className="font-handwritten text-base leading-tight text-amber-950 drop-shadow-[0_1px_0_rgba(255,255,255,0.6)]">

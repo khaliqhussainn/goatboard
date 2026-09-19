@@ -13,6 +13,13 @@ import type { CurrentVideoAd } from "@/lib/types";
  * so it keeps playing rather than being replaced by a lightbox) and a link
  * to the advertiser's site. Same open/dialog shape as AdSlotDisplay's empty
  * state, styled dark instead of gold so it doesn't read as the same slot.
+ *
+ * Sized as its own compact 16:9 box on a phone, where it stacks alone. Beside
+ * the ad slot (sm+) it instead fills whatever the row gives it — height
+ * matched to the ad slot via the parent's fixed row height, width via
+ * flex-1 — so the pair reads as one unbroken rectangle rather than a small
+ * video floating in leftover space. object-cover keeps the clip itself
+ * looking right regardless of the box's resulting ratio.
  */
 export function VideoAdDisplay({
   videoAd,
@@ -37,7 +44,7 @@ export function VideoAdDisplay({
   return (
     <div className={cn("relative", className)}>
       {videoAd ? (
-        <div className="group relative mx-auto aspect-video h-40 w-auto max-w-full overflow-hidden rounded-2xl bg-black shadow-[0_12px_32px_-18px_rgba(0,0,0,0.6)] ring-1 ring-inset ring-white/10 sm:mx-0 sm:h-44">
+        <div className="group relative mx-auto aspect-video h-40 w-auto max-w-full overflow-hidden rounded-2xl bg-black shadow-[0_12px_32px_-18px_rgba(0,0,0,0.6)] ring-1 ring-inset ring-white/10 sm:mx-0 sm:aspect-auto sm:h-full sm:w-full">
           <video
             ref={videoRef}
             src={videoAd.video_url}
@@ -71,7 +78,7 @@ export function VideoAdDisplay({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="group relative mx-auto flex aspect-video h-40 w-auto max-w-full flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-white/15 bg-black/90 text-center shadow-[0_12px_32px_-18px_rgba(0,0,0,0.6)] transition-colors hover:border-white/30 sm:mx-0 sm:h-44"
+          className="group relative mx-auto flex aspect-video h-40 w-auto max-w-full flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-white/15 bg-black/90 text-center shadow-[0_12px_32px_-18px_rgba(0,0,0,0.6)] transition-colors hover:border-white/30 sm:mx-0 sm:aspect-auto sm:h-full sm:w-full"
         >
           <Film className="size-5 text-white/50" />
           <p className="font-handwritten text-base text-white/90">Your video could be here</p>
