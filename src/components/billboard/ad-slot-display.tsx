@@ -163,6 +163,19 @@ export function AdSlotDisplay({
                 Visit site <ExternalLink className="size-3.5" />
               </a>
             </div>
+
+            {/* The way into the queue while the spot is taken. Deliberately a
+                small corner chip rather than a second CTA beside the
+                advertiser's own: they paid for this space, and the booking
+                dialog behind it already explains where in the queue a
+                purchase lands. */}
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-amber-950/85 px-2.5 py-1 text-[11px] font-bold text-amber-50 shadow-sm transition-colors hover:bg-amber-900"
+            >
+              Book next →
+            </button>
           </div>
         ) : (
           <button
@@ -250,7 +263,7 @@ export function AdSlotDisplay({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rent the ad spot</DialogTitle>
+            <DialogTitle>{ad ? "Book the next ad spot" : "Rent the ad spot"}</DialogTitle>
           </DialogHeader>
           <AdSlotForm onDone={() => setOpen(false)} />
         </DialogContent>

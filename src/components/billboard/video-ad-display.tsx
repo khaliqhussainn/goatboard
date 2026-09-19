@@ -57,6 +57,16 @@ export function VideoAdDisplay({
           <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/90 backdrop-blur-sm">
             Sponsored
           </span>
+          {/* The way into the queue while a video is playing: a booking made
+              now starts the moment this one's run ends (see lib/video-ads.ts),
+              and the dialog behind this spells out those dates. */}
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+          >
+            Book next →
+          </button>
           <button
             type="button"
             onClick={toggleFullscreen}
@@ -91,7 +101,7 @@ export function VideoAdDisplay({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rent the video spot</DialogTitle>
+            <DialogTitle>{videoAd ? "Book the next video spot" : "Rent the video spot"}</DialogTitle>
           </DialogHeader>
           <VideoAdForm onDone={() => setOpen(false)} />
         </DialogContent>
