@@ -3,9 +3,9 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { Film, Loader2, X } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { AD_VIDEO_BUCKET, MAX_VIDEO_BYTES } from "@/lib/validation";
 import { cn } from "@/lib/utils";
-
-const MAX_SIZE = 25 * 1024 * 1024;
 
 /**
  * Upload/preview/clear control for the video ad's clip, the same shape as
@@ -30,22 +30,39 @@ export function VideoPicker({
     e.target.value = "";
     if (!file) return;
 
-    if (file.size > MAX_SIZE) {
+    if (file.size > MAX_VIDEO_BYTES) {
       toast.error("Video must be under 25MB.");
       return;
     }
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
     try {
-      const res = await fetch("/api/upload/video", { method: "POST", body: formData });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.message ?? "Couldn't upload video. Try again.");
+      // The server only signs the upload; the bytes go straight from here to
+      // Supabase Storage, which is the only way a file this size gets there
+      // at all (see the route for why).
+      const res = await fetch("/api/upload/video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentType: file.type, size: file.size }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data) {
+        toast.error(data?.message ?? "Couldn't start the upload. Try again.");
         return;
       }
-      onChange(data.url as string);
+
+      const { error } = await createClient()
+        .storage.from(AD_VIDEO_BUCKET)
+        .uploadToSignedUrl(data.path, data.token, file, { contentType: file.type });
+
+      if (error) {
+        // Surfaced rather than swallowed: at this point the failure is
+        // Supabase's own (size limit, mime type, expired token), and its
+        // message is the only thing that says which.
+        toast.error(error.message || "Couldn't upload video. Try again.");
+        return;
+      }
+      onChange(data.publicUrl as string);
     } catch {
       toast.error("Couldn't upload video. Try again.");
     } finally {

@@ -165,6 +165,15 @@ export const adCheckoutSchema = z.object({
 // ---------------------------------------------------------------------------
 export const VIDEO_AD_PRICE_USD = 10;
 
+/** Where paid ad videos are stored. Named here rather than in lib/storage.ts
+ *  because the browser needs it too: the file goes straight from the uploader
+ *  to Supabase Storage, and lib/storage.ts is server-only. */
+export const AD_VIDEO_BUCKET = "ad-videos";
+
+/** Must stay in step with the bucket's own file_size_limit in schema.sql,
+ *  which is what actually enforces this - a client can claim any size. */
+export const MAX_VIDEO_BYTES = 25 * 1024 * 1024;
+
 export const videoAdSchema = z.object({
   name: z
     .string()
