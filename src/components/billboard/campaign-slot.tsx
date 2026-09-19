@@ -44,7 +44,7 @@ export function CampaignSlot({
           ? { duration: 0.2 }
           : { type: "spring", stiffness: 300, damping: 30, mass: 0.9 }
       }
-      className={cn("relative", tierClass[tier])}
+      className={cn("relative h-full", tierClass[tier])}
     >
       <AnimatePresence>
         {isNewFirst && (
@@ -67,6 +67,11 @@ export function CampaignSlot({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
+          // Fills the grid cell rather than sitting at its natural height at
+          // the top of it - without this the spotlight stops short whenever
+          // something else in its row (the distribution promo) is taller,
+          // leaving dead space under the card.
+          className="h-full"
         >
           {tier === "spotlight" && (
             <SpotlightCampaign

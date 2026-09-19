@@ -26,7 +26,7 @@ export function SpotlightCampaign({
   onVoted?: (totalPower: number) => void;
 }) {
   return (
-    <div className="billboard-surface-lg flex flex-col overflow-hidden rounded-[1.75rem] sm:flex-row sm:items-stretch">
+    <div className="billboard-surface-lg flex h-full flex-col overflow-hidden rounded-2xl sm:flex-row sm:items-stretch">
       <div className="relative aspect-[16/10] w-full shrink-0 sm:aspect-auto sm:w-[42%]">
         <Link href={`/campaign/${campaign.slug}`} className="absolute inset-0 block">
           <CampaignHeroMascot campaignId={campaign.id} rank={1} className="size-full" />

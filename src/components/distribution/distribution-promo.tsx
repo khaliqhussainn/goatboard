@@ -35,7 +35,7 @@ export function DistributionPromo({
     <Link
       href="/get-listed"
       className={cn(
-        "billboard-surface group relative flex flex-col gap-3 overflow-hidden rounded-[1.75rem] bg-gradient-to-b from-[#fdf6d8] via-[#fdfaec] to-[#fcf3cf] p-5 ring-1 ring-inset ring-white/70 transition-transform duration-200 hover:-translate-y-0.5",
+        "billboard-surface group relative flex flex-col gap-3 overflow-hidden rounded-2xl bg-gradient-to-b from-[#fdf6d8] via-[#fdfaec] to-[#fcf3cf] p-5 ring-1 ring-inset ring-white/70 transition-transform duration-200 hover:-translate-y-0.5",
         // Room for the goat: to the side while wide, underneath once tall.
         "pb-28 sm:pb-5 sm:pr-44 xl:pb-28 xl:pr-5",
         className,

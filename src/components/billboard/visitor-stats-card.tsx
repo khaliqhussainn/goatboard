@@ -100,7 +100,7 @@ export function VisitorStatsCard({ initial }: { initial: VisitorStats }) {
       {/* Paired squares. The wrapper spans the parent's two phone columns and
           re-splits them itself, so the pairing survives the sidebar switching
           from a two-column grid to a single stacked column at lg. */}
-      <div className="col-span-2 grid grid-cols-2 gap-3 sm:gap-4 lg:col-span-1">
+      <div className="col-span-2 grid grid-cols-2 gap-4 lg:col-span-1">
         <div className="billboard-surface flex aspect-square flex-col justify-between rounded-2xl p-3.5">
         <div className="flex items-center justify-between gap-1.5">
           <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-accent-green text-green-600">

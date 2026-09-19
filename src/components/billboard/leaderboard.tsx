@@ -59,7 +59,7 @@ export function Leaderboard({
             becomes a single stacked column once it's beside the spotlight.
             Spans both grid rows at xl so it runs the full height alongside
             the ad slot + video row too, instead of stopping at the spotlight. */}
-        <div className="order-2 grid grid-cols-2 gap-3 sm:gap-4 lg:order-1 lg:flex lg:flex-col xl:row-span-2">
+        <div className="order-2 grid grid-cols-2 gap-4 lg:order-1 lg:flex lg:flex-col xl:row-span-2">
           <VisitorStatsCard initial={visitorStats} />
         </div>
 
@@ -93,18 +93,17 @@ export function Leaderboard({
             column (never the stats column, which is what let it drift under
             the sidebar before) and widened to also span the distribution
             column once that's a column of its own at xl - so this row's
-            outer edges exactly match the row above it. The ad slot is kept
-            short and the video taller (it's the one meant to draw the eye);
-            bottom-aligned so the two still read as one row despite the
-            different heights, with the same gap-4 used everywhere else. */}
-        <div className="order-4 flex flex-col gap-4 sm:flex-row sm:items-end lg:col-start-2 xl:col-span-2">
+            outer edges exactly match the row above it. One height for both,
+            so their tops and bottoms line up with each other and the row
+            closes off the block as a clean edge. */}
+        <div className="order-4 flex flex-col gap-4 sm:h-56 sm:flex-row lg:col-start-2 xl:col-span-2">
           <AdSlotDisplay
             ad={adSlot}
             mascot={adSlotMascot}
             compact
-            className="w-full sm:h-28 sm:w-3/5 sm:shrink-0"
+            className="w-full sm:h-full sm:w-3/5 sm:shrink-0"
           />
-          <VideoAdDisplay videoAd={videoAd} className="sm:h-52 sm:flex-1" />
+          <VideoAdDisplay videoAd={videoAd} className="sm:h-full sm:flex-1" />
         </div>
       </div>
 

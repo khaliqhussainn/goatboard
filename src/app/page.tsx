@@ -48,7 +48,7 @@ export default async function Home() {
   return (
     <>
       <AbstractBackdrop />
-      <div className="on-backdrop mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+      <div className="on-backdrop mx-auto max-w-screen-2xl px-4 py-8 sm:px-6 sm:py-12">
         <Suspense fallback={null}>
           <AdPurchaseConfirmation />
         </Suspense>

@@ -94,7 +94,18 @@ export function AdSlotDisplay({
 
   return (
     <div className={cn("relative", compact ? "" : "mb-3 sm:mb-4", className)}>
-      <span className="gold-surface absolute -top-3 left-5 z-10 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-950 shadow-[0_4px_12px_-4px_rgba(146,105,16,0.6)] ring-1 ring-inset ring-white/60">
+      {/* Compact tucks the badge inside the card's own bounds from sm up,
+          where the card is tall enough to clear the content: in the collage
+          this banner butts up against the spotlight above it, and a badge
+          poking into that gap breaks the block's edge. On a phone the card is
+          only as tall as its content, so it straddles the edge instead rather
+          than landing on top of the ad's own name. */}
+      <span
+        className={cn(
+          "gold-surface absolute z-10 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-950 shadow-[0_4px_12px_-4px_rgba(146,105,16,0.6)] ring-1 ring-inset ring-white/60",
+          compact ? "-top-3 left-5 sm:left-3 sm:top-3" : "-top-3 left-5",
+        )}
+      >
         {ad ? "Sponsored" : "Ad space · 7 days"}
       </span>
       {!compact && (
@@ -103,25 +114,25 @@ export function AdSlotDisplay({
 
       {compact ? (
         ad ? (
-          <div className="gold-surface-soft relative flex h-full flex-col justify-center overflow-hidden rounded-2xl border-2 border-amber-300/80 px-4 py-2.5 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70">
+          <div className="gold-surface-soft relative flex h-full flex-col justify-center gap-3 overflow-hidden rounded-2xl border-2 border-amber-300/80 px-5 py-4 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70">
             {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} rounded="rounded-2xl" />}
             <GoldSheen rounded="rounded-2xl" />
             <div className="relative flex items-center gap-3">
               <CampaignAvatar
                 src={ad.image_url}
                 name={ad.name}
-                className="size-10 shrink-0 rounded-xl text-sm shadow-sm ring-2 ring-white"
+                className="size-12 shrink-0 rounded-xl text-base shadow-sm ring-2 ring-white"
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-black tracking-tight">{ad.name}</p>
-                <p className="truncate text-xs text-foreground">{ad.description}</p>
+                <p className="truncate text-base font-black tracking-tight">{ad.name}</p>
+                <p className="line-clamp-2 text-xs text-foreground">{ad.description}</p>
               </div>
             </div>
             <a
               href={ad.destination_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="relative mt-2 flex items-center justify-center gap-1 rounded-full bg-amber-950 px-3 py-1.5 text-xs font-bold text-amber-50 shadow-sm transition-colors hover:bg-amber-900"
+              className="relative flex items-center justify-center gap-1 rounded-full bg-amber-950 px-3 py-2 text-xs font-bold text-amber-50 shadow-sm transition-colors hover:bg-amber-900"
             >
               Visit <ExternalLink className="size-3" />
             </a>
@@ -130,13 +141,13 @@ export function AdSlotDisplay({
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="gold-surface group relative flex h-full w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-amber-300/90 px-4 py-3 text-center shadow-[0_12px_32px_-16px_rgba(146,105,16,0.65)] ring-1 ring-inset ring-white/60 transition-shadow hover:shadow-[0_16px_38px_-16px_rgba(146,105,16,0.8)]"
+            className="gold-surface group relative flex h-full w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-amber-300/90 px-5 py-4 text-center shadow-[0_12px_32px_-16px_rgba(146,105,16,0.65)] ring-1 ring-inset ring-white/60 transition-shadow hover:shadow-[0_16px_38px_-16px_rgba(146,105,16,0.8)]"
           >
             <GoldSheen rounded="rounded-2xl" />
-            <p className="font-handwritten text-base leading-tight text-amber-950 drop-shadow-[0_1px_0_rgba(255,255,255,0.6)]">
+            <p className="font-handwritten text-xl leading-tight text-amber-950 drop-shadow-[0_1px_0_rgba(255,255,255,0.6)]">
               Your product could be here
             </p>
-            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-amber-950 px-3 py-1.5 text-xs font-bold text-amber-50 shadow-sm transition-colors group-hover:bg-amber-900">
+            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-amber-950 px-4 py-2 text-xs font-bold text-amber-50 shadow-sm transition-colors group-hover:bg-amber-900">
               Get noticed →
             </span>
           </button>
