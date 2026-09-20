@@ -35,7 +35,12 @@ export function SpotlightCampaign({
         <DownloadTileButton slug={campaign.slug} className="absolute right-3 top-3" />
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-2.5 p-5 sm:p-7">
+      {/* justify-between rather than letting the action row's mt-auto take all
+          of it: this card is stretched to whatever the tallest thing in its
+          row needs, and any height it doesn't use has to go somewhere. Spread
+          across every gap it reads as an airy card; dumped in one place it
+          reads as a hole above the buttons. */}
+      <div className="flex min-w-0 flex-1 flex-col justify-between gap-2.5 p-5 sm:p-7">
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
@@ -82,7 +87,10 @@ export function SpotlightCampaign({
           </span>
         </div>
 
-        <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+        {/* No mt-auto: an auto margin swallows all the free space before
+            justify-between can share it out, which is what put every spare
+            pixel into one gap right above these buttons. */}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
           <VoteButton campaignId={campaign.id} onVoted={onVoted} />
           <BoostButton campaignId={campaign.id} campaignName={campaign.name} variant="outline" />
           <ShareXButton

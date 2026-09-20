@@ -37,7 +37,11 @@ export function DistributionPromo({
       className={cn(
         "billboard-surface group relative flex flex-col gap-3 overflow-hidden rounded-2xl bg-gradient-to-b from-[#fdf6d8] via-[#fdfaec] to-[#fcf3cf] p-5 ring-1 ring-inset ring-white/70 transition-transform duration-200 hover:-translate-y-0.5",
         // Room for the goat: to the side while wide, underneath once tall.
-        "pb-28 sm:pb-5 sm:pr-44 xl:pb-28 xl:pr-5",
+        // The xl reserve is kept tight on purpose - this promo is the tallest
+        // thing in the hero row, so whatever it asks for is the height the #1
+        // spotlight beside it gets stretched to, and every pixel of that it
+        // doesn't need opens a gap above the spotlight's buttons.
+        "pb-28 sm:pb-5 sm:pr-44 xl:gap-2 xl:p-4 xl:pb-20 xl:pr-4",
         className,
       )}
     >
@@ -45,7 +49,7 @@ export function DistributionPromo({
         <Sparkle key={i} className={cn(cls, "fill-amber-300/70 text-amber-300/70")} aria-hidden />
       ))}
 
-      <div className="relative flex min-w-0 flex-col items-start gap-3">
+      <div className="relative flex min-w-0 flex-col items-start gap-3 xl:gap-2">
         <span className="inline-flex w-fit items-center rounded-md bg-accent-yellow px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-yellow-900">
           Startup distribution
         </span>
@@ -58,7 +62,9 @@ export function DistributionPromo({
           Get your startup out there.
         </h2>
 
-        <p className="max-w-md text-sm leading-snug text-muted-foreground">
+        {/* Clamped only in the narrow xl column, where this wraps to six lines
+            and is the single biggest contributor to the row's height. */}
+        <p className="max-w-md text-sm leading-snug text-muted-foreground xl:line-clamp-4">
           We manually submit your startup to relevant directories and discovery platforms so you can
           spend less time filling forms and more time building.
         </p>
@@ -75,7 +81,7 @@ export function DistributionPromo({
           src={mascot}
           alt=""
           aria-hidden
-          className="pointer-events-none absolute -bottom-3 right-0 h-28 w-auto drop-shadow-[0_14px_22px_rgba(133,77,14,0.28)] transition-transform duration-300 group-hover:-translate-y-1 sm:right-2 sm:h-36 xl:right-0 xl:h-32"
+          className="pointer-events-none absolute -bottom-3 right-0 h-28 w-auto drop-shadow-[0_14px_22px_rgba(133,77,14,0.28)] transition-transform duration-300 group-hover:-translate-y-1 sm:right-2 sm:h-36 xl:right-0 xl:h-24"
         />
       )}
     </Link>
