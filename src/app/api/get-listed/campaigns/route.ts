@@ -60,6 +60,7 @@ export async function POST(request: Request) {
         website_url: input.website_url,
         description: input.description,
         category: input.category,
+        x_handle: input.x_handle,
         x_url: input.x_url || null,
         linkedin_url: input.linkedin_url || null,
         other_url: input.other_url || null,

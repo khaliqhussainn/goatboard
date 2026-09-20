@@ -29,6 +29,7 @@ export function AdSlotAdminPanel({ adSlots }: { adSlots: AdSlot[] }) {
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [destinationUrl, setDestinationUrl] = React.useState("");
+  const [xHandle, setXHandle] = React.useState("");
   const [imageUrl, setImageUrl] = React.useState<string | null>(null);
   const [imageSource, setImageSource] = React.useState<"upload" | "site" | null>(null);
   const [backdropUrl, setBackdropUrl] = React.useState<string | null>(null);
@@ -67,6 +68,7 @@ export function AdSlotAdminPanel({ adSlots }: { adSlots: AdSlot[] }) {
           image_url: imageUrl || null,
           backdrop_url: backdropUrl || null,
           duration_days: durationDays,
+          x_handle: xHandle,
         }),
       });
       const data = await res.json();
@@ -78,6 +80,7 @@ export function AdSlotAdminPanel({ adSlots }: { adSlots: AdSlot[] }) {
       setName("");
       setDescription("");
       setDestinationUrl("");
+      setXHandle("");
       setImageUrl(null);
       setImageSource(null);
       setBackdropUrl(null);
@@ -148,6 +151,18 @@ export function AdSlotAdminPanel({ adSlots }: { adSlots: AdSlot[] }) {
             required
           />
         </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="admin-ad-x">X account</Label>
+          <Input
+            id="admin-ad-x"
+            value={xHandle}
+            onChange={(e) => setXHandle(e.target.value)}
+            placeholder="yourhandle"
+            maxLength={15}
+            required
+          />
+        </div>
+
         <div className="flex flex-col gap-1.5 sm:col-span-2">
           <Label htmlFor="admin-ad-description">Description</Label>
           <Textarea
@@ -227,6 +242,16 @@ export function AdSlotAdminPanel({ adSlots }: { adSlots: AdSlot[] }) {
                 {slot.duration_days}d ·{" "}
                 {slot.lemon_squeezy_order_id ? formatMoney(slot.amount) : "free (admin)"}
               </span>
+              {slot.x_handle && (
+                <a
+                  href={`https://x.com/${slot.x_handle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                >
+                  @{slot.x_handle}
+                </a>
+              )}
               <div className="ml-auto flex shrink-0 gap-1.5">
                 {canEnd && (
                   <Button

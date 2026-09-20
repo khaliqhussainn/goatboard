@@ -139,6 +139,9 @@ export type AdSlot = {
   destination_url: string;
   image_url: string | null;
   backdrop_url: string | null;
+  /** The buyer's X handle, without the "@". Null only on rows created before
+   *  it was required. */
+  x_handle: string | null;
   duration_days: AdSlotDuration;
   amount: number;
   lemon_squeezy_order_id: string | null;
@@ -165,6 +168,9 @@ export type VideoAd = {
   name: string;
   destination_url: string;
   video_url: string;
+  /** The buyer's X handle, without the "@". Null only on rows created before
+   *  it was required. */
+  x_handle: string | null;
   amount: number;
   lemon_squeezy_order_id: string | null;
   status: VideoAdStatus;
@@ -193,6 +199,9 @@ export type GetListedCampaign = {
   website_url: string;
   description: string;
   category: Category;
+  /** The buyer's own X handle, without the "@" — required since it became a
+   *  form field. Distinct from x_url, the startup's profile link. */
+  x_handle: string | null;
   x_url: string | null;
   linkedin_url: string | null;
   other_url: string | null;

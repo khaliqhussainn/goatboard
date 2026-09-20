@@ -34,6 +34,7 @@ export async function POST(request: Request) {
     name: parsed.data.name,
     destination_url: parsed.data.destination_url,
     video_url: parsed.data.video_url,
+    x_handle: parsed.data.x_handle,
     amount: VIDEO_AD_PRICE_USD,
     status: "paid",
     starts_at: startsAt.toISOString(),

@@ -39,6 +39,7 @@ export function StartCampaignForm({ initialPackage }: { initialPackage?: string 
   const [websiteUrl, setWebsiteUrl] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [category, setCategory] = React.useState("startup");
+  const [xHandle, setXHandle] = React.useState("");
   const [xUrl, setXUrl] = React.useState("");
   const [linkedinUrl, setLinkedinUrl] = React.useState("");
   const [otherUrl, setOtherUrl] = React.useState("");
@@ -58,6 +59,7 @@ export function StartCampaignForm({ initialPackage }: { initialPackage?: string 
       website_url: websiteUrl,
       description,
       category,
+      x_handle: xHandle,
       x_url: xUrl || null,
       linkedin_url: linkedinUrl || null,
       other_url: otherUrl || null,
@@ -277,6 +279,24 @@ export function StartCampaignForm({ initialPackage }: { initialPackage?: string 
             </option>
           ))}
         </select>
+      </Field>
+
+      {/* Your handle, not the startup's profile link below: this is how we
+          reach you about the campaign. */}
+      <Field label="Your X account" error={errors.x_handle} htmlFor="x_handle">
+        <div className="relative">
+          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+            @
+          </span>
+          <Input
+            id="x_handle"
+            value={xHandle}
+            onChange={(e) => setXHandle(e.target.value)}
+            placeholder="yourhandle"
+            maxLength={15}
+            className="pl-7"
+          />
+        </div>
       </Field>
 
       <Field label="X / Twitter URL (optional)" error={errors.x_url} htmlFor="x_url">

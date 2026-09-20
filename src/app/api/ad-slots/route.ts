@@ -54,6 +54,7 @@ export async function POST(request: Request) {
         image_url: parsed.data.image_url || null,
         backdrop_url: parsed.data.backdrop_url || null,
         duration_days: parsed.data.duration_days,
+        x_handle: parsed.data.x_handle,
         amount,
       })
       .select("id")

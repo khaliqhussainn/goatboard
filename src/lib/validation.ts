@@ -11,6 +11,22 @@ export function isSafeUrl(value: string): boolean {
   }
 }
 
+/**
+ * A required X handle, stored without the leading "@".
+ *
+ * Every paid or published thing on the board carries one: it is the only
+ * contact detail collected, and it makes a listing traceable to an account
+ * that can actually be replied to. Shared rather than repeated so the five
+ * forms that ask for it can't drift on what counts as valid - X itself caps
+ * handles at 15 characters of [A-Za-z0-9_].
+ */
+export const xHandleSchema = z
+  .string({ error: "An X handle is required." })
+  .trim()
+  .transform((v) => v.replace(/^@/, ""))
+  .refine((v) => v.length > 0, "An X handle is required.")
+  .refine((v) => /^[A-Za-z0-9_]{1,15}$/.test(v), "Enter a valid X handle.");
+
 export const campaignSchema = z.object({
   name: z
     .string()
@@ -35,12 +51,7 @@ export const campaignSchema = z.object({
     .nullable(),
   // Required: every listing has to be traceable to an account that can be
   // replied to. It is also the only contact detail the board collects.
-  x_handle: z
-    .string({ error: "An X handle is required." })
-    .trim()
-    .transform((v) => v.replace(/^@/, ""))
-    .refine((v) => v.length > 0, "An X handle is required.")
-    .refine((v) => v === "" || /^[A-Za-z0-9_]{1,15}$/.test(v), "Enter a valid X handle."),
+  x_handle: xHandleSchema,
   category: z.enum([
     "product",
     "startup",
@@ -68,15 +79,10 @@ export const COMMENT_HANDLE_MAX = 15;
 
 export const commentSchema = z.object({
   campaignId: z.string().uuid(),
-  // Required, same as campaignSchema.x_handle above: a real, checkable
-  // account instead of a free-text name nobody can verify. Attribution still
-  // runs on the visitor cookie in author_id - this is just the label shown.
-  authorXHandle: z
-    .string({ error: "An X handle is required." })
-    .trim()
-    .transform((v) => v.replace(/^@/, ""))
-    .refine((v) => v.length > 0, "An X handle is required.")
-    .refine((v) => v === "" || /^[A-Za-z0-9_]{1,15}$/.test(v), "Enter a valid X handle."),
+  // A real, checkable account instead of a free-text name nobody can verify.
+  // Attribution still runs on the visitor cookie in author_id - this is just
+  // the label shown.
+  authorXHandle: xHandleSchema,
   body: z
     .string()
     .trim()
@@ -152,6 +158,7 @@ export const adSlotSchema = z.object({
     .optional()
     .nullable(),
   duration_days: z.union([z.literal(7), z.literal(14), z.literal(30)]),
+  x_handle: xHandleSchema,
 });
 
 export type AdSlotInput = z.infer<typeof adSlotSchema>;
@@ -190,6 +197,7 @@ export const videoAdSchema = z.object({
     .trim()
     .min(1, "Upload a video first.")
     .refine(isSafeUrl, "Enter a valid video URL."),
+  x_handle: xHandleSchema,
 });
 
 export type VideoAdInput = z.infer<typeof videoAdSchema>;
@@ -241,6 +249,10 @@ export const getListedCampaignSchema = z.object({
     "game",
     "other",
   ]),
+  // The buyer's own handle, required — distinct from x_url below, which is
+  // the startup's profile and stays optional because it's one of several
+  // links we pass on to directories.
+  x_handle: xHandleSchema,
   x_url: optionalUrl,
   linkedin_url: optionalUrl,
   other_url: optionalUrl,

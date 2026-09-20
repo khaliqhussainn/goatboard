@@ -23,6 +23,7 @@ export function AdSlotForm({ onDone }: { onDone: () => void }) {
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [destinationUrl, setDestinationUrl] = React.useState("");
+  const [xHandle, setXHandle] = React.useState("");
   const [durationDays, setDurationDays] = React.useState<AdSlotDuration>(7);
   const [imageUrl, setImageUrl] = React.useState<string | null>(null);
   const [imageSource, setImageSource] = React.useState<"upload" | "site" | null>(null);
@@ -81,6 +82,7 @@ export function AdSlotForm({ onDone }: { onDone: () => void }) {
       image_url: imageUrl,
       backdrop_url: backdropUrl,
       duration_days: durationDays,
+      x_handle: xHandle,
     });
 
     if (!parsed.success) {
@@ -165,6 +167,29 @@ export function AdSlotForm({ onDone }: { onDone: () => void }) {
         />
         {errors.destination_url && (
           <p className="text-xs text-red-500">{errors.destination_url}</p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="ad-x">X account</Label>
+        <div className="relative">
+          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+            @
+          </span>
+          <Input
+            id="ad-x"
+            value={xHandle}
+            onChange={(e) => setXHandle(e.target.value)}
+            placeholder="yourhandle"
+            maxLength={15}
+            className="pl-7"
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Required - it is how we reach you about this spot.
+        </p>
+        {errors.x_handle && (
+          <p className="text-xs text-red-500">{errors.x_handle}</p>
         )}
       </div>
 

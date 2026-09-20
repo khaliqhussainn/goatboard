@@ -26,6 +26,7 @@ export function VideoAdAdminPanel({ videoAds }: { videoAds: VideoAd[] }) {
   const router = useRouter();
   const [name, setName] = React.useState("");
   const [destinationUrl, setDestinationUrl] = React.useState("");
+  const [xHandle, setXHandle] = React.useState("");
   const [videoUrl, setVideoUrl] = React.useState<string | null>(null);
   const [creating, setCreating] = React.useState(false);
   const [actingId, setActingId] = React.useState<string | null>(null);
@@ -41,6 +42,7 @@ export function VideoAdAdminPanel({ videoAds }: { videoAds: VideoAd[] }) {
           name,
           destination_url: destinationUrl,
           video_url: videoUrl,
+          x_handle: xHandle,
         }),
       });
       const data = await res.json();
@@ -51,6 +53,7 @@ export function VideoAdAdminPanel({ videoAds }: { videoAds: VideoAd[] }) {
       toast.success("Video ad created for free — it's live now.");
       setName("");
       setDestinationUrl("");
+      setXHandle("");
       setVideoUrl(null);
       router.refresh();
     } finally {
@@ -117,6 +120,18 @@ export function VideoAdAdminPanel({ videoAds }: { videoAds: VideoAd[] }) {
             required
           />
         </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="admin-video-x">X account</Label>
+          <Input
+            id="admin-video-x"
+            value={xHandle}
+            onChange={(e) => setXHandle(e.target.value)}
+            placeholder="yourhandle"
+            maxLength={15}
+            required
+          />
+        </div>
+
         <div className="flex flex-col gap-1.5 sm:col-span-2">
           <Label htmlFor="admin-video-video">Video</Label>
           <VideoPicker id="admin-video-video" value={videoUrl} onChange={setVideoUrl} />
@@ -140,6 +155,16 @@ export function VideoAdAdminPanel({ videoAds }: { videoAds: VideoAd[] }) {
               <span className="text-sm text-muted-foreground">
                 7d · {ad.lemon_squeezy_order_id ? formatMoney(ad.amount) : "free (admin)"}
               </span>
+              {ad.x_handle && (
+                <a
+                  href={`https://x.com/${ad.x_handle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                >
+                  @{ad.x_handle}
+                </a>
+              )}
               <div className="ml-auto flex shrink-0 gap-1.5">
                 {canEnd && (
                   <Button

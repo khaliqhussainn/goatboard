@@ -1192,3 +1192,20 @@ drop policy if exists "ad videos are publicly readable" on storage.objects;
 create policy "ad videos are publicly readable"
   on storage.objects for select
   using (bucket_id = 'ad-videos');
+
+-- ---------------------------------------------------------------------------
+-- Required X handle on every paid placement.
+--
+-- Added nullable because these tables already hold rows: the requirement is
+-- enforced by xHandleSchema in lib/validation.ts on the way in, exactly as
+-- campaigns.x_handle already is. The check only constrains the shape, so old
+-- rows with no handle stay valid.
+-- ---------------------------------------------------------------------------
+alter table public.ad_slots add column if not exists x_handle text
+  check (x_handle is null or x_handle ~ '^[A-Za-z0-9_]{1,15}$');
+
+alter table public.video_ads add column if not exists x_handle text
+  check (x_handle is null or x_handle ~ '^[A-Za-z0-9_]{1,15}$');
+
+alter table public.get_listed_campaigns add column if not exists x_handle text
+  check (x_handle is null or x_handle ~ '^[A-Za-z0-9_]{1,15}$');

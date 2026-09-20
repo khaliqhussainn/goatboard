@@ -19,6 +19,7 @@ type Availability = {
 export function VideoAdForm({ onDone }: { onDone: () => void }) {
   const [name, setName] = React.useState("");
   const [destinationUrl, setDestinationUrl] = React.useState("");
+  const [xHandle, setXHandle] = React.useState("");
   const [videoUrl, setVideoUrl] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
@@ -46,6 +47,7 @@ export function VideoAdForm({ onDone }: { onDone: () => void }) {
       name,
       destination_url: destinationUrl,
       video_url: videoUrl,
+      x_handle: xHandle,
     });
 
     if (!parsed.success) {
@@ -118,6 +120,27 @@ export function VideoAdForm({ onDone }: { onDone: () => void }) {
         {errors.destination_url && (
           <p className="text-xs text-red-500">{errors.destination_url}</p>
         )}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="video-ad-x">X account</Label>
+        <div className="relative">
+          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+            @
+          </span>
+          <Input
+            id="video-ad-x"
+            value={xHandle}
+            onChange={(e) => setXHandle(e.target.value)}
+            placeholder="yourhandle"
+            maxLength={15}
+            className="pl-7"
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Required - it is how we reach you about this spot.
+        </p>
+        {errors.x_handle && <p className="text-xs text-red-500">{errors.x_handle}</p>}
       </div>
 
       <div className="flex flex-col gap-1.5">
