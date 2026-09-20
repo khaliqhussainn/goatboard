@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { createAdminClient, SupabaseConfigError } from "@/lib/supabase/admin";
 import { getVisitorId } from "@/lib/visitor";
+import { isBotUserAgent } from "@/lib/bots";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 /** Records one "the site was opened" event — see record_site_visit in schema.sql. */
 export async function POST(request: Request) {
+  // Crawlers, previewers and scripts are answered normally but not counted,
+  // so the visitor number means people rather than traffic.
+  if (isBotUserAgent(request.headers.get("user-agent"))) {
+    return NextResponse.json({ success: true, recorded: false });
+  }
+
   const visitorId = await getVisitorId();
 
   const ip = getClientIp(request.headers);

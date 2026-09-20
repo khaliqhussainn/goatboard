@@ -11,6 +11,16 @@ const SESSION_KEY = "goatboard_visit_recorded";
 const HEARTBEAT_MS = 30_000;
 const POLL_MS = 20_000;
 
+/**
+ * Driven browsers (Playwright, Puppeteer, Selenium) send an ordinary user
+ * agent, so the server-side filter in lib/bots.ts can't see them - but they
+ * set this flag. Catches scrapers that render the page, and our own
+ * screenshot runs, neither of which is a visitor.
+ */
+function isAutomated() {
+  return typeof navigator !== "undefined" && navigator.webdriver === true;
+}
+
 /** vs the previous 12h, from the same 24 hourly buckets the sparkline draws. */
 function useActivityDelta(activity: VisitorStats["activity"]) {
   return React.useMemo(() => {
@@ -31,6 +41,8 @@ export function VisitorStatsCard({ initial }: { initial: VisitorStats }) {
   const delta = useActivityDelta(stats.activity);
 
   React.useEffect(() => {
+    if (isAutomated()) return;
+
     let alreadyVisited = false;
     try {
       alreadyVisited = sessionStorage.getItem(SESSION_KEY) === "1";
@@ -48,6 +60,8 @@ export function VisitorStatsCard({ initial }: { initial: VisitorStats }) {
   }, []);
 
   React.useEffect(() => {
+    if (isAutomated()) return;
+
     const sendHeartbeat = () => {
       fetch("/api/visits/heartbeat", { method: "POST" }).catch(() => {});
     };

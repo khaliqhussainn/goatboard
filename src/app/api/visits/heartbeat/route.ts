@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient, SupabaseConfigError } from "@/lib/supabase/admin";
 import { getVisitorId } from "@/lib/visitor";
+import { isBotUserAgent } from "@/lib/bots";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 /**
@@ -8,6 +9,12 @@ import { rateLimit, getClientIp } from "@/lib/rate-limit";
  * record_visitor_heartbeat in schema.sql. Powers the "Live" count.
  */
 export async function POST(request: Request) {
+  // Same filter as /api/visits: a crawler holding a tab open is not a live
+  // visitor, and this endpoint is what the "Live" count is built from.
+  if (isBotUserAgent(request.headers.get("user-agent"))) {
+    return NextResponse.json({ success: true, recorded: false });
+  }
+
   const visitorId = await getVisitorId();
   if (!visitorId) {
     return NextResponse.json({ success: false, message: "no_visitor_id" }, { status: 400 });
