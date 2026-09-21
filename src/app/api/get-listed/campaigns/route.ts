@@ -74,7 +74,19 @@ export async function POST(request: Request) {
       .single();
 
     if (error || !data) {
-      console.error("get_listed campaign insert failed", error);
+      // PGRST204 is PostgREST failing to find a column the insert names,
+      // which in practice means schema.sql hasn't been run against this
+      // project since a column was added. Called out by name because the
+      // generic message below is otherwise the only clue, and this has cost
+      // a live sale before.
+      if (error?.code === "PGRST204") {
+        console.error(
+          "get_listed campaign insert failed: the table is missing a column this build " +
+            `writes - run the latest supabase/schema.sql against this project. (${error.message})`,
+        );
+      } else {
+        console.error("get_listed campaign insert failed", error);
+      }
       return NextResponse.json(
         { message: "Couldn't save your campaign. Try again." },
         { status: 500 },
