@@ -20,6 +20,13 @@ const FEATURED_ON = [
     width: 244,
     height: 56,
   },
+  {
+  name: "Indie Chains",
+  href: "https://indiechains.com",
+  src: "https://api.indiechains.com/badge/7304bc433fcf589d5a3283e9c4be846d0dfe4f5594a6ce3a.svg?theme=dark",
+  width: 180,
+  height: 40,
+},
 ];
 
 /**
