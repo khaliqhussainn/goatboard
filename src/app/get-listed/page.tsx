@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  Check,
   ArrowRight,
   Zap,
   FileText,
   Search,
   Send,
   BarChart3,
+  Sparkle,
+  Tag,
 } from "lucide-react";
 import { AbstractBackdrop } from "@/components/layout/abstract-backdrop";
 import { Button } from "@/components/ui/button";
@@ -17,11 +18,11 @@ import {
   GET_LISTED_DISCLOSURES,
   GET_LISTED_PROMO,
   isPromoActive,
-  promoPrice,
 } from "@/lib/get-listed";
 import { PromoCountdown } from "@/components/get-listed/promo-countdown";
-import { pickHourlyMascot } from "@/lib/mascots";
-import { formatMoney, cn } from "@/lib/utils";
+import { PackageCard } from "@/components/get-listed/package-card";
+import { MASCOT_IMAGES, pickHourlyMascot } from "@/lib/mascots";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Get Listed",
@@ -55,8 +56,16 @@ function SectionTag({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** A stable goat per pricing card, offset so the three tiers never land on
+ *  the same pose. Rotates hourly with the rest of the board's mascot art. */
+function mascotFor(index: number): string | null {
+  const base = pickHourlyMascot();
+  if (!base || MASCOT_IMAGES.length === 0) return base;
+  const start = MASCOT_IMAGES.indexOf(base);
+  return MASCOT_IMAGES[(start + index * 5 + MASCOT_IMAGES.length) % MASCOT_IMAGES.length];
+}
+
 export default function GetListedPage() {
-  const mascot = pickHourlyMascot();
   const popularKey = "big_goat";
   // Read once per render so every price on the page agrees with itself.
   const promo = isPromoActive();
@@ -194,86 +203,36 @@ export default function GetListedPage() {
             Choose the package that fits your goals. All plans include manual submissions, relevant
             directories and a final report.
           </p>
-          {promo && (
-            <p className="text-sm font-semibold text-yellow-900">
-              {GET_LISTED_PROMO.percentOff}% off every package this week - the discount is applied
-              at checkout.
-            </p>
-          )}
         </div>
 
-        <div className="mt-8 grid grid-cols-1 items-start gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {GET_LISTED_PACKAGE_LIST.map((pkg) => {
-            const popular = pkg.key === popularKey;
-            return (
-              <div
-                key={pkg.key}
-                className={cn(
-                  "relative flex flex-col gap-4 rounded-[1.75rem] p-6",
-                  popular
-                    ? "billboard-surface-lg bg-gradient-to-b from-[#fdf8e3] to-[#fdfbf2] ring-2 ring-accent-yellow lg:-mt-4 lg:pb-10"
-                    : "billboard-surface",
-                )}
-              >
-                {popular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-accent-yellow px-3 py-1 text-[10px] font-bold text-yellow-900">
-                    Most Popular
-                  </span>
-                )}
+        {promo && (
+          <div className="mt-8 flex items-center justify-center gap-3">
+            <Sparkle className="size-4 shrink-0 fill-accent-purple text-accent-purple" aria-hidden />
+            <p className="inline-flex items-center gap-2 rounded-full bg-accent-purple/45 px-5 py-2.5 text-center text-sm text-purple-950 ring-1 ring-inset ring-white/60">
+              <Tag className="size-4 shrink-0" aria-hidden />
+              <span>
+                <span className="font-black">{GET_LISTED_PROMO.percentOff}% off</span> every package
+                this week &ndash; the discount is applied at checkout.
+              </span>
+            </p>
+            <Sparkle className="size-4 shrink-0 fill-accent-purple text-accent-purple" aria-hidden />
+          </div>
+        )}
 
-                <div className="flex items-center gap-3">
-                  {mascot && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={mascot} alt="" aria-hidden className="h-10 w-auto shrink-0" />
-                  )}
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-black uppercase tracking-wide">
-                      {pkg.name}
-                    </h3>
-                    <p className="text-xs text-muted-foreground">{pkg.summary}</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                  <span className="text-4xl font-black tracking-tight tabular-nums">
-                    {formatMoney(promoPrice(pkg))}
-                  </span>
-                  {promo && (
-                    <>
-                      <span className="text-lg font-bold tabular-nums text-muted-foreground line-through">
-                        {formatMoney(pkg.priceUsd)}
-                      </span>
-                      <span className="rounded-full bg-accent-yellow px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-yellow-900">
-                        {GET_LISTED_PROMO.percentOff}% off
-                      </span>
-                    </>
-                  )}
-                </div>
-
-                <ul className="flex flex-1 flex-col gap-2">
-                  {pkg.includes.map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-sm">
-                      <Check className="mt-0.5 size-4 shrink-0 text-green-600" />
-                      <span className="min-w-0">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Link href={`/get-listed/start?package=${pkg.key}`} className="mt-auto">
-                  <Button
-                    variant={popular ? "abstract" : "outline"}
-                    className={cn(
-                      "w-full",
-                      !popular &&
-                        "border border-border bg-card text-foreground hover:bg-muted hover:opacity-100",
-                    )}
-                  >
-                    Choose {pkg.name}
-                  </Button>
-                </Link>
-              </div>
-            );
-          })}
+        {/* items-stretch, so the three cards end on the same line whatever
+            the middle one's offset does to the row. */}
+        <div className="mt-10 grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {GET_LISTED_PACKAGE_LIST.map((pkg, i) => (
+            <PackageCard
+              key={pkg.key}
+              pkg={pkg}
+              // A different goat per tier rather than the same pose three
+              // times, still deterministic so it doesn't churn per render.
+              mascot={mascotFor(i)}
+              popular={pkg.key === popularKey}
+              promo={promo}
+            />
+          ))}
         </div>
 
         {/* What the packages do and don't promise. Same text as the Terms. */}

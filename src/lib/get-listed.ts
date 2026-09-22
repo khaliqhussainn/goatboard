@@ -24,6 +24,10 @@ export type GetListedPackage = {
   /** Env var holding this package's Lemon Squeezy variant id. */
   variantEnvVar: string;
   summary: string;
+  /** Who the package is for, under the name on the pricing card. */
+  tagline: string;
+  /** The handwritten line at the foot of the pricing card. */
+  footnote: string;
   includes: string[];
 };
 
@@ -36,6 +40,8 @@ export const GET_LISTED_PACKAGES: Record<GetListedPackageKey, GetListedPackage> 
     currency: "USD",
     variantEnvVar: "GET_LISTED_BABY_GOAT_VARIANT_ID",
     summary: "30+ submissions",
+    tagline: "Perfect for early-stage founders.",
+    footnote: "Small steps.\nBig exposure.",
     includes: [
       "Relevant directories",
       "Manual submission",
@@ -50,6 +56,8 @@ export const GET_LISTED_PACKAGES: Record<GetListedPackageKey, GetListedPackage> 
     currency: "USD",
     variantEnvVar: "GET_LISTED_BIG_GOAT_VARIANT_ID",
     summary: "60+ submissions",
+    tagline: "For growing businesses & startups.",
+    footnote: "More reach.\nMore opportunities.",
     includes: [
       "Relevant directories",
       "Manual submission",
@@ -64,6 +72,8 @@ export const GET_LISTED_PACKAGES: Record<GetListedPackageKey, GetListedPackage> 
     currency: "USD",
     variantEnvVar: "GET_LISTED_GOAT_MODE_VARIANT_ID",
     summary: "100+ submissions",
+    tagline: "For established brands & larger reach.",
+    footnote: "Bigger goals.\nMore exposure.",
     includes: [
       "Relevant directories",
       "Manual submission",
