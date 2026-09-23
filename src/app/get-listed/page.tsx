@@ -41,7 +41,7 @@ const STEP_ACCENTS = [
 ];
 
 const HERO_STATS = [
-  { value: "30+", label: "Directories", chip: "bg-accent-blue text-blue-700" },
+  { value: "100+", label: "Directories", chip: "bg-accent-blue text-blue-700" },
   { value: "Manual", label: "Submissions", chip: "bg-accent-yellow text-yellow-800" },
   { value: "Tracked", label: "Every listing", chip: "bg-accent-green text-green-700" },
 ];
