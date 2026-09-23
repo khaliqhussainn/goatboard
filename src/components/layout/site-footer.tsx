@@ -15,18 +15,20 @@ const FEATURED_ON = [
   {
     name: "Nick Launches",
     href: "https://nicklaunches.com/products/goatboard/?utm_source=goatboard.lol&utm_medium=badge&utm_campaign=featured",
-    // Twice the rendered size: the source is a 480x112 retina asset.
+    // A 480x112 retina asset, rendered at 171x40 - comfortably above 1x.
     src: "https://nicklaunches.com/badges/featured-dark.png",
     width: 244,
     height: 56,
   },
   {
-  name: "Indie Chains",
-  href: "https://indiechains.com",
-  src: "https://api.indiechains.com/badge/7304bc433fcf589d5a3283e9c4be846d0dfe4f5594a6ce3a.svg?theme=dark",
-  width: 180,
-  height: 40,
-},
+    name: "Indie Chains",
+    href: "https://indiechains.com",
+    // An SVG at exactly the rendered height, so the intrinsic size here is
+    // only reserving the box before it loads.
+    src: "https://api.indiechains.com/badge/7304bc433fcf589d5a3283e9c4be846d0dfe4f5594a6ce3a.svg?theme=dark",
+    width: 180,
+    height: 40,
+  },
 ];
 
 /**
@@ -73,6 +75,10 @@ export function SiteFooter() {
               <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
                 Goatboard is featured on
               </h2>
+              {/* h-10 rather than something chunkier: at h-14 the two badges
+                  measured 240px and 252px against a 446px column and wrapped
+                  onto separate lines at every width. They still wrap on a
+                  phone, which is the right call down there. */}
               <div className="flex flex-wrap items-center gap-3">
                 {FEATURED_ON.map((badge) => (
                   <a
@@ -92,7 +98,7 @@ export function SiteFooter() {
                       height={badge.height}
                       loading="lazy"
                       decoding="async"
-                      className="h-14 w-auto max-w-full"
+                      className="h-10 w-auto max-w-full"
                     />
                   </a>
                 ))}
