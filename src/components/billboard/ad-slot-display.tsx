@@ -55,7 +55,7 @@ function CompactMascot({ src }: { src: string }) {
       src={src}
       alt=""
       aria-hidden
-      className="pointer-events-none absolute -bottom-1 right-2 h-28 w-auto drop-shadow-[0_14px_22px_rgba(146,105,16,0.32)] transition-transform duration-300 group-hover:-translate-y-1 sm:h-40"
+      className="pointer-events-none absolute -bottom-1 right-2 h-24 w-auto drop-shadow-[0_14px_22px_rgba(146,105,16,0.32)] transition-transform duration-300 group-hover:-translate-y-1 sm:h-40"
     />
   );
 }
@@ -133,18 +133,24 @@ export function AdSlotDisplay({
 
       {compact ? (
         ad ? (
-          <div className="gold-surface-soft relative flex h-full flex-col justify-center overflow-hidden rounded-2xl border-2 border-amber-300/80 px-5 py-4 pr-28 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70 sm:pr-40">
+          <div className="gold-surface-soft relative flex h-full flex-col justify-center overflow-hidden rounded-2xl border-2 border-amber-300/80 px-5 py-4 pr-24 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70 sm:pr-40">
             {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} rounded="rounded-2xl" />}
             <GoldSheen rounded="rounded-2xl" />
             {mascot && <CompactMascot src={mascot} />}
-            <div className="relative flex flex-col gap-2">
-              <div className="flex items-center gap-2.5">
+            <div className="relative flex flex-col gap-1.5">
+              {/* Extra right padding on this row alone, not on the card: the
+                  "Book next" chip is pinned to the top-right corner and its
+                  left edge lands just inside the card's own padding, so a name
+                  long enough to truncate put its ellipsis under the chip.
+                  Padding the whole card instead would take the width back off
+                  the description. */}
+              <div className="flex items-center gap-2 pr-3 sm:pr-0">
                 <CampaignAvatar
                   src={ad.image_url}
                   name={ad.name}
-                  className="size-11 shrink-0 rounded-xl text-base shadow-sm ring-2 ring-white"
+                  className="size-10 shrink-0 rounded-xl text-sm shadow-sm ring-2 ring-white"
                 />
-                <p className="min-w-0 truncate text-xl font-black tracking-tight text-amber-950 sm:text-2xl">
+                <p className="min-w-0 truncate text-lg font-black tracking-tight text-amber-950 sm:text-xl">
                   {ad.name}
                 </p>
               </div>
@@ -158,9 +164,9 @@ export function AdSlotDisplay({
                 href={ad.destination_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex w-fit items-center gap-1.5 rounded-full bg-amber-950 px-4 py-2 text-sm font-bold text-amber-50 shadow-sm transition-colors hover:bg-amber-900"
+                className="mt-0.5 inline-flex w-fit items-center gap-1.5 rounded-full bg-amber-950 px-3.5 py-1.5 text-xs font-bold text-amber-50 shadow-sm transition-colors hover:bg-amber-900"
               >
-                Visit site <ExternalLink className="size-3.5" />
+                Visit site <ExternalLink className="size-3" />
               </a>
             </div>
 
@@ -181,14 +187,14 @@ export function AdSlotDisplay({
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="gold-surface group relative flex h-full w-full flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl border-2 border-amber-300/90 px-5 py-4 pr-28 text-center shadow-[0_12px_32px_-16px_rgba(146,105,16,0.65)] ring-1 ring-inset ring-white/60 transition-shadow hover:shadow-[0_16px_38px_-16px_rgba(146,105,16,0.8)] sm:pr-40"
+            className="gold-surface group relative flex h-full w-full flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl border-2 border-amber-300/90 px-5 py-4 pr-24 text-center shadow-[0_12px_32px_-16px_rgba(146,105,16,0.65)] ring-1 ring-inset ring-white/60 transition-shadow hover:shadow-[0_16px_38px_-16px_rgba(146,105,16,0.8)] sm:pr-40"
           >
             <GoldSheen rounded="rounded-2xl" />
             {mascot && <CompactMascot src={mascot} />}
-            <p className="relative text-xl font-black leading-tight tracking-tight text-amber-950 sm:text-2xl">
+            <p className="relative text-lg font-black leading-tight tracking-tight text-amber-950 sm:text-xl">
               Your product could be here
             </p>
-            <span className="relative inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-amber-950 px-4 py-2 text-sm font-bold text-amber-50 shadow-sm transition-colors group-hover:bg-amber-900">
+            <span className="relative inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-amber-950 px-3.5 py-1.5 text-xs font-bold text-amber-50 shadow-sm transition-colors group-hover:bg-amber-900">
               Get noticed →
             </span>
           </button>
