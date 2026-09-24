@@ -374,6 +374,11 @@ export interface Database {
         Args: Record<string, never>;
         Returns: CurrentVideoAd[];
       };
+      /** Returns how many real purchases the activation displaced. */
+      admin_activate_video_ad: {
+        Args: { p_id: string };
+        Returns: number;
+      };
       sync_first_place: {
         Args: Record<string, never>;
         Returns: undefined;

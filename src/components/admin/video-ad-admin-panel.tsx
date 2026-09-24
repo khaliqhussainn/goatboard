@@ -11,6 +11,17 @@ import { VideoPicker } from "@/components/billboard/video-picker";
 import { formatMoney } from "@/lib/utils";
 import type { VideoAd } from "@/lib/types";
 
+/** A paid row that hasn't finished yet - either playing now or waiting its
+ *  turn. These are what an activation displaces. */
+function isUnfinishedPaid(ad: VideoAd): boolean {
+  return (
+    ad.status === "paid" &&
+    ad.lemon_squeezy_order_id !== null &&
+    ad.ends_at !== null &&
+    new Date(ad.ends_at).getTime() > Date.now()
+  );
+}
+
 function statusInfo(ad: VideoAd): { label: string; variant: "green" | "blue" | "outline" } {
   const now = Date.now();
   const starts = ad.starts_at ? new Date(ad.starts_at).getTime() : null;
@@ -58,6 +69,40 @@ export function VideoAdAdminPanel({ videoAds }: { videoAds: VideoAd[] }) {
       router.refresh();
     } finally {
       setCreating(false);
+    }
+  }
+
+  async function activate(ad: VideoAd) {
+    // The route reports what it displaced, but that is after the fact - the
+    // warning has to come from the list we already have, before the call.
+    const displaced = videoAds.filter((v) => v.id !== ad.id && isUnfinishedPaid(v));
+    if (displaced.length > 0) {
+      const names = displaced.map((v) => v.name).join(", ");
+      const ok = window.confirm(
+        `${displaced.length} paid video ${displaced.length === 1 ? "ad is" : "ads are"} still ` +
+          `running or queued (${names}).\n\n` +
+          `Activating "${ad.name}" stops whatever is playing and pushes the rest of the queue ` +
+          `back by 7 days. Nobody loses their time, but their dates move. Continue?`,
+      );
+      if (!ok) return;
+    }
+
+    setActingId(ad.id);
+    try {
+      const res = await fetch(`/api/admin/video-ads/${ad.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "activate" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(data.message ?? "Couldn't activate that video.");
+        return;
+      }
+      toast.success(`"${ad.name}" is in the spot now, for 7 days.`);
+      router.refresh();
+    } finally {
+      setActingId(null);
     }
   }
 
@@ -145,6 +190,9 @@ export function VideoAdAdminPanel({ videoAds }: { videoAds: VideoAd[] }) {
         {videoAds.map((ad) => {
           const status = statusInfo(ad);
           const canEnd = status.label === "Live" || status.label === "Scheduled";
+          // Everything but the one already playing: activating that would only
+          // restart its 7 days, which isn't what the button reads as.
+          const canActivate = status.label !== "Live";
           return (
             <div
               key={ad.id}
@@ -166,6 +214,15 @@ export function VideoAdAdminPanel({ videoAds }: { videoAds: VideoAd[] }) {
                 </a>
               )}
               <div className="ml-auto flex shrink-0 gap-1.5">
+                {canActivate && (
+                  <Button
+                    size="sm"
+                    disabled={actingId === ad.id}
+                    onClick={() => activate(ad)}
+                  >
+                    Activate now
+                  </Button>
+                )}
                 {canEnd && (
                   <Button
                     size="sm"

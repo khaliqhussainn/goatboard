@@ -1209,3 +1209,106 @@ alter table public.video_ads add column if not exists x_handle text
 
 alter table public.get_listed_campaigns add column if not exists x_handle text
   check (x_handle is null or x_handle ~ '^[A-Za-z0-9_]{1,15}$');
+
+-- ---------------------------------------------------------------------------
+-- admin_activate_video_ad  (put a chosen video in the spot right now)
+--
+-- The admin panel's "Activate now": whatever is playing stops, the chosen row
+-- starts immediately for the usual 7 days, and anything still queued is
+-- pushed out behind it so nothing is silently destroyed.
+--
+-- This has to be one function rather than a handful of updates from the route,
+-- because video_ads_no_overlap is checked at the end of every statement: a
+-- route doing this step by step would be rejected the moment the new window
+-- touched the one it is replacing. The order below never lets two paid rows
+-- claim the same instant even in mid-flight:
+--
+--   1. End what's live. Shrinking a range cannot create an overlap.
+--   2. Null the target's window, which drops it out of the constraint's WHERE
+--      clause entirely, so steps 3-4 can't collide with where it used to sit.
+--   3. Shift the remaining queue later, furthest-future row first. The order
+--      matters: the constraint is checked per row, not at end of statement, so
+--      moving the earliest row first lands it on top of the next one before
+--      that has budged. Going from the back, every move is into space that is
+--      already free.
+--   4. Drop the target into the window that is now empty.
+--
+-- Returns how many real purchases (ones with a Lemon Squeezy order) were still
+-- running or queued, so the caller can warn before an admin bumps a payer.
+-- ---------------------------------------------------------------------------
+create or replace function public.admin_activate_video_ad(p_id uuid)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_now   timestamptz := now();
+  v_ends  timestamptz := now() + make_interval(days => 7);
+  v_shift interval;
+  v_displaced integer;
+  v_queued  record;
+begin
+  -- Two admins clicking at once would otherwise both compute their shift from
+  -- the same queue and interleave their updates.
+  perform pg_advisory_xact_lock(hashtext('video_ads_activate'));
+
+  if not exists (select 1 from public.video_ads where id = p_id) then
+    raise exception 'video ad % not found', p_id using errcode = 'no_data_found';
+  end if;
+
+  select count(*)
+    into v_displaced
+    from public.video_ads
+   where id <> p_id
+     and status = 'paid'
+     and lemon_squeezy_order_id is not null
+     and ends_at > v_now;
+
+  update public.video_ads
+     set ends_at = v_now
+   where id <> p_id
+     and status = 'paid'
+     and starts_at <= v_now
+     and ends_at > v_now;
+
+  update public.video_ads
+     set starts_at = null, ends_at = null
+   where id = p_id;
+
+  select greatest(v_ends - min(starts_at), interval '0')
+    into v_shift
+    from public.video_ads
+   where id <> p_id
+     and status = 'paid'
+     and starts_at > v_now;
+
+  if v_shift is not null and v_shift > interval '0' then
+    for v_queued in
+      select id
+        from public.video_ads
+       where id <> p_id
+         and status = 'paid'
+         and starts_at > v_now
+       order by starts_at desc
+    loop
+      update public.video_ads
+         set starts_at = starts_at + v_shift,
+             ends_at   = ends_at   + v_shift
+       where id = v_queued.id;
+    end loop;
+  end if;
+
+  update public.video_ads
+     set status    = 'paid',
+         starts_at = v_now,
+         ends_at   = v_ends
+   where id = p_id;
+
+  return v_displaced;
+end;
+$$;
+
+-- Only the service-role key reaches this, through /api/admin/video-ads/[id].
+revoke all on function public.admin_activate_video_ad(uuid) from public;
+grant execute on function public.admin_activate_video_ad(uuid) to service_role;
