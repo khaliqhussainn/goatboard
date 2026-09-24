@@ -9,26 +9,38 @@ const EMPTY_STATS: VisitorStats = {
 };
 
 /**
- * Everything actually taken in money, across all four things the site
- * sells: boosts, rented ad slots, Get Listed campaigns, and the $1 charge
- * to publish a new campaign listing. Those are the only tables in the
- * schema that hold an amount.
+ * Everything actually taken in money, across all five things the site
+ * sells: boosts, rented ad slots, the video demo spot, Get Listed
+ * campaigns, and the $1 charge to publish a new campaign listing.
+ *
+ * Keep this in step with the schema. Every table carrying an `amount`
+ * column belongs here, and the list is exactly:
+ *
+ *   purchases, ad_slots, video_ads, get_listed_orders, listing_orders
+ *
+ * video_ads was added after this function and missed for a while, which
+ * quietly under-reported the total by every video sold.
  *
  * Each is filtered to its own paid state, which is also what keeps refunded
  * and cancelled rows out - a Get Listed order that was refunded carries the
  * amount it was sold at, and counting it would report money we gave back.
  *
- * Ad slots the admin created for free are excluded too: they carry a list
- * price like any other row but no Lemon Squeezy order behind it, so counting
- * them would inflate this by whatever was only ever a test.
+ * Ad slots and videos the admin created for free are excluded too: they
+ * carry a list price like any other row but no Lemon Squeezy order behind
+ * it, so counting them would inflate this by whatever was only ever a test.
  */
 async function getTotalEarnings(
   admin: ReturnType<typeof createAdminClient>,
 ): Promise<number> {
-  const [purchases, adSlots, getListed, listings] = await Promise.all([
+  const [purchases, adSlots, videoAds, getListed, listings] = await Promise.all([
     admin.from("purchases").select("amount").eq("status", "paid"),
     admin
       .from("ad_slots")
+      .select("amount")
+      .eq("status", "paid")
+      .not("lemon_squeezy_order_id", "is", null),
+    admin
+      .from("video_ads")
       .select("amount")
       .eq("status", "paid")
       .not("lemon_squeezy_order_id", "is", null),
@@ -38,13 +50,20 @@ async function getTotalEarnings(
 
   if (purchases.error) console.error("earnings: purchases read failed", purchases.error);
   if (adSlots.error) console.error("earnings: ad_slots read failed", adSlots.error);
+  if (videoAds.error) console.error("earnings: video_ads read failed", videoAds.error);
   if (getListed.error) console.error("earnings: get_listed_orders read failed", getListed.error);
   if (listings.error) console.error("earnings: listing_orders read failed", listings.error);
 
   const sum = (rows: { amount: number | string }[] | null) =>
     (rows ?? []).reduce((total, row) => total + Number(row.amount ?? 0), 0);
 
-  return sum(purchases.data) + sum(adSlots.data) + sum(getListed.data) + sum(listings.data);
+  return (
+    sum(purchases.data) +
+    sum(adSlots.data) +
+    sum(videoAds.data) +
+    sum(getListed.data) +
+    sum(listings.data)
+  );
 }
 
 /**
