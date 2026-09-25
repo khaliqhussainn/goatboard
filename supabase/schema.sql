@@ -660,6 +660,7 @@ create table if not exists public.get_listed_submissions (
   backlink_status text not null default 'not_needed'
     check (backlink_status in ('not_needed', 'requested', 'added', 'verified')),
   backlink_instructions text,
+  badge_code text,
   backlink_url text,
   backlink_verified_at timestamptz,
   public_notes text,
@@ -714,6 +715,7 @@ alter table public.get_listed_submissions
   add column if not exists backlink_status text not null default 'not_needed'
     check (backlink_status in ('not_needed', 'requested', 'added', 'verified')),
   add column if not exists backlink_instructions text,
+  add column if not exists badge_code text,
   add column if not exists backlink_url text,
   add column if not exists backlink_verified_at timestamptz,
   add column if not exists public_notes text,

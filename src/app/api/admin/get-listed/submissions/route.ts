@@ -52,6 +52,7 @@ export async function POST(request: Request) {
       requirement_type: requirementType,
       backlink_status: backlinkStatus,
       backlink_instructions: input.backlink_instructions || null,
+      badge_code: input.badge_code || null,
       backlink_url: input.backlink_url || null,
       public_notes: input.public_notes || null,
       internal_notes: input.internal_notes || null,

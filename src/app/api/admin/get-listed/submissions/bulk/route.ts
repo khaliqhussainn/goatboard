@@ -10,6 +10,10 @@ const entrySchema = z.object({
   directory_url: z.string().refine(isSafeUrl),
   listing_url: z.string().refine(isSafeUrl),
   status: z.enum(GET_LISTED_SUBMISSION_STATUSES),
+  public_notes: z.string().trim().max(2000).optional().nullable(),
+  badge_code: z.string().trim().max(10_000).optional().nullable(),
+  requirement_type: z.enum(["none", "badge_embed"]),
+  backlink_status: z.enum(["not_needed", "requested"]),
 });
 
 const bodySchema = z.object({
@@ -63,6 +67,10 @@ export async function POST(request: Request) {
         directory_url: entry.directory_url,
         listing_url: entry.listing_url,
         status: entry.status,
+        public_notes: entry.public_notes || null,
+        badge_code: entry.badge_code || null,
+        requirement_type: entry.requirement_type,
+        backlink_status: entry.backlink_status,
         submitted_at: entry.status === "planned" ? null : now,
       })),
     )

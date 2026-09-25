@@ -30,10 +30,7 @@ export async function POST(request: Request) {
   }
 
   const lineErrors = parsedLines.filter((line) => line.error);
-  const validLines = parsedLines.filter(
-    (line): line is typeof line & { status: NonNullable<typeof line.status> } =>
-      !line.error && line.status !== null,
-  );
+  const validLines = parsedLines.filter((line) => !line.error && line.listingUrl);
 
   const admin = createAdminClient();
   const [{ data: campaign }, { data: existing }] = await Promise.all([
@@ -66,8 +63,15 @@ export async function POST(request: Request) {
       directory_url: details.directoryUrl,
       listing_url: line.listingUrl,
       status: line.status,
+      public_notes: line.publicNotes,
+      badge_code: line.badgeCode,
+      requirement_type: line.badgeCode ? "badge_embed" : "none",
+      backlink_status: line.badgeCode ? "requested" : "not_needed",
       duplicate: existingUrls.has(line.listingUrl) || (inputCounts.get(line.listingUrl) ?? 0) > 1,
-      warning: details.warning,
+      warning: [
+        details.warning,
+        line.status ? null : "Status was not recognized; choose it before importing.",
+      ].filter(Boolean).join(" ") || null,
     } satisfies BulkSubmissionPreview;
   });
 

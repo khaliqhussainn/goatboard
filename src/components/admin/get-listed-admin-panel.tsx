@@ -249,7 +249,11 @@ type BulkPreviewEntry = {
   directory_name: string;
   directory_url: string;
   listing_url: string;
-  status: GetListedSubmissionStatus;
+  status: GetListedSubmissionStatus | null;
+  public_notes: string | null;
+  badge_code: string | null;
+  requirement_type: "none" | "badge_embed";
+  backlink_status: "not_needed" | "requested";
   duplicate: boolean;
   warning: string | null;
 };
@@ -292,7 +296,7 @@ function BulkSubmissionImport({
   }
 
   async function importEntries() {
-    if (!entries.length || entries.some((entry) => entry.duplicate)) return;
+    if (!entries.length || entries.some((entry) => entry.duplicate || !entry.status)) return;
     setBusy(true);
     try {
       const res = await fetch("/api/admin/get-listed/submissions/bulk", {
@@ -300,11 +304,15 @@ function BulkSubmissionImport({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           campaign_id: campaignId,
-          entries: entries.map(({ directory_name, directory_url, listing_url, status }) => ({
-            directory_name,
-            directory_url,
-            listing_url,
-            status,
+          entries: entries.map((entry) => ({
+            directory_name: entry.directory_name,
+            directory_url: entry.directory_url,
+            listing_url: entry.listing_url,
+            status: entry.status,
+            public_notes: entry.public_notes,
+            badge_code: entry.badge_code,
+            requirement_type: entry.requirement_type,
+            backlink_status: entry.backlink_status,
           })),
         }),
       });
@@ -331,7 +339,7 @@ function BulkSubmissionImport({
     );
   }
 
-  const blocked = errors.length > 0 || entries.some((entry) => entry.duplicate);
+  const blocked = errors.length > 0 || entries.some((entry) => entry.duplicate || !entry.status);
 
   return (
     <details className="mt-4 rounded-xl border border-border bg-muted/20">
@@ -341,7 +349,7 @@ function BulkSubmissionImport({
       <div className="border-t border-border p-4">
         <Label htmlFor={`bulk-${campaignId}`}>Raw entries</Label>
         <p className="mt-1 text-xs text-muted-foreground">
-          One per line: listing URL followed by its status in parentheses.
+          Paste raw Markdown or plain links. Status and multiline badge code are read automatically.
         </p>
         <Textarea
           id={`bulk-${campaignId}`}
@@ -352,7 +360,7 @@ function BulkSubmissionImport({
             setErrors([]);
           }}
           placeholder={
-            "https://directory.example/products/your-product (under review)\nhttps://another.example/your-product (approved)"
+            "[https://directory.example/product](https://directory.example/product) (under review)\n[https://another.example/submit](https://another.example/submit) (add badge) <a href=\"https://another.example\">Badge</a>"
           }
           className="mt-2 min-h-32 font-mono text-xs"
           disabled={busy}
@@ -415,7 +423,23 @@ function BulkSubmissionImport({
                 <div className="min-w-0 md:col-span-2">
                   <p className="truncate text-xs text-muted-foreground">{entry.listing_url}</p>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
-                    <Badge variant="outline">{SUBMISSION_STATUS_LABELS[entry.status]}</Badge>
+                    <select
+                      value={entry.status ?? ""}
+                      onChange={(event) =>
+                        updateEntry(index, {
+                          status: (event.target.value || null) as GetListedSubmissionStatus | null,
+                        })
+                      }
+                      className="form-field h-8 rounded-lg border border-border bg-background px-2 text-xs"
+                      disabled={busy}
+                    >
+                      <option value="">Choose status</option>
+                      {GET_LISTED_SUBMISSION_STATUSES.map((status) => (
+                        <option key={status} value={status}>
+                          {SUBMISSION_STATUS_LABELS[status]}
+                        </option>
+                      ))}
+                    </select>
                     {entry.duplicate && <Badge variant="pink">Duplicate</Badge>}
                     {entry.warning && (
                       <span className="text-xs text-muted-foreground">{entry.warning}</span>
@@ -430,6 +454,26 @@ function BulkSubmissionImport({
                     </button>
                   </div>
                 </div>
+                {entry.public_notes && (
+                  <Field label="Imported note" className="md:col-span-2">
+                    <Textarea
+                      value={entry.public_notes}
+                      onChange={(event) => updateEntry(index, { public_notes: event.target.value })}
+                      className="min-h-16"
+                      disabled={busy}
+                    />
+                  </Field>
+                )}
+                {entry.badge_code && (
+                  <Field label="Badge code" className="md:col-span-2">
+                    <Textarea
+                      value={entry.badge_code}
+                      onChange={(event) => updateEntry(index, { badge_code: event.target.value })}
+                      className="min-h-28 font-mono text-xs"
+                      disabled={busy}
+                    />
+                  </Field>
+                )}
               </div>
             ))}
 
@@ -494,6 +538,7 @@ function SubmissionEditor({
       requirement_type: data.get("requirement_type"),
       backlink_status: data.get("backlink_status"),
       backlink_instructions: textFromForm(data, "backlink_instructions"),
+      badge_code: textFromForm(data, "badge_code"),
       backlink_url: textFromForm(data, "backlink_url"),
       submitted_at: isoFromForm(data.get("submitted_at")),
       last_checked_at: isoFromForm(data.get("last_checked_at")),
@@ -597,6 +642,15 @@ function SubmissionEditor({
             defaultValue={submission.backlink_instructions ?? ""}
             disabled={busy}
             className="min-h-20"
+          />
+        </Field>
+        <Field label="Badge embed code" className="md:col-span-2">
+          <Textarea
+            name="badge_code"
+            defaultValue={submission.badge_code ?? ""}
+            placeholder="HTML badge code the buyer needs to add"
+            disabled={busy}
+            className="min-h-28 font-mono text-xs"
           />
         </Field>
         <Field label="Submitted at">

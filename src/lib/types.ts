@@ -242,6 +242,7 @@ export type GetListedSubmission = {
   requirement_type: GetListedRequirementType;
   backlink_status: GetListedBacklinkStatus;
   backlink_instructions: string | null;
+  badge_code: string | null;
   backlink_url: string | null;
   backlink_verified_at: string | null;
   public_notes: string | null;

@@ -42,6 +42,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (input.backlink_instructions !== undefined) {
     update.backlink_instructions = input.backlink_instructions || null;
   }
+  if (input.badge_code !== undefined) update.badge_code = input.badge_code || null;
   if (input.backlink_url !== undefined) update.backlink_url = input.backlink_url || null;
   if (input.public_notes !== undefined) update.public_notes = input.public_notes || null;
   if (input.internal_notes !== undefined) update.internal_notes = input.internal_notes || null;

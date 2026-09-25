@@ -191,6 +191,16 @@ export default async function GetListedCampaignDetailPage({
                       {s.public_notes}
                     </p>
                   )}
+                  {s.badge_code && (
+                    <div className="mt-2 rounded-lg bg-muted p-2.5">
+                      <p className="mb-1 text-[11px] font-bold uppercase tracking-wide">
+                        Badge code to add
+                      </p>
+                      <pre className="overflow-x-auto whitespace-pre-wrap break-all text-[11px] text-muted-foreground">
+                        <code>{s.badge_code}</code>
+                      </pre>
+                    </div>
+                  )}
                 </div>
                 <Badge variant={SUBMISSION_VARIANT[s.status]}>
                   {SUBMISSION_STATUS_LABELS[s.status]}
