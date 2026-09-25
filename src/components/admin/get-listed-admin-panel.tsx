@@ -206,6 +206,8 @@ function CampaignCard({ row }: { row: Row }) {
         ))}
       </div>
 
+      <BulkSubmissionImport campaignId={campaign.id} onImported={() => router.refresh()} />
+
       {submissions.length > 0 && (
         <div className="mt-4 flex flex-col gap-3">
           {submissions.map((s) => (
@@ -239,6 +241,216 @@ function CampaignCard({ row }: { row: Row }) {
         </Button>
       </form>
     </div>
+  );
+}
+
+type BulkPreviewEntry = {
+  line: number;
+  directory_name: string;
+  directory_url: string;
+  listing_url: string;
+  status: GetListedSubmissionStatus;
+  duplicate: boolean;
+  warning: string | null;
+};
+
+type BulkPreviewError = { line: number; message: string };
+
+function BulkSubmissionImport({
+  campaignId,
+  onImported,
+}: {
+  campaignId: string;
+  onImported: () => void;
+}) {
+  const [raw, setRaw] = React.useState("");
+  const [entries, setEntries] = React.useState<BulkPreviewEntry[]>([]);
+  const [errors, setErrors] = React.useState<BulkPreviewError[]>([]);
+  const [busy, setBusy] = React.useState(false);
+
+  async function preview() {
+    if (!raw.trim()) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/admin/get-listed/submissions/bulk-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ campaign_id: campaignId, raw }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.message ?? "Couldn't preview these entries.");
+        return;
+      }
+      setEntries(data.entries ?? []);
+      setErrors(data.errors ?? []);
+    } catch {
+      toast.error("Couldn't preview these entries.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function importEntries() {
+    if (!entries.length || entries.some((entry) => entry.duplicate)) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/admin/get-listed/submissions/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          campaign_id: campaignId,
+          entries: entries.map(({ directory_name, directory_url, listing_url, status }) => ({
+            directory_name,
+            directory_url,
+            listing_url,
+            status,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.message ?? "Couldn't import the entries.");
+        return;
+      }
+      toast.success(`${data.imported} ${data.imported === 1 ? "entry" : "entries"} imported.`);
+      setRaw("");
+      setEntries([]);
+      setErrors([]);
+      onImported();
+    } catch {
+      toast.error("Couldn't import the entries.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function updateEntry(index: number, patch: Partial<BulkPreviewEntry>) {
+    setEntries((current) =>
+      current.map((entry, entryIndex) => entryIndex === index ? { ...entry, ...patch } : entry),
+    );
+  }
+
+  const blocked = errors.length > 0 || entries.some((entry) => entry.duplicate);
+
+  return (
+    <details className="mt-4 rounded-xl border border-border bg-muted/20">
+      <summary className="cursor-pointer list-none px-4 py-3 text-sm font-bold">
+        Bulk add from listing URLs
+      </summary>
+      <div className="border-t border-border p-4">
+        <Label htmlFor={`bulk-${campaignId}`}>Raw entries</Label>
+        <p className="mt-1 text-xs text-muted-foreground">
+          One per line: listing URL followed by its status in parentheses.
+        </p>
+        <Textarea
+          id={`bulk-${campaignId}`}
+          value={raw}
+          onChange={(event) => {
+            setRaw(event.target.value);
+            setEntries([]);
+            setErrors([]);
+          }}
+          placeholder={
+            "https://directory.example/products/your-product (under review)\nhttps://another.example/your-product (approved)"
+          }
+          className="mt-2 min-h-32 font-mono text-xs"
+          disabled={busy}
+        />
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button type="button" size="sm" onClick={preview} disabled={busy || !raw.trim()}>
+            {busy ? "Working…" : "Fetch and preview"}
+          </Button>
+          {(entries.length > 0 || errors.length > 0) && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              onClick={() => {
+                setEntries([]);
+                setErrors([]);
+              }}
+            >
+              Clear preview
+            </Button>
+          )}
+        </div>
+
+        {errors.length > 0 && (
+          <div className="mt-4 rounded-xl border border-hero-pink/40 bg-hero-pink/10 p-3 text-xs">
+            <p className="font-bold">Fix these rows and preview again:</p>
+            <ul className="mt-1 list-disc pl-4">
+              {errors.map((error) => (
+                <li key={`${error.line}-${error.message}`}>
+                  Line {error.line}: {error.message}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {entries.length > 0 && (
+          <div className="mt-4 flex flex-col gap-3">
+            {entries.map((entry, index) => (
+              <div
+                key={`${entry.line}-${entry.listing_url}`}
+                className="grid gap-3 rounded-xl border border-border bg-background p-3 md:grid-cols-2"
+              >
+                <Field label={`Directory name · line ${entry.line}`}>
+                  <Input
+                    value={entry.directory_name}
+                    onChange={(event) => updateEntry(index, { directory_name: event.target.value })}
+                    disabled={busy}
+                  />
+                </Field>
+                <Field label="Directory URL">
+                  <Input
+                    type="url"
+                    value={entry.directory_url}
+                    onChange={(event) => updateEntry(index, { directory_url: event.target.value })}
+                    disabled={busy}
+                  />
+                </Field>
+                <div className="min-w-0 md:col-span-2">
+                  <p className="truncate text-xs text-muted-foreground">{entry.listing_url}</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <Badge variant="outline">{SUBMISSION_STATUS_LABELS[entry.status]}</Badge>
+                    {entry.duplicate && <Badge variant="pink">Duplicate</Badge>}
+                    {entry.warning && (
+                      <span className="text-xs text-muted-foreground">{entry.warning}</span>
+                    )}
+                    <button
+                      type="button"
+                      className="ml-auto text-xs font-semibold text-muted-foreground hover:text-foreground"
+                      onClick={() => setEntries((current) => current.filter((_, i) => i !== index))}
+                      disabled={busy}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">
+                Review the autofilled names and URLs before importing.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="abstract"
+                onClick={importEntries}
+                disabled={busy || blocked || entries.length === 0}
+              >
+                Import {entries.length} {entries.length === 1 ? "entry" : "entries"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </details>
   );
 }
 
