@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,7 +16,11 @@ import {
   PAYMENT_STATUS_LABELS,
   GET_LISTED_CAMPAIGN_STATUSES,
   GET_LISTED_SUBMISSION_STATUSES,
+  GET_LISTED_REQUIREMENT_TYPES,
+  GET_LISTED_BACKLINK_STATUSES,
   SUBMISSION_STATUS_LABELS,
+  REQUIREMENT_TYPE_LABELS,
+  BACKLINK_STATUS_LABELS,
   type GetListedSubmissionStatus,
   type GetListedCampaignStatus,
 } from "@/lib/get-listed";
@@ -72,7 +78,7 @@ function CampaignCard({ row }: { row: Row }) {
           campaign_id: campaign.id,
           directory_name: name.trim(),
           directory_url: url.trim() || null,
-          status: "submitted",
+          status: "planned",
         }),
       });
       const data = await res.json();
@@ -181,7 +187,7 @@ function CampaignCard({ row }: { row: Row }) {
             {progress.sent}/{progress.target}
           </div>
           <div className="text-[11px] text-muted-foreground">
-            {progress.accepted} accepted · {progress.rejected} rejected
+            {progress.approved} approved · {progress.under_review} under review
           </div>
         </div>
       </div>
@@ -201,68 +207,17 @@ function CampaignCard({ row }: { row: Row }) {
       </div>
 
       {submissions.length > 0 && (
-        <ul className="mt-3 flex flex-col divide-y divide-border">
+        <div className="mt-4 flex flex-col gap-3">
           {submissions.map((s) => (
-            <li key={s.id} className="flex flex-wrap items-center gap-2 py-2">
-              <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                {s.directory_name}
-              </span>
-
-              <select
-                value={s.status}
-                disabled={busy}
-                onChange={(e) =>
-                  patchSubmission(s.id, {
-                    status: e.target.value as GetListedSubmissionStatus,
-                  })
-                }
-                className="h-8 rounded-lg border border-border bg-background px-2 text-xs"
-              >
-                {GET_LISTED_SUBMISSION_STATUSES.map((status) => (
-                  <option key={status} value={status}>
-                    {SUBMISSION_STATUS_LABELS[status]}
-                  </option>
-                ))}
-              </select>
-
-              <Input
-                defaultValue={s.listing_url ?? ""}
-                placeholder="Listing URL"
-                disabled={busy}
-                onBlur={(e) => {
-                  const value = e.target.value.trim();
-                  if (value !== (s.listing_url ?? "")) {
-                    patchSubmission(s.id, { listing_url: value || null });
-                  }
-                }}
-                className="h-8 w-48 text-xs"
-              />
-
-              <Input
-                defaultValue={s.notes ?? ""}
-                placeholder="Notes"
-                disabled={busy}
-                onBlur={(e) => {
-                  const value = e.target.value.trim();
-                  if (value !== (s.notes ?? "")) {
-                    patchSubmission(s.id, { notes: value || null });
-                  }
-                }}
-                className="h-8 w-40 text-xs"
-              />
-
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={busy}
-                aria-label={`Delete ${s.directory_name}`}
-                onClick={() => deleteSubmission(s.id)}
-              >
-                <Trash2 className="size-3.5" />
-              </Button>
-            </li>
+            <SubmissionEditor
+              key={s.id}
+              submission={s}
+              busy={busy}
+              onSave={(body) => patchSubmission(s.id, body)}
+              onDelete={() => deleteSubmission(s.id)}
+            />
           ))}
-        </ul>
+        </div>
       )}
 
       <form onSubmit={addSubmission} className="mt-3 flex flex-wrap items-center gap-2">
@@ -284,5 +239,231 @@ function CampaignCard({ row }: { row: Row }) {
         </Button>
       </form>
     </div>
+  );
+}
+
+function toDatetimeLocal(value: string | null): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
+function isoFromForm(value: FormDataEntryValue | null): string | null {
+  if (typeof value !== "string" || !value) return null;
+  return new Date(value).toISOString();
+}
+
+function textFromForm(data: FormData, name: string): string | null {
+  const value = data.get(name);
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function SubmissionEditor({
+  submission,
+  busy,
+  onSave,
+  onDelete,
+}: {
+  submission: GetListedSubmission;
+  busy: boolean;
+  onSave: (body: Record<string, unknown>) => Promise<void>;
+  onDelete: () => Promise<void>;
+}) {
+  async function save(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const data = new FormData(e.currentTarget);
+    await onSave({
+      directory_name: textFromForm(data, "directory_name"),
+      directory_url: textFromForm(data, "directory_url"),
+      status: data.get("status") as GetListedSubmissionStatus,
+      listing_url: textFromForm(data, "listing_url"),
+      requirement_type: data.get("requirement_type"),
+      backlink_status: data.get("backlink_status"),
+      backlink_instructions: textFromForm(data, "backlink_instructions"),
+      backlink_url: textFromForm(data, "backlink_url"),
+      submitted_at: isoFromForm(data.get("submitted_at")),
+      last_checked_at: isoFromForm(data.get("last_checked_at")),
+      backlink_verified_at: isoFromForm(data.get("backlink_verified_at")),
+      public_notes: textFromForm(data, "public_notes"),
+      internal_notes: textFromForm(data, "internal_notes"),
+      visible_to_client: data.get("visible_to_client") === "on",
+    });
+  }
+
+  return (
+    <details className="rounded-xl border border-border bg-muted/20">
+      <summary className="flex cursor-pointer list-none flex-wrap items-center gap-2 px-3 py-2.5">
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+          {submission.directory_name}
+        </span>
+        {!submission.visible_to_client && <Badge variant="outline">Hidden</Badge>}
+        <Badge variant="outline">{SUBMISSION_STATUS_LABELS[submission.status]}</Badge>
+      </summary>
+
+      <form onSubmit={save} className="grid gap-4 border-t border-border p-4 md:grid-cols-2">
+        <Field label="Directory name">
+          <Input
+            name="directory_name"
+            defaultValue={submission.directory_name}
+            disabled={busy}
+            required
+          />
+        </Field>
+        <Field label="Directory website">
+          <Input
+            name="directory_url"
+            type="url"
+            defaultValue={submission.directory_url ?? ""}
+            placeholder="https://directory.example"
+            disabled={busy}
+          />
+        </Field>
+        <Field label="Submission status">
+          <select
+            name="status"
+            defaultValue={submission.status}
+            disabled={busy}
+            className="form-field h-10 w-full rounded-xl border border-border bg-background px-3.5 text-sm"
+          >
+            {GET_LISTED_SUBMISSION_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {SUBMISSION_STATUS_LABELS[status]}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Live listing URL">
+          <Input
+            name="listing_url"
+            type="url"
+            defaultValue={submission.listing_url ?? ""}
+            placeholder="https://directory.example/product"
+            disabled={busy}
+          />
+        </Field>
+        <Field label="Website requirement">
+          <select
+            name="requirement_type"
+            defaultValue={submission.requirement_type}
+            disabled={busy}
+            className="form-field h-10 w-full rounded-xl border border-border bg-background px-3.5 text-sm"
+          >
+            {GET_LISTED_REQUIREMENT_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {REQUIREMENT_TYPE_LABELS[type]}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Backlink / badge status">
+          <select
+            name="backlink_status"
+            defaultValue={submission.backlink_status}
+            disabled={busy}
+            className="form-field h-10 w-full rounded-xl border border-border bg-background px-3.5 text-sm"
+          >
+            {GET_LISTED_BACKLINK_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {BACKLINK_STATUS_LABELS[status]}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Required backlink URL">
+          <Input
+            name="backlink_url"
+            type="url"
+            defaultValue={submission.backlink_url ?? ""}
+            disabled={busy}
+          />
+        </Field>
+        <Field label="Backlink instructions">
+          <Textarea
+            name="backlink_instructions"
+            defaultValue={submission.backlink_instructions ?? ""}
+            disabled={busy}
+            className="min-h-20"
+          />
+        </Field>
+        <Field label="Submitted at">
+          <Input
+            name="submitted_at"
+            type="datetime-local"
+            defaultValue={toDatetimeLocal(submission.submitted_at)}
+            disabled={busy}
+          />
+        </Field>
+        <Field label="Last checked at">
+          <Input
+            name="last_checked_at"
+            type="datetime-local"
+            defaultValue={toDatetimeLocal(submission.last_checked_at)}
+            disabled={busy}
+          />
+        </Field>
+        <Field label="Backlink verified at">
+          <Input
+            name="backlink_verified_at"
+            type="datetime-local"
+            defaultValue={toDatetimeLocal(submission.backlink_verified_at)}
+            disabled={busy}
+          />
+        </Field>
+        <label className="flex items-center gap-2 self-end rounded-xl border border-border px-3.5 py-2.5 text-sm font-semibold">
+          <input
+            name="visible_to_client"
+            type="checkbox"
+            defaultChecked={submission.visible_to_client}
+            disabled={busy}
+            className="size-4"
+          />
+          Visible to buyer
+        </label>
+        <Field label="Public progress note" className="md:col-span-2">
+          <Textarea
+            name="public_notes"
+            defaultValue={submission.public_notes ?? submission.notes ?? ""}
+            placeholder="Shown to the buyer in their report"
+            disabled={busy}
+          />
+        </Field>
+        <Field label="Private admin note" className="md:col-span-2">
+          <Textarea
+            name="internal_notes"
+            defaultValue={submission.internal_notes ?? ""}
+            placeholder="Only visible in admin"
+            disabled={busy}
+          />
+        </Field>
+
+        <div className="flex flex-wrap justify-between gap-2 md:col-span-2">
+          <Button type="button" size="sm" variant="outline" disabled={busy} onClick={onDelete}>
+            <Trash2 className="mr-1.5 size-3.5" /> Delete
+          </Button>
+          <Button type="submit" size="sm" disabled={busy}>
+            Save entry
+          </Button>
+        </div>
+      </form>
+    </details>
+  );
+}
+
+function Field({
+  label,
+  className,
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Label className={className}>
+      <span className="mb-1.5 block">{label}</span>
+      {children}
+    </Label>
   );
 }

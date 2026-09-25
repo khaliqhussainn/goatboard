@@ -41,7 +41,11 @@ export async function listMyGetListedCampaigns(): Promise<
   const ids = campaigns.map((c) => c.id);
   const [{ data: orders }, { data: submissions }] = await Promise.all([
     admin.from("get_listed_orders").select("*").in("campaign_id", ids),
-    admin.from("get_listed_submissions").select("campaign_id, status").in("campaign_id", ids),
+    admin
+      .from("get_listed_submissions")
+      .select("campaign_id, status")
+      .in("campaign_id", ids)
+      .eq("visible_to_client", true),
   ]);
 
   return campaigns.map((campaign) => ({
@@ -88,6 +92,7 @@ export async function getMyGetListedCampaign(
       .from("get_listed_submissions")
       .select("*")
       .eq("campaign_id", campaign.id)
+      .eq("visible_to_client", true)
       .order("created_at", { ascending: true }),
   ]);
 

@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  GET_LISTED_BACKLINK_STATUSES,
+  GET_LISTED_REQUIREMENT_TYPES,
+  GET_LISTED_SUBMISSION_STATUSES,
+} from "@/lib/get-listed";
 
 const SAFE_URL_PROTOCOLS = ["http:", "https:"];
 
@@ -276,17 +281,35 @@ export const getListedSubmissionSchema = z.object({
     .min(1, "Directory name is required.")
     .max(120, "Keep it under 120 characters."),
   directory_url: optionalUrl,
-  status: z.enum(["pending", "submitted", "accepted", "rejected"]).optional(),
+  status: z.enum(GET_LISTED_SUBMISSION_STATUSES).optional(),
   listing_url: optionalUrl,
-  notes: z.string().trim().max(1000, "Keep notes under 1000 characters.").optional().nullable(),
+  requirement_type: z.enum(GET_LISTED_REQUIREMENT_TYPES).optional(),
+  backlink_status: z.enum(GET_LISTED_BACKLINK_STATUSES).optional(),
+  backlink_instructions: z.string().trim().max(2000).optional().nullable(),
+  backlink_url: optionalUrl,
+  public_notes: z.string().trim().max(2000).optional().nullable(),
+  internal_notes: z.string().trim().max(2000).optional().nullable(),
+  visible_to_client: z.boolean().optional(),
+  submitted_at: z.iso.datetime().optional().nullable(),
+  last_checked_at: z.iso.datetime().optional().nullable(),
+  backlink_verified_at: z.iso.datetime().optional().nullable(),
 });
 
 export const getListedSubmissionUpdateSchema = z.object({
   directory_name: z.string().trim().min(1).max(120).optional(),
   directory_url: optionalUrl,
-  status: z.enum(["pending", "submitted", "accepted", "rejected"]).optional(),
+  status: z.enum(GET_LISTED_SUBMISSION_STATUSES).optional(),
   listing_url: optionalUrl,
-  notes: z.string().trim().max(1000).optional().nullable(),
+  requirement_type: z.enum(GET_LISTED_REQUIREMENT_TYPES).optional(),
+  backlink_status: z.enum(GET_LISTED_BACKLINK_STATUSES).optional(),
+  backlink_instructions: z.string().trim().max(2000).optional().nullable(),
+  backlink_url: optionalUrl,
+  public_notes: z.string().trim().max(2000).optional().nullable(),
+  internal_notes: z.string().trim().max(2000).optional().nullable(),
+  visible_to_client: z.boolean().optional(),
+  submitted_at: z.iso.datetime().optional().nullable(),
+  last_checked_at: z.iso.datetime().optional().nullable(),
+  backlink_verified_at: z.iso.datetime().optional().nullable(),
 });
 
 export const getListedCampaignStatusSchema = z.object({

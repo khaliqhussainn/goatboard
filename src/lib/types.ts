@@ -123,9 +123,11 @@ export type Report = {
 };
 
 import type {
+  GetListedBacklinkStatus,
   GetListedPackageKey,
   GetListedCampaignStatus,
   GetListedPaymentStatus,
+  GetListedRequirementType,
   GetListedSubmissionStatus,
 } from "@/lib/get-listed";
 
@@ -237,6 +239,16 @@ export type GetListedSubmission = {
   directory_url: string | null;
   status: GetListedSubmissionStatus;
   listing_url: string | null;
+  requirement_type: GetListedRequirementType;
+  backlink_status: GetListedBacklinkStatus;
+  backlink_instructions: string | null;
+  backlink_url: string | null;
+  backlink_verified_at: string | null;
+  public_notes: string | null;
+  internal_notes: string | null;
+  visible_to_client: boolean;
+  last_checked_at: string | null;
+  /** Kept for compatibility with rows created before public/private notes. */
   notes: string | null;
   submitted_at: string | null;
   created_at: string;

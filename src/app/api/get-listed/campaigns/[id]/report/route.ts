@@ -41,11 +41,26 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     ["Package", `${pkg.name} (${pkg.summary})`].map(csvCell).join(","),
     ["Target", String(campaign.submission_target)].map(csvCell).join(","),
     ["Submitted", String(progress.sent)].map(csvCell).join(","),
-    ["Accepted", String(progress.accepted)].map(csvCell).join(","),
+    ["Under review", String(progress.under_review)].map(csvCell).join(","),
+    ["Approved / live", String(progress.approved)].map(csvCell).join(","),
     ["Rejected", String(progress.rejected)].map(csvCell).join(","),
-    ["Pending", String(progress.pending)].map(csvCell).join(","),
+    ["Needs action", String(progress.needs_action)].map(csvCell).join(","),
+    ["Planned", String(progress.planned)].map(csvCell).join(","),
     "",
-    ["Directory", "Directory URL", "Status", "Listing URL", "Submitted at", "Notes"]
+    [
+      "Directory",
+      "Directory URL",
+      "Status",
+      "Listing URL",
+      "Website requirement",
+      "Backlink status",
+      "Required backlink URL",
+      "Backlink instructions",
+      "Submitted at",
+      "Last checked at",
+      "Backlink verified at",
+      "Public notes",
+    ]
       .map(csvCell)
       .join(","),
     ...submissions.map((s) =>
@@ -54,8 +69,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         s.directory_url,
         s.status,
         s.listing_url,
+        s.requirement_type,
+        s.backlink_status,
+        s.backlink_url,
+        s.backlink_instructions,
         s.submitted_at,
-        s.notes,
+        s.last_checked_at,
+        s.backlink_verified_at,
+        s.public_notes,
       ]
         .map(csvCell)
         .join(","),

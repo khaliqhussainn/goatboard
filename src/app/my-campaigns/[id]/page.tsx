@@ -12,6 +12,8 @@ import {
   CAMPAIGN_STATUS_LABELS,
   PAYMENT_STATUS_LABELS,
   SUBMISSION_STATUS_LABELS,
+  REQUIREMENT_TYPE_LABELS,
+  BACKLINK_STATUS_LABELS,
   type GetListedSubmissionStatus,
 } from "@/lib/get-listed";
 import { formatMoney } from "@/lib/utils";
@@ -23,11 +25,17 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-const SUBMISSION_VARIANT: Record<GetListedSubmissionStatus, "yellow" | "blue" | "green" | "pink"> = {
-  pending: "yellow",
+const SUBMISSION_VARIANT: Record<
+  GetListedSubmissionStatus,
+  "yellow" | "blue" | "green" | "pink" | "outline"
+> = {
+  planned: "outline",
   submitted: "blue",
-  accepted: "green",
+  under_review: "yellow",
+  approved: "green",
   rejected: "pink",
+  needs_action: "pink",
+  removed: "outline",
 };
 
 export default async function GetListedCampaignDetailPage({
@@ -125,7 +133,7 @@ export default async function GetListedCampaignDetailPage({
             />
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {(["pending", "submitted", "accepted", "rejected"] as const).map((status) => (
+            {(["planned", "submitted", "under_review", "approved"] as const).map((status) => (
               <div key={status} className="rounded-xl border border-border p-3">
                 <div className="text-xl font-black tabular-nums">{progress[status]}</div>
                 <div className="text-[11px] text-muted-foreground">
@@ -149,9 +157,19 @@ export default async function GetListedCampaignDetailPage({
         ) : (
           <ul className="billboard-surface mt-3 flex flex-col divide-y divide-border rounded-[1.75rem] p-5">
             {submissions.map((s) => (
-              <li key={s.id} className="flex flex-wrap items-center gap-3 py-2.5">
+              <li key={s.id} className="flex flex-wrap items-start gap-3 py-3">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{s.directory_name}</p>
+                  {s.directory_url && (
+                    <a
+                      href={s.directory_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-muted-foreground underline underline-offset-4"
+                    >
+                      Directory website
+                    </a>
+                  )}
                   {s.listing_url && (
                     <a
                       href={s.listing_url}
@@ -161,6 +179,17 @@ export default async function GetListedCampaignDetailPage({
                     >
                       View listing <ExternalLink className="size-3" />
                     </a>
+                  )}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {REQUIREMENT_TYPE_LABELS[s.requirement_type]}
+                    {s.requirement_type !== "none"
+                      ? ` · ${BACKLINK_STATUS_LABELS[s.backlink_status]}`
+                      : ""}
+                  </p>
+                  {s.public_notes && (
+                    <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">
+                      {s.public_notes}
+                    </p>
                   )}
                 </div>
                 <Badge variant={SUBMISSION_VARIANT[s.status]}>

@@ -649,14 +649,83 @@ create table if not exists public.get_listed_submissions (
   campaign_id uuid not null references public.get_listed_campaigns (id) on delete cascade,
   directory_name text not null check (char_length(directory_name) between 1 and 120),
   directory_url text,
-  status text not null default 'pending'
-    check (status in ('pending', 'submitted', 'accepted', 'rejected')),
+  status text not null default 'planned'
+    check (status in (
+      'planned', 'submitted', 'under_review', 'approved',
+      'rejected', 'needs_action', 'removed'
+    )),
   listing_url text,
+  requirement_type text not null default 'none'
+    check (requirement_type in ('none', 'backlink', 'dofollow_backlink', 'badge_embed')),
+  backlink_status text not null default 'not_needed'
+    check (backlink_status in ('not_needed', 'requested', 'added', 'verified')),
+  backlink_instructions text,
+  backlink_url text,
+  backlink_verified_at timestamptz,
+  public_notes text,
+  internal_notes text,
+  visible_to_client boolean not null default true,
+  last_checked_at timestamptz,
+  -- Legacy column retained so this schema can upgrade existing deployments.
   notes text,
   submitted_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Enrich submission tracking on deployments that already have the original
+-- pending/submitted/accepted/rejected table. Drop the generated status check
+-- before translating its two renamed values, then install a stable constraint.
+do $mig$
+declare
+  c record;
+begin
+  for c in
+    select con.conname
+      from pg_constraint con
+     where con.conrelid = 'public.get_listed_submissions'::regclass
+       and con.contype = 'c'
+       and pg_get_constraintdef(con.oid) ilike '%status%'
+       and pg_get_constraintdef(con.oid) ilike '%submitted%'
+  loop
+    execute format(
+      'alter table public.get_listed_submissions drop constraint %I',
+      c.conname
+    );
+  end loop;
+end
+$mig$;
+
+update public.get_listed_submissions set status = 'planned' where status = 'pending';
+update public.get_listed_submissions set status = 'approved' where status = 'accepted';
+
+alter table public.get_listed_submissions
+  alter column status set default 'planned';
+alter table public.get_listed_submissions
+  add constraint get_listed_submissions_status_check
+  check (status in (
+    'planned', 'submitted', 'under_review', 'approved',
+    'rejected', 'needs_action', 'removed'
+  ));
+
+alter table public.get_listed_submissions
+  add column if not exists requirement_type text not null default 'none'
+    check (requirement_type in ('none', 'backlink', 'dofollow_backlink', 'badge_embed')),
+  add column if not exists backlink_status text not null default 'not_needed'
+    check (backlink_status in ('not_needed', 'requested', 'added', 'verified')),
+  add column if not exists backlink_instructions text,
+  add column if not exists backlink_url text,
+  add column if not exists backlink_verified_at timestamptz,
+  add column if not exists public_notes text,
+  add column if not exists internal_notes text,
+  add column if not exists visible_to_client boolean not null default true,
+  add column if not exists last_checked_at timestamptz;
+
+-- Notes used to be a single buyer-visible field. Preserve that meaning while
+-- keeping future private operational notes in internal_notes.
+update public.get_listed_submissions
+   set public_notes = notes
+ where public_notes is null and notes is not null;
 
 create index if not exists get_listed_submissions_campaign_idx
   on public.get_listed_submissions (campaign_id, created_at);

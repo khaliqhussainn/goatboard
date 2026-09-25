@@ -199,12 +199,31 @@ export const GET_LISTED_PAYMENT_STATUSES = [
 export type GetListedPaymentStatus = (typeof GET_LISTED_PAYMENT_STATUSES)[number];
 
 export const GET_LISTED_SUBMISSION_STATUSES = [
-  "pending",
+  "planned",
   "submitted",
-  "accepted",
+  "under_review",
+  "approved",
   "rejected",
+  "needs_action",
+  "removed",
 ] as const;
 export type GetListedSubmissionStatus = (typeof GET_LISTED_SUBMISSION_STATUSES)[number];
+
+export const GET_LISTED_REQUIREMENT_TYPES = [
+  "none",
+  "backlink",
+  "dofollow_backlink",
+  "badge_embed",
+] as const;
+export type GetListedRequirementType = (typeof GET_LISTED_REQUIREMENT_TYPES)[number];
+
+export const GET_LISTED_BACKLINK_STATUSES = [
+  "not_needed",
+  "requested",
+  "added",
+  "verified",
+] as const;
+export type GetListedBacklinkStatus = (typeof GET_LISTED_BACKLINK_STATUSES)[number];
 
 export const CAMPAIGN_STATUS_LABELS: Record<GetListedCampaignStatus, string> = {
   draft: "Draft",
@@ -224,10 +243,27 @@ export const PAYMENT_STATUS_LABELS: Record<GetListedPaymentStatus, string> = {
 };
 
 export const SUBMISSION_STATUS_LABELS: Record<GetListedSubmissionStatus, string> = {
-  pending: "Pending",
+  planned: "Planned",
   submitted: "Submitted",
-  accepted: "Accepted",
+  under_review: "Under review",
+  approved: "Approved / live",
   rejected: "Rejected",
+  needs_action: "Needs action",
+  removed: "Removed / expired",
+};
+
+export const REQUIREMENT_TYPE_LABELS: Record<GetListedRequirementType, string> = {
+  none: "No backlink required",
+  backlink: "Backlink required",
+  dofollow_backlink: "Dofollow backlink required",
+  badge_embed: "Badge / embed required",
+};
+
+export const BACKLINK_STATUS_LABELS: Record<GetListedBacklinkStatus, string> = {
+  not_needed: "Not needed",
+  requested: "Requested",
+  added: "Added",
+  verified: "Verified",
 };
 
 /** Progress derived from real submission rows - never a stored counter. */
@@ -235,12 +271,20 @@ export function submissionProgress(
   submissions: { status: GetListedSubmissionStatus }[],
   target: number,
 ) {
-  const counts = { pending: 0, submitted: 0, accepted: 0, rejected: 0 };
+  const counts: Record<GetListedSubmissionStatus, number> = {
+    planned: 0,
+    submitted: 0,
+    under_review: 0,
+    approved: 0,
+    rejected: 0,
+    needs_action: 0,
+    removed: 0,
+  };
   for (const s of submissions) counts[s.status] += 1;
 
-  // "Sent" is anything that has actually left our hands, whatever the
-  // directory decided afterwards.
-  const sent = counts.submitted + counts.accepted + counts.rejected;
+  // "Sent" is anything that left our hands, including entries later removed
+  // by a directory. Planned work is the only state that has not been sent.
+  const sent = submissions.length - counts.planned;
   return {
     ...counts,
     total: submissions.length,

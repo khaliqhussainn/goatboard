@@ -37,7 +37,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Campaign not found." }, { status: 404 });
   }
 
-  const status = input.status ?? "pending";
+  const status = input.status ?? "planned";
+  const requirementType = input.requirement_type ?? "none";
+  const backlinkStatus = input.backlink_status ?? "not_needed";
+  const now = new Date().toISOString();
   const { data, error } = await admin
     .from("get_listed_submissions")
     .insert({
@@ -46,9 +49,17 @@ export async function POST(request: Request) {
       directory_url: input.directory_url || null,
       status,
       listing_url: input.listing_url || null,
-      notes: input.notes || null,
-      // Stamped the moment it stops being merely planned.
-      submitted_at: status === "pending" ? null : new Date().toISOString(),
+      requirement_type: requirementType,
+      backlink_status: backlinkStatus,
+      backlink_instructions: input.backlink_instructions || null,
+      backlink_url: input.backlink_url || null,
+      public_notes: input.public_notes || null,
+      internal_notes: input.internal_notes || null,
+      visible_to_client: input.visible_to_client ?? true,
+      submitted_at: input.submitted_at ?? (status === "planned" ? null : now),
+      last_checked_at: input.last_checked_at ?? null,
+      backlink_verified_at:
+        input.backlink_verified_at ?? (backlinkStatus === "verified" ? now : null),
     })
     .select("id")
     .single();

@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getListedSubmissionUpdateSchema } from "@/lib/validation";
 import type { GetListedSubmission } from "@/lib/types";
 
-/** Admin-only: edit a submission's status, listing URL or notes. */
+/** Admin-only: edit every operational and buyer-visible submission field. */
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await isAdminAuthed())) {
     return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
@@ -37,16 +37,36 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (input.directory_name !== undefined) update.directory_name = input.directory_name;
   if (input.directory_url !== undefined) update.directory_url = input.directory_url || null;
   if (input.listing_url !== undefined) update.listing_url = input.listing_url || null;
-  if (input.notes !== undefined) update.notes = input.notes || null;
+  if (input.requirement_type !== undefined) update.requirement_type = input.requirement_type;
+  if (input.backlink_status !== undefined) update.backlink_status = input.backlink_status;
+  if (input.backlink_instructions !== undefined) {
+    update.backlink_instructions = input.backlink_instructions || null;
+  }
+  if (input.backlink_url !== undefined) update.backlink_url = input.backlink_url || null;
+  if (input.public_notes !== undefined) update.public_notes = input.public_notes || null;
+  if (input.internal_notes !== undefined) update.internal_notes = input.internal_notes || null;
+  if (input.visible_to_client !== undefined) update.visible_to_client = input.visible_to_client;
+  if (input.submitted_at !== undefined) update.submitted_at = input.submitted_at;
+  if (input.last_checked_at !== undefined) update.last_checked_at = input.last_checked_at;
+  if (input.backlink_verified_at !== undefined) {
+    update.backlink_verified_at = input.backlink_verified_at;
+  }
 
   if (input.status !== undefined) {
     update.status = input.status;
-    // Stamp the first time it leaves "pending", and keep that original time
+    // Stamp the first time it leaves "planned", and keep that original time
     // through any later status change - it's when we submitted, not when the
     // directory last replied.
-    if (input.status !== "pending" && !existing.submitted_at) {
+    if (input.status !== "planned" && !existing.submitted_at && !input.submitted_at) {
       update.submitted_at = new Date().toISOString();
     }
+  }
+
+  if (
+    input.backlink_status === "verified" &&
+    !input.backlink_verified_at
+  ) {
+    update.backlink_verified_at = new Date().toISOString();
   }
 
   const { error } = await admin.from("get_listed_submissions").update(update).eq("id", id);
