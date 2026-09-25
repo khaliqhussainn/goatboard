@@ -210,6 +210,10 @@ export type GetListedCampaign = {
   package_key: GetListedPackageKey;
   submission_target: number;
   status: GetListedCampaignStatus;
+  report_share_token_hash: string | null;
+  report_share_enabled: boolean;
+  report_share_created_at: string | null;
+  report_share_expires_at: string | null;
   terms_accepted_at: string | null;
   created_at: string;
   updated_at: string;

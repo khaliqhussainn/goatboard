@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Copy, Link2, Link2Off, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -206,6 +206,8 @@ function CampaignCard({ row }: { row: Row }) {
         ))}
       </div>
 
+      <ShareReportControls campaign={campaign} />
+
       <BulkSubmissionImport campaignId={campaign.id} onImported={() => router.refresh()} />
 
       {submissions.length > 0 && (
@@ -241,6 +243,126 @@ function CampaignCard({ row }: { row: Row }) {
         </Button>
       </form>
     </div>
+  );
+}
+
+function ShareReportControls({ campaign }: { campaign: GetListedCampaign }) {
+  const [active, setActive] = React.useState(campaign.report_share_enabled);
+  const [expiresAt, setExpiresAt] = React.useState(
+    toDatetimeLocal(campaign.report_share_expires_at),
+  );
+  const [shareUrl, setShareUrl] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
+
+  async function generate() {
+    if (
+      active &&
+      !window.confirm("Generate a new link? The current share link will stop working immediately.")
+    ) return;
+
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/get-listed/campaigns/${campaign.id}/share`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.message ?? "Couldn't create the share link.");
+        return;
+      }
+      setShareUrl(data.url);
+      setActive(true);
+      toast.success("Read-only share link created.");
+    } catch {
+      toast.error("Couldn't create the share link.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function revoke() {
+    if (!window.confirm("Revoke this link? Anyone using it will immediately lose access.")) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/get-listed/campaigns/${campaign.id}/share`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.message ?? "Couldn't revoke the share link.");
+        return;
+      }
+      setActive(false);
+      setShareUrl("");
+      toast.success("Share link revoked.");
+    } catch {
+      toast.error("Couldn't revoke the share link.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Share link copied.");
+    } catch {
+      toast.error("Couldn't copy automatically. Select and copy the URL below.");
+    }
+  }
+
+  return (
+    <details className="mt-4 rounded-xl border border-border bg-muted/20">
+      <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-bold">
+        <Link2 className="size-4" /> Read-only live report
+        <Badge variant={active ? "green" : "outline"} className="ml-auto">
+          {active ? "Active" : "Not shared"}
+        </Badge>
+      </summary>
+      <div className="border-t border-border p-4">
+        <p className="text-xs text-muted-foreground">
+          The buyer sees live client-visible entries. Private notes and admin controls are excluded.
+        </p>
+        <div className="mt-3 flex flex-wrap items-end gap-2">
+          <Field label="Optional expiry">
+            <Input
+              type="datetime-local"
+              value={expiresAt}
+              min={toDatetimeLocal(new Date().toISOString())}
+              onChange={(event) => setExpiresAt(event.target.value)}
+              disabled={busy}
+              className="w-56"
+            />
+          </Field>
+          <Button type="button" size="sm" onClick={generate} disabled={busy}>
+            <Link2 /> {active ? "Regenerate link" : "Generate link"}
+          </Button>
+          {active && (
+            <Button type="button" size="sm" variant="outline" onClick={revoke} disabled={busy}>
+              <Link2Off /> Revoke
+            </Button>
+          )}
+        </div>
+
+        {shareUrl ? (
+          <div className="mt-3 flex gap-2">
+            <Input value={shareUrl} readOnly aria-label="Generated live report URL" />
+            <Button type="button" size="sm" variant="outline" onClick={copyLink}>
+              <Copy /> Copy
+            </Button>
+          </div>
+        ) : active ? (
+          <p className="mt-3 text-xs text-muted-foreground">
+            The token is stored only as a secure hash. Regenerate the link to receive a copy again;
+            doing so invalidates the previous URL.
+          </p>
+        ) : null}
+      </div>
+    </details>
   );
 }
 

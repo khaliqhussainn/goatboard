@@ -605,6 +605,12 @@ create table if not exists public.get_listed_campaigns (
   -- cancelled        : abandoned or refunded
   status text not null default 'draft'
     check (status in ('draft', 'awaiting_payment', 'active', 'in_progress', 'completed', 'cancelled')),
+  -- Public live-report access uses a high-entropy token. Only its SHA-256
+  -- digest is stored, so a database read cannot reveal a usable share URL.
+  report_share_token_hash text,
+  report_share_enabled boolean not null default false,
+  report_share_created_at timestamptz,
+  report_share_expires_at timestamptz,
   -- When the buyer accepted the Terms. Null until they tick the box.
   terms_accepted_at timestamptz,
   created_at timestamptz not null default now(),
@@ -673,6 +679,16 @@ create table if not exists public.get_listed_submissions (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.get_listed_campaigns
+  add column if not exists report_share_token_hash text,
+  add column if not exists report_share_enabled boolean not null default false,
+  add column if not exists report_share_created_at timestamptz,
+  add column if not exists report_share_expires_at timestamptz;
+
+create unique index if not exists get_listed_campaigns_share_token_idx
+  on public.get_listed_campaigns (report_share_token_hash)
+  where report_share_token_hash is not null;
 
 -- Enrich submission tracking on deployments that already have the original
 -- pending/submitted/accepted/rejected table. Drop the generated status check

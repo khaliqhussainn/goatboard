@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getVisitorId } from "@/lib/visitor";
+import { hashReportShareToken, isReportShareToken } from "@/lib/get-listed-share";
 import type { GetListedCampaign, GetListedOrder, GetListedSubmission } from "@/lib/types";
 
 /**
@@ -18,6 +19,56 @@ export type GetListedCampaignDetail = {
   order: GetListedOrder | null;
   submissions: GetListedSubmission[];
 };
+
+export type SharedGetListedReport = Pick<
+  GetListedCampaign,
+  "id" | "startup_name" | "website_url" | "description" | "submission_target" | "status" | "updated_at"
+> & { submissions: GetListedSubmission[] };
+
+/** Read-only live report addressed by an unguessable token, not owner identity. */
+export async function getSharedGetListedReport(
+  token: string,
+): Promise<SharedGetListedReport | null> {
+  if (!isReportShareToken(token)) return null;
+
+  const admin = createAdminClient();
+  const { data: campaign } = await admin
+    .from("get_listed_campaigns")
+    .select("id, startup_name, website_url, description, submission_target, status, updated_at, report_share_expires_at")
+    .eq("report_share_token_hash", hashReportShareToken(token))
+    .eq("report_share_enabled", true)
+    .maybeSingle();
+
+  if (!campaign) return null;
+  if (
+    campaign.report_share_expires_at &&
+    new Date(campaign.report_share_expires_at).getTime() <= Date.now()
+  ) return null;
+
+  const { data: submissions } = await admin
+    .from("get_listed_submissions")
+    .select("*")
+    .eq("campaign_id", campaign.id)
+    .eq("visible_to_client", true)
+    .order("created_at", { ascending: true });
+
+  const visibleSubmissions = submissions ?? [];
+  const updatedAt = visibleSubmissions.reduce(
+    (latest, submission) => submission.updated_at > latest ? submission.updated_at : latest,
+    campaign.updated_at,
+  );
+
+  return {
+    id: campaign.id,
+    startup_name: campaign.startup_name,
+    website_url: campaign.website_url,
+    description: campaign.description,
+    submission_target: campaign.submission_target,
+    status: campaign.status,
+    updated_at: updatedAt,
+    submissions: visibleSubmissions,
+  };
+}
 
 /** Every campaign belonging to the current visitor, newest first. */
 export async function listMyGetListedCampaigns(): Promise<
