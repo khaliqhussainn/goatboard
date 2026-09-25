@@ -339,7 +339,16 @@ function BulkSubmissionImport({
     );
   }
 
-  const blocked = errors.length > 0 || entries.some((entry) => entry.duplicate || !entry.status);
+  const blocked =
+    errors.length > 0 ||
+    entries.some(
+      (entry) =>
+        entry.duplicate ||
+        !entry.status ||
+        !entry.directory_name.trim() ||
+        !entry.directory_url.trim() ||
+        !entry.listing_url.trim(),
+    );
 
   return (
     <details className="mt-4 rounded-xl border border-border bg-muted/20">
@@ -402,7 +411,7 @@ function BulkSubmissionImport({
           <div className="mt-4 flex flex-col gap-3">
             {entries.map((entry, index) => (
               <div
-                key={`${entry.line}-${entry.listing_url}`}
+                key={entry.line}
                 className="grid gap-3 rounded-xl border border-border bg-background p-3 md:grid-cols-2"
               >
                 <Field label={`Directory name · line ${entry.line}`}>
@@ -420,8 +429,23 @@ function BulkSubmissionImport({
                     disabled={busy}
                   />
                 </Field>
+                <Field label="Listing URL" className="md:col-span-2">
+                  <Input
+                    type="url"
+                    value={entry.listing_url}
+                    onChange={(event) =>
+                      updateEntry(index, {
+                        listing_url: event.target.value,
+                        // The save endpoint performs the authoritative duplicate
+                        // check for an edited URL.
+                        duplicate: false,
+                      })
+                    }
+                    disabled={busy}
+                    required
+                  />
+                </Field>
                 <div className="min-w-0 md:col-span-2">
-                  <p className="truncate text-xs text-muted-foreground">{entry.listing_url}</p>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     <select
                       value={entry.status ?? ""}
