@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AbstractBackdrop } from "@/components/layout/abstract-backdrop";
 import { Leaderboard } from "@/components/billboard/leaderboard";
 import { AdPurchaseConfirmation } from "@/components/billboard/ad-purchase-confirmation";
+import { GetListedPromoModal } from "@/components/get-listed/get-listed-promo-modal";
 import { getVisitorStats } from "@/lib/queries/visitors";
 import { getCurrentAd } from "@/lib/queries/ad-slots";
 import { getCurrentVideoAd } from "@/lib/queries/video-ads";
@@ -52,6 +53,7 @@ export default async function Home() {
         <Suspense fallback={null}>
           <AdPurchaseConfirmation />
         </Suspense>
+        <GetListedPromoModal mode="homepage" />
 
         <Leaderboard
           initialCampaigns={campaigns}

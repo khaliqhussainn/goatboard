@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { GetListedPromoModal } from "@/components/get-listed/get-listed-promo-modal";
 import {
   Select,
   SelectContent,
@@ -43,6 +44,7 @@ export function CampaignCreationForm({
   const [fetchingLogo, setFetchingLogo] = React.useState(false);
   const [logoNotFound, setLogoNotFound] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
+  const [pendingCheckoutUrl, setPendingCheckoutUrl] = React.useState<string | null>(null);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const lastAutoFetchedUrl = React.useRef<string | null>(null);
 
@@ -156,9 +158,10 @@ export function CampaignCreationForm({
 
       if (data.checkoutUrl) {
         // Saved, but not on the board: the campaign is pending_payment until
-        // the webhook confirms. A full navigation, not router.push - this is
-        // leaving the app for Lemon Squeezy.
-        window.location.href = data.checkoutUrl;
+        // the webhook confirms. Pause before leaving so the visitor can see
+        // the Get Listed offer; dismissing it continues to this exact URL.
+        setPendingCheckoutUrl(data.checkoutUrl);
+        setSubmitting(false);
         return;
       }
 
@@ -171,7 +174,11 @@ export function CampaignCreationForm({
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
+    <>
+      {pendingCheckoutUrl && (
+        <GetListedPromoModal mode="post-submit" checkoutUrl={pendingCheckoutUrl} />
+      )}
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="name">Campaign name</Label>
@@ -353,6 +360,7 @@ export function CampaignCreationForm({
           xHandle={xHandle}
         />
       </div>
-    </div>
+      </div>
+    </>
   );
 }
