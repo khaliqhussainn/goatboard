@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Copy, Link2, Link2Off, Trash2 } from "lucide-react";
+import { Copy, Download, Link2, Link2Off, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -204,6 +204,16 @@ function CampaignCard({ row }: { row: Row }) {
             {CAMPAIGN_STATUS_LABELS[status]}
           </Button>
         ))}
+        <Button asChild size="sm" variant="outline">
+          <a href={`/api/admin/get-listed/campaigns/${campaign.id}/report?format=pdf`} download>
+            <Download /> PDF report
+          </a>
+        </Button>
+        <Button asChild size="sm" variant="outline">
+          <a href={`/api/admin/get-listed/campaigns/${campaign.id}/report?format=csv`} download>
+            <Download /> CSV report
+          </a>
+        </Button>
       </div>
 
       <ShareReportControls campaign={campaign} />

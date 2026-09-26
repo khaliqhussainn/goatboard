@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ExternalLink } from "lucide-react";
+import { Download, ExternalLink } from "lucide-react";
 import { AbstractBackdrop } from "@/components/layout/abstract-backdrop";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   BACKLINK_STATUS_LABELS,
   CAMPAIGN_STATUS_LABELS,
@@ -73,6 +74,18 @@ export default async function SharedGetListedReportPage({
         <p className="mt-3 text-xs text-muted-foreground">
           Last updated {new Date(report.updated_at).toLocaleString("en-US")}
         </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button asChild size="sm">
+            <a href={`/api/get-listed/report/${token}/download?format=pdf`} download>
+              <Download /> Download PDF
+            </a>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <a href={`/api/get-listed/report/${token}/download?format=csv`} download>
+              <Download /> Download CSV
+            </a>
+          </Button>
+        </div>
       </header>
 
       <section className="billboard-surface mt-5 rounded-[1.75rem] p-5 sm:p-6">

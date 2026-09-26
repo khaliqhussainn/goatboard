@@ -70,6 +70,35 @@ export async function getSharedGetListedReport(
   };
 }
 
+/** Admin-only caller: one campaign prepared with only buyer-visible rows. */
+export async function getAdminGetListedReport(
+  campaignId: string,
+): Promise<SharedGetListedReport | null> {
+  const admin = createAdminClient();
+  const { data: campaign } = await admin
+    .from("get_listed_campaigns")
+    .select("id, startup_name, website_url, description, submission_target, status, updated_at")
+    .eq("id", campaignId)
+    .maybeSingle();
+
+  if (!campaign) return null;
+
+  const { data: submissions } = await admin
+    .from("get_listed_submissions")
+    .select("*")
+    .eq("campaign_id", campaign.id)
+    .eq("visible_to_client", true)
+    .order("created_at", { ascending: true });
+
+  const visibleSubmissions = submissions ?? [];
+  const updatedAt = visibleSubmissions.reduce(
+    (latest, submission) => submission.updated_at > latest ? submission.updated_at : latest,
+    campaign.updated_at,
+  );
+
+  return { ...campaign, updated_at: updatedAt, submissions: visibleSubmissions };
+}
+
 /** Every campaign belonging to the current visitor, newest first. */
 export async function listMyGetListedCampaigns(): Promise<
   { campaign: GetListedCampaign; order: GetListedOrder | null; submissions: { status: GetListedSubmission["status"] }[] }[]

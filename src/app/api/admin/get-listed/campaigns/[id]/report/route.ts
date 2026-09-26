@@ -1,25 +1,27 @@
 import { NextResponse } from "next/server";
+import { isAdminAuthed } from "@/lib/admin-auth";
 import {
   createGetListedReportResponse,
   getListedReportFormat,
 } from "@/lib/get-listed-report";
-import { getMyGetListedCampaign } from "@/lib/queries/get-listed";
+import { getAdminGetListedReport } from "@/lib/queries/get-listed";
 
-/** Download the current buyer-owned campaign snapshot as CSV or PDF. */
+/** Admin download of the same buyer-safe campaign snapshot. */
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await isAdminAuthed())) {
+    return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
+  }
+
   const format = getListedReportFormat(request);
   if (!format) {
     return NextResponse.json({ message: "Format must be csv or pdf." }, { status: 400 });
   }
 
   const { id } = await params;
-  const detail = await getMyGetListedCampaign(id);
-  if (!detail) {
+  const report = await getAdminGetListedReport(id);
+  if (!report) {
     return NextResponse.json({ message: "Campaign not found." }, { status: 404 });
   }
 
-  return createGetListedReportResponse(
-    { ...detail.campaign, submissions: detail.submissions },
-    format,
-  );
+  return createGetListedReportResponse(report, format);
 }

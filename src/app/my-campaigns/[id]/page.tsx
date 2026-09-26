@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink } from "lucide-react";
+import { Download, ExternalLink } from "lucide-react";
 import { AbstractBackdrop } from "@/components/layout/abstract-backdrop";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,6 @@ export default async function GetListedCampaignDetailPage({
   const pkg = getListedPackage(campaign.package_key);
   const progress = submissionProgress(submissions, campaign.submission_target);
   const paymentStatus = order?.payment_status ?? "pending";
-  const isComplete = campaign.status === "completed";
 
   return (
     <div className="on-backdrop mx-auto max-w-3xl px-4 py-10 sm:px-6">
@@ -214,24 +213,26 @@ export default async function GetListedCampaignDetailPage({
         )}
       </section>
 
-      {/* Final report — only offered once the work is actually finished. */}
+      {/* A live snapshot is available throughout delivery. */}
       <section className="mt-6">
-        <h2 className="text-lg font-black tracking-tight">Final report</h2>
+        <h2 className="text-lg font-black tracking-tight">Download report</h2>
         <div className="billboard-surface mt-3 flex flex-col items-start gap-3 rounded-[1.75rem] p-5">
-          {isComplete ? (
-            <>
-              <p className="text-sm text-muted-foreground">
-                Your campaign is complete. The report lists every submission and its outcome.
-              </p>
-              <a href={`/api/get-listed/campaigns/${campaign.id}/report`} download>
-                <Button variant="abstract">Download report (CSV)</Button>
+          <p className="text-sm text-muted-foreground">
+            Download the current live snapshot. It includes every client-visible submission and
+            its latest status.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="abstract">
+              <a href={`/api/get-listed/campaigns/${campaign.id}/report?format=pdf`} download>
+                <Download /> Download PDF
               </a>
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              The final report becomes available when your campaign is marked complete.
-            </p>
-          )}
+            </Button>
+            <Button asChild variant="outline">
+              <a href={`/api/get-listed/campaigns/${campaign.id}/report?format=csv`} download>
+                <Download /> Download CSV
+              </a>
+            </Button>
+          </div>
         </div>
       </section>
     </div>
