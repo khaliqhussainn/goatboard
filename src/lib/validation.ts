@@ -19,9 +19,9 @@ export function isSafeUrl(value: string): boolean {
 /**
  * A required X handle, stored without the leading "@".
  *
- * Every paid or published thing on the board carries one: it is the only
- * contact detail collected, and it makes a listing traceable to an account
- * that can actually be replied to. Shared rather than repeated so the five
+ * Every paid or published thing on the board carries one: it is the public
+ * reply channel and makes a listing traceable to an account that can actually
+ * be reached. Shared rather than repeated so the five
  * forms that ask for it can't drift on what counts as valid - X itself caps
  * handles at 15 characters of [A-Za-z0-9_].
  */
@@ -48,14 +48,22 @@ export const campaignSchema = z.object({
     .trim()
     .min(1, "A destination link is required.")
     .refine(isSafeUrl, "Enter a valid http(s) URL."),
-  image_url: z
+  image_urls: z
+    .array(z.string().trim().refine(isSafeUrl, "Enter a valid image URL."))
+    .min(1, "Add at least one image.")
+    .max(5, "You can add up to five images."),
+  email: z.string().trim().email("Enter a valid campaign email.").max(254),
+  maker_name: z
     .string()
     .trim()
-    .refine((v) => v === "" || isSafeUrl(v), "Enter a valid image URL.")
-    .optional()
-    .nullable(),
-  // Required: every listing has to be traceable to an account that can be
-  // replied to. It is also the only contact detail the board collects.
+    .min(2, "Enter the maker's name.")
+    .max(80, "Keep the maker name under 80 characters."),
+  maker_email: z.string().trim().email("Enter a valid maker email.").max(254),
+  pricing_model: z.enum(["free", "freemium", "paid"], {
+    error: "Choose a pricing model.",
+  }),
+  // Required: every listing has to be traceable to a public account that can
+  // be replied to. Private campaign emails are validated separately above.
   x_handle: xHandleSchema,
   category: z.enum([
     "product",

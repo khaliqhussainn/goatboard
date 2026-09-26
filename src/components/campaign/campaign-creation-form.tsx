@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { ImagePlus, Loader2, Sparkles, X } from "lucide-react";
 import { campaignSchema, isSafeUrl } from "@/lib/validation";
 import { CampaignPreview } from "@/components/campaign/campaign-preview";
-import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
 import { CATEGORIES } from "@/lib/categories";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LISTING_PRICE_USD } from "@/lib/listing";
-import type { Category } from "@/lib/types";
+import type { CampaignPricingModel, Category } from "@/lib/types";
 
 export function CampaignCreationForm({
   onVoteRequired,
@@ -35,11 +34,14 @@ export function CampaignCreationForm({
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [destinationUrl, setDestinationUrl] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [makerName, setMakerName] = React.useState("");
+  const [makerEmail, setMakerEmail] = React.useState("");
+  const [pricingModel, setPricingModel] = React.useState<CampaignPricingModel | "">("");
   const [xHandle, setXHandle] = React.useState("");
   const [category, setCategory] = React.useState<Category>("product");
   const [firstComment, setFirstComment] = React.useState("");
-  const [imageUrl, setImageUrl] = React.useState<string | null>(null);
-  const [imageSource, setImageSource] = React.useState<"upload" | "site" | null>(null);
+  const [imageUrls, setImageUrls] = React.useState<string[]>([]);
   const [uploading, setUploading] = React.useState(false);
   const [fetchingLogo, setFetchingLogo] = React.useState(false);
   const [logoNotFound, setLogoNotFound] = React.useState(false);
@@ -53,7 +55,7 @@ export function CampaignCreationForm({
     if (!url || !isSafeUrl(url)) return;
     // Don't clobber an image the visitor already chose, and don't re-fetch
     // the same URL twice in a row.
-    if (imageSource === "upload" || lastAutoFetchedUrl.current === url) return;
+    if (imageUrls.length > 0 || lastAutoFetchedUrl.current === url) return;
 
     lastAutoFetchedUrl.current = url;
     setFetchingLogo(true);
@@ -66,8 +68,7 @@ export function CampaignCreationForm({
       });
       const data = await res.json();
       if (res.ok && data.url) {
-        setImageUrl(data.url);
-        setImageSource("site");
+        setImageUrls([data.url]);
       } else {
         setLogoNotFound(true);
       }
@@ -79,39 +80,49 @@ export function CampaignCreationForm({
   }
 
   async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+    const files = Array.from(e.target.files ?? []);
     e.target.value = "";
-    if (!file) return;
+    if (files.length === 0) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be under 5MB.");
+    const slotsLeft = 5 - imageUrls.length;
+    if (files.length > slotsLeft) {
+      toast.error(`You can add ${slotsLeft} more ${slotsLeft === 1 ? "image" : "images"}.`);
+      return;
+    }
+    if (files.some((file) => file.size > 5 * 1024 * 1024)) {
+      toast.error("Each image must be under 5MB.");
       return;
     }
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.message ?? "Couldn't upload image. Try again.");
-        return;
+      const uploaded: string[] = [];
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        const data = await res.json();
+        if (!res.ok || !data.url) {
+          throw new Error(data.message ?? "Couldn't upload an image.");
+        }
+        uploaded.push(data.url);
       }
-      setImageUrl(data.url);
-      setImageSource("upload");
-    } catch {
-      toast.error("Couldn't upload image. Try again.");
+      setImageUrls((current) => [...current, ...uploaded].slice(0, 5));
+      setLogoNotFound(false);
+      setErrors((current) => ({ ...current, image_urls: "" }));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't upload images. Try again.");
     } finally {
       setUploading(false);
     }
   }
 
-  function clearImage() {
-    setImageUrl(null);
-    setImageSource(null);
-    lastAutoFetchedUrl.current = null;
+  function clearImage(index: number) {
+    setImageUrls((current) => {
+      const next = current.filter((_, imageIndex) => imageIndex !== index);
+      if (next.length === 0) lastAutoFetchedUrl.current = null;
+      return next;
+    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -121,7 +132,11 @@ export function CampaignCreationForm({
       name,
       description,
       destination_url: destinationUrl,
-      image_url: imageUrl,
+      image_urls: imageUrls,
+      email,
+      maker_name: makerName,
+      maker_email: makerEmail,
+      pricing_model: pricingModel,
       x_handle: xHandle,
       category,
       first_comment: firstComment,
@@ -220,6 +235,76 @@ export function CampaignCreationForm({
         </div>
 
         <div className="flex flex-col gap-1.5">
+          <Label htmlFor="email">Campaign email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="hello@yourproduct.com"
+            autoComplete="email"
+            maxLength={254}
+            required
+          />
+          <p className="text-xs text-muted-foreground">
+            Kept private and used for campaign-related contact.
+          </p>
+          {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="maker-name">Maker name</Label>
+            <Input
+              id="maker-name"
+              value={makerName}
+              onChange={(event) => setMakerName(event.target.value)}
+              placeholder="Your name"
+              autoComplete="name"
+              maxLength={80}
+              required
+            />
+            {errors.maker_name && <p className="text-xs text-red-500">{errors.maker_name}</p>}
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="maker-email">Maker email</Label>
+            <Input
+              id="maker-email"
+              type="email"
+              value={makerEmail}
+              onChange={(event) => setMakerEmail(event.target.value)}
+              placeholder="you@example.com"
+              autoComplete="email"
+              maxLength={254}
+              required
+            />
+            {errors.maker_email && (
+              <p className="text-xs text-red-500">{errors.maker_email}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="pricing-model">Pricing</Label>
+          <Select
+            value={pricingModel}
+            onValueChange={(value) => setPricingModel(value as CampaignPricingModel)}
+          >
+            <SelectTrigger id="pricing-model">
+              <SelectValue placeholder="Choose a pricing model" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="free">Free</SelectItem>
+              <SelectItem value="freemium">Freemium</SelectItem>
+              <SelectItem value="paid">Paid</SelectItem>
+            </SelectContent>
+          </Select>
+          {errors.pricing_model && (
+            <p className="text-xs text-red-500">{errors.pricing_model}</p>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="x-handle">X account</Label>
           <div className="relative">
             <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
@@ -276,31 +361,44 @@ export function CampaignCreationForm({
           </Select>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="image">Image / logo</Label>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-3">
+            <Label htmlFor="image">Product images</Label>
+            <span className="text-xs text-muted-foreground">{imageUrls.length}/5</span>
+          </div>
 
-          {imageUrl ? (
-            <div className="flex items-center gap-3">
-              <CampaignAvatar src={imageUrl} name={name || "?"} className="size-14 shrink-0" />
-              <div className="min-w-0 flex-1 text-xs text-muted-foreground">
-                {imageSource === "site" ? "Fetched from your website" : "Uploaded"}
-              </div>
-              <label
-                htmlFor="image"
-                className="cursor-pointer rounded-lg px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                Replace
-              </label>
-              <button
-                type="button"
-                onClick={clearImage}
-                aria-label="Remove image"
-                className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <X className="size-4" />
-              </button>
+          {imageUrls.length > 0 && (
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+              {imageUrls.map((imageUrl, index) => (
+                <div
+                  key={`${imageUrl}-${index}`}
+                  className="group relative aspect-square overflow-hidden rounded-xl bg-muted"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imageUrl}
+                    alt={`Product image ${index + 1}`}
+                    className="size-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => clearImage(index)}
+                    aria-label={`Remove product image ${index + 1}`}
+                    className="absolute right-1.5 top-1.5 rounded-full bg-background/90 p-1 text-foreground shadow-sm transition-transform hover:scale-105"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                  {index === 0 && (
+                    <span className="absolute bottom-1.5 left-1.5 rounded-full bg-foreground px-2 py-0.5 text-[10px] font-bold text-background">
+                      Primary
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
-          ) : (
+          )}
+
+          {imageUrls.length < 5 && (
             <label
               htmlFor="image"
               className="flex h-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -315,13 +413,20 @@ export function CampaignCreationForm({
               ) : (
                 <>
                   <ImagePlus className="size-5" />
-                  <span className="text-xs">Upload an image (optional)</span>
+                  <span className="text-xs">
+                    {imageUrls.length === 0 ? "Add at least one image" : "Add more images"}
+                  </span>
                 </>
               )}
             </label>
           )}
 
-          {logoNotFound && !imageUrl && (
+          <p className="text-xs text-muted-foreground">
+            One image is required. Add up to five PNG, JPG, WebP, or GIF files, 5MB each.
+          </p>
+          {errors.image_urls && <p className="text-xs text-red-500">{errors.image_urls}</p>}
+
+          {logoNotFound && imageUrls.length === 0 && (
             <p className="flex items-center gap-1 text-xs text-muted-foreground">
               <Sparkles className="size-3" /> Couldn&apos;t find a logo on that site - upload one
               above.
@@ -332,6 +437,7 @@ export function CampaignCreationForm({
             id="image"
             type="file"
             accept="image/png,image/jpeg,image/webp,image/gif"
+            multiple
             className="sr-only"
             onChange={handleImageChange}
           />
@@ -355,9 +461,11 @@ export function CampaignCreationForm({
         <CampaignPreview
           name={name}
           description={description}
-          imageUrl={imageUrl}
+          imageUrl={imageUrls[0] ?? null}
           category={category}
           xHandle={xHandle}
+          makerName={makerName}
+          pricingModel={pricingModel}
         />
       </div>
       </div>

@@ -48,6 +48,17 @@ export default async function AdminPage({
     new Set([...(reports ?? []).map((r) => r.campaign_id), ...(purchases ?? []).map((p) => p.campaign_id)]),
   );
 
+  const campaignIds = (campaigns ?? []).map((campaign) => campaign.id);
+  const { data: campaignContacts } = campaignIds.length
+    ? await admin
+        .from("campaign_contacts")
+        .select("campaign_id, email, maker_email")
+        .in("campaign_id", campaignIds)
+    : { data: [] };
+  const contactByCampaignId = new Map(
+    (campaignContacts ?? []).map((contact) => [contact.campaign_id, contact]),
+  );
+
   const { data: referencedCampaigns } = referencedIds.length
     ? await admin.from("campaigns").select("id, name, slug").in("id", referencedIds)
     : { data: [] };
@@ -76,27 +87,39 @@ export default async function AdminPage({
           </form>
         </div>
         <div className="flex flex-col gap-2">
-          {(campaigns ?? []).map((c) => (
-            <div
-              key={c.id}
-              className="flex flex-wrap items-center gap-3 rounded-xl border border-border p-3"
-            >
-              <Link href={`/campaign/${c.slug}`} className="font-semibold hover:underline">
-                {c.name}
-              </Link>
-              <Badge
-                variant={c.status === "active" ? "green" : c.status === "suspended" ? "yellow" : "pink"}
+          {(campaigns ?? []).map((c) => {
+            const contact = contactByCampaignId.get(c.id);
+            return (
+              <div
+                key={c.id}
+                className="flex flex-wrap items-center gap-3 rounded-xl border border-border p-3"
               >
-                {c.status}
-              </Badge>
-              <span className="text-sm text-muted-foreground">
-                {formatPower(c.total_power)} Power
-              </span>
-              <div className="ml-auto">
-                <CampaignStatusActions id={c.id} status={c.status} />
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link href={`/campaign/${c.slug}`} className="font-semibold hover:underline">
+                      {c.name}
+                    </Link>
+                    <Badge variant="outline">{c.pricing_model}</Badge>
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {c.maker_name ? `Maker: ${c.maker_name}` : "Legacy campaign"}
+                    {contact ? ` · ${contact.maker_email} · ${contact.email}` : ""}
+                  </p>
+                </div>
+                <Badge
+                  variant={c.status === "active" ? "green" : c.status === "suspended" ? "yellow" : "pink"}
+                >
+                  {c.status}
+                </Badge>
+                <span className="text-sm text-muted-foreground">
+                  {formatPower(c.total_power)} Power
+                </span>
+                <div className="ml-auto">
+                  <CampaignStatusActions id={c.id} status={c.status} />
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {(campaigns ?? []).length === 0 && (
             <p className="text-sm text-muted-foreground">No campaigns found.</p>
           )}

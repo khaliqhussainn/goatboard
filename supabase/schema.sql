@@ -21,6 +21,9 @@ create table if not exists public.campaigns (
   description text not null check (char_length(description) between 1 and 280),
   destination_url text not null,
   image_url text,
+  image_urls text[] not null default '{}',
+  pricing_model text not null default 'free' check (pricing_model in ('free', 'freemium', 'paid')),
+  maker_name text,
   category text not null default 'other',
   status text not null default 'active' check (status in ('active', 'suspended', 'removed')),
   vote_power integer not null default 0 check (vote_power >= 0),
@@ -51,6 +54,13 @@ alter table public.campaigns add column if not exists has_been_goat boolean not 
 -- purely informational (see record_click below).
 alter table public.campaigns add column if not exists click_count integer not null default 0;
 
+-- New listings can attach a gallery of up to five images. image_url remains
+-- the primary/legacy image used by compact board cards.
+alter table public.campaigns add column if not exists image_urls text[] not null default '{}';
+alter table public.campaigns add column if not exists pricing_model text not null default 'free'
+  check (pricing_model in ('free', 'freemium', 'paid'));
+alter table public.campaigns add column if not exists maker_name text;
+
 -- Optional X (Twitter) handle the creator can attach to their campaign,
 -- stored without the leading "@" (see campaignSchema in lib/validation.ts).
 alter table public.campaigns add column if not exists x_handle text
@@ -65,6 +75,16 @@ alter table public.campaigns add column if not exists x_handle text
 -- don't exist in auth.users. Drop it unconditionally so this file
 -- converges to the current schema no matter which version ran first.
 alter table public.campaigns drop constraint if exists campaigns_created_by_fkey;
+
+-- Contact emails are deliberately separated from publicly readable campaign
+-- rows. RLS is enabled below with no anon read policy; only server-side
+-- service-role code can access them.
+create table if not exists public.campaign_contacts (
+  campaign_id uuid primary key references public.campaigns(id) on delete cascade,
+  email text not null check (char_length(email) between 3 and 254),
+  maker_email text not null check (char_length(maker_email) between 3 and 254),
+  created_at timestamptz not null default now()
+);
 
 -- ---------------------------------------------------------------------------
 -- votes  (one free vote per campaign per anonymous visitor per UTC day)
@@ -489,6 +509,7 @@ grant execute on function public.get_visitor_activity() to anon, authenticated;
 -- anon/authenticated roles have no write access at all.
 -- ---------------------------------------------------------------------------
 alter table public.campaigns enable row level security;
+alter table public.campaign_contacts enable row level security;
 alter table public.votes enable row level security;
 alter table public.purchases enable row level security;
 alter table public.reports enable row level security;

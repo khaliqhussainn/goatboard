@@ -36,6 +36,8 @@ export type Category =
   | "game"
   | "other";
 
+export type CampaignPricingModel = "free" | "freemium" | "paid";
+
 // Plain `type` aliases (not `interface`) so these structurally satisfy
 // postgrest-js's `Record<string, unknown>` constraint on Row/Insert/Update —
 // a named `interface` does not, even when its shape matches exactly.
@@ -46,6 +48,9 @@ export type Campaign = {
   description: string;
   destination_url: string;
   image_url: string | null;
+  image_urls: string[];
+  pricing_model: CampaignPricingModel;
+  maker_name: string | null;
   category: Category;
   status: CampaignStatus;
   vote_power: number;
@@ -63,6 +68,14 @@ export type Campaign = {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+};
+
+/** Private campaign contact data. This table has no public RLS read policy. */
+export type CampaignContact = {
+  campaign_id: string;
+  email: string;
+  maker_email: string;
+  created_at: string;
 };
 
 export type VisitorActivityPoint = {
@@ -269,6 +282,13 @@ export interface Database {
         Insert: Partial<Campaign> &
           Pick<Campaign, "slug" | "name" | "description" | "destination_url">;
         Update: Partial<Campaign>;
+        Relationships: [];
+      };
+      campaign_contacts: {
+        Row: CampaignContact;
+        Insert: Pick<CampaignContact, "campaign_id" | "email" | "maker_email"> &
+          Partial<CampaignContact>;
+        Update: Partial<CampaignContact>;
         Relationships: [];
       };
       campaign_comments: {

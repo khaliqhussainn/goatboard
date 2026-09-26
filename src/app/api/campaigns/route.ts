@@ -67,7 +67,10 @@ export async function POST(request: Request) {
           name: parsed.data.name,
           description: parsed.data.description,
           destination_url: parsed.data.destination_url,
-          image_url: parsed.data.image_url || null,
+          image_url: parsed.data.image_urls[0],
+          image_urls: parsed.data.image_urls,
+          pricing_model: parsed.data.pricing_model,
+          maker_name: parsed.data.maker_name,
           x_handle: parsed.data.x_handle || null,
           category: parsed.data.category,
           created_by: visitorId,
@@ -80,6 +83,20 @@ export async function POST(request: Request) {
         .single();
 
       if (!error && data) {
+        const { error: contactError } = await admin.from("campaign_contacts").insert({
+          campaign_id: data.id,
+          email: parsed.data.email,
+          maker_email: parsed.data.maker_email,
+        });
+        if (contactError) {
+          console.error("campaign contact insert failed", contactError);
+          await admin.from("campaigns").delete().eq("id", data.id);
+          return NextResponse.json(
+            { message: "Couldn't save the campaign contact details." },
+            { status: 500 },
+          );
+        }
+
         // The creator's opening comment, if they wrote one. Best effort: a
         // campaign that published shouldn't fail because its first comment
         // didn't, so this never changes the response.

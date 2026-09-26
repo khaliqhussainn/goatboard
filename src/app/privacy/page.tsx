@@ -16,14 +16,15 @@ export default function PrivacyPage() {
           <ul className="flex list-disc flex-col gap-2 pl-5">
             <li>
               <strong>An anonymous browser identifier.</strong> A random id stored in a cookie
-              (goatboard_uid). It is not linked to a name or an email address. It is what lets us
-              limit voting to once a day per campaign and show you your own campaigns without a
-              login.
+              (goatboard_uid). It is what lets us limit voting to once a day per campaign and show
+              you your own campaigns without a login. When you submit a campaign, it is linked to
+              that campaign and its privately stored contact details so ownership can be preserved.
             </li>
             <li>
               <strong>Campaign information you enter.</strong> Startup name, website, description,
-              category and any links you add. This is submitted to third-party directories as part
-              of the Get Listed service, which is the point of the service.
+              category, pricing model, maker name, images and any links you add. Campaign and maker
+              email addresses are stored privately for service communication. Startup information
+              is submitted to third-party directories only as part of the Get Listed service.
             </li>
             <li>
               <strong>Visit counts.</strong> We record that a visit happened and a periodic
@@ -65,9 +66,10 @@ export default function PrivacyPage() {
 
         <Section title="Public information">
           <p>
-            Anything published on the GOATBOARD billboard - campaign name, description, image, link
-            and vote totals - is public by design. Get Listed campaign details are private to your
-            browser, apart from the information submitted to directories on your behalf.
+            Anything published on the GOATBOARD billboard - campaign name, description, images,
+            link, maker name, pricing model and vote totals - is public by design. Campaign and maker
+            email addresses are not displayed publicly. Get Listed campaign details are private to
+            your browser, apart from the information submitted to directories on your behalf.
           </p>
         </Section>
 

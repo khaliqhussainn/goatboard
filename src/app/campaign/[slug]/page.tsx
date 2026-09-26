@@ -44,7 +44,10 @@ export default async function CampaignPage({
     name: campaign.name,
     description: campaign.description,
     url,
-    image: campaign.image_url ?? undefined,
+    image: campaign.image_urls?.length ? campaign.image_urls : campaign.image_url ?? undefined,
+    author: campaign.maker_name
+      ? { "@type": "Person", name: campaign.maker_name }
+      : undefined,
   };
 
   return (

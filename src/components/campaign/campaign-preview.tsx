@@ -9,13 +9,21 @@ export function CampaignPreview({
   imageUrl,
   category,
   xHandle,
+  makerName,
+  pricingModel,
 }: {
   name: string;
   description: string;
   imageUrl: string | null;
   category: string;
   xHandle?: string;
+  makerName?: string;
+  pricingModel?: "free" | "freemium" | "paid" | "";
 }) {
+  const pricingLabel = pricingModel
+    ? { free: "Free", freemium: "Freemium", paid: "Paid" }[pricingModel]
+    : null;
+
   return (
     <div className="billboard-surface-lg flex flex-col items-center gap-3 rounded-[1.75rem] p-6 text-center">
       <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
@@ -32,6 +40,7 @@ export function CampaignPreview({
         </p>
         <div className="flex max-w-full flex-wrap items-center justify-center gap-2">
           <Badge variant={categoryAccent(category)}>{categoryLabel(category)}</Badge>
+          {pricingLabel && <Badge variant="outline">{pricingLabel}</Badge>}
           {xHandle && (
             <span className="inline-flex min-w-0 items-center gap-1 text-sm font-semibold text-muted-foreground">
               <XLogo className="size-3.5 shrink-0" />
@@ -44,6 +53,7 @@ export function CampaignPreview({
       <p className="line-clamp-2 max-w-sm text-sm text-muted-foreground">
         {description || "Your short description will show up here."}
       </p>
+      {makerName && <p className="text-xs font-semibold text-muted-foreground">By {makerName}</p>}
       <div className="flex gap-3 text-sm font-semibold text-muted-foreground">
         <span className="rounded-xl bg-foreground px-4 py-2 text-background">Vote ↑</span>
         <span className="rounded-xl border border-border px-4 py-2">Boost $</span>

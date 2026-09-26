@@ -31,6 +31,16 @@ export async function CampaignDetail({
     getCampaignComments(campaign.id),
   ]);
   const url = `${getSiteUrl()}/campaign/${campaign.slug}`;
+  const images = campaign.image_urls?.length
+    ? campaign.image_urls
+    : campaign.image_url
+      ? [campaign.image_url]
+      : [];
+  const pricingLabel = {
+    free: "Free",
+    freemium: "Freemium",
+    paid: "Paid",
+  }[campaign.pricing_model];
 
   return (
     <div className="billboard-surface flex flex-col gap-5 rounded-[1.75rem] p-6 sm:p-8">
@@ -47,9 +57,12 @@ export async function CampaignDetail({
           <h1 className="truncate text-2xl font-black tracking-tight sm:text-3xl">
             {campaign.name}
           </h1>
-          <Badge variant={categoryAccent(campaign.category)} className="mt-1">
-            {categoryLabel(campaign.category)}
-          </Badge>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            <Badge variant={categoryAccent(campaign.category)}>
+              {categoryLabel(campaign.category)}
+            </Badge>
+            <Badge variant="outline">{pricingLabel}</Badge>
+          </div>
         </div>
       </div>
 
@@ -64,6 +77,32 @@ export async function CampaignDetail({
       <p className={cn("wrap-break-word text-sm text-muted-foreground", compact && "line-clamp-3")}>
         {campaign.description}
       </p>
+
+      {campaign.maker_name && (
+        <p className="text-xs font-semibold text-muted-foreground">Made by {campaign.maker_name}</p>
+      )}
+
+      {!compact && images.length > 0 && (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {images.map((imageUrl, index) => (
+            <div
+              key={`${imageUrl}-${index}`}
+              className={cn(
+                "overflow-hidden rounded-xl bg-muted",
+                index === 0 && images.length % 2 === 1 && "col-span-2 sm:col-span-1",
+              )}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageUrl}
+                alt={`${campaign.name} image ${index + 1}`}
+                loading="lazy"
+                className="aspect-[4/3] size-full object-cover"
+              />
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
