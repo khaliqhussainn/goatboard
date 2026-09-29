@@ -612,6 +612,11 @@ create table if not exists public.get_listed_campaigns (
   startup_name text not null check (char_length(startup_name) between 2 and 80),
   website_url text not null,
   description text not null check (char_length(description) between 4 and 500),
+  email text not null check (char_length(email) between 3 and 254),
+  maker_name text not null check (char_length(maker_name) between 2 and 80),
+  maker_email text not null check (char_length(maker_email) between 3 and 254),
+  pricing_model text not null check (pricing_model in ('free', 'freemium', 'paid')),
+  image_urls text[] not null check (cardinality(image_urls) between 1 and 5),
   category text not null default 'startup',
   x_url text,
   linkedin_url text,
@@ -706,6 +711,32 @@ alter table public.get_listed_campaigns
   add column if not exists report_share_enabled boolean not null default false,
   add column if not exists report_share_created_at timestamptz,
   add column if not exists report_share_expires_at timestamptz;
+
+-- Required on every new campaign by getListedCampaignSchema. These remain
+-- nullable/defaulted for legacy rows created before the fields existed.
+alter table public.get_listed_campaigns
+  add column if not exists email text,
+  add column if not exists maker_name text,
+  add column if not exists maker_email text,
+  add column if not exists pricing_model text not null default 'free'
+    check (pricing_model in ('free', 'freemium', 'paid')),
+  add column if not exists image_urls text[] not null default '{}';
+
+alter table public.get_listed_campaigns
+  drop constraint if exists get_listed_campaigns_email_length,
+  drop constraint if exists get_listed_campaigns_maker_name_length,
+  drop constraint if exists get_listed_campaigns_maker_email_length,
+  drop constraint if exists get_listed_campaigns_image_count;
+
+alter table public.get_listed_campaigns
+  add constraint get_listed_campaigns_email_length
+    check (email is null or char_length(email) between 3 and 254),
+  add constraint get_listed_campaigns_maker_name_length
+    check (maker_name is null or char_length(maker_name) between 2 and 80),
+  add constraint get_listed_campaigns_maker_email_length
+    check (maker_email is null or char_length(maker_email) between 3 and 254),
+  add constraint get_listed_campaigns_image_count
+    check (cardinality(image_urls) between 0 and 5);
 
 create unique index if not exists get_listed_campaigns_share_token_idx
   on public.get_listed_campaigns (report_share_token_hash)

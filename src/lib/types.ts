@@ -213,6 +213,12 @@ export type GetListedCampaign = {
   startup_name: string;
   website_url: string;
   description: string;
+  /** Nullable only for campaigns created before these required fields shipped. */
+  email: string | null;
+  maker_name: string | null;
+  maker_email: string | null;
+  pricing_model: CampaignPricingModel;
+  image_urls: string[];
   category: Category;
   /** The buyer's own X handle, without the "@" — required since it became a
    *  form field. Distinct from x_url, the startup's profile link. */
@@ -340,6 +346,11 @@ export interface Database {
             | "startup_name"
             | "website_url"
             | "description"
+            | "email"
+            | "maker_name"
+            | "maker_email"
+            | "pricing_model"
+            | "image_urls"
             | "package_key"
             | "submission_target"
           >;

@@ -154,6 +154,7 @@ function CampaignCard({ row }: { row: Row }) {
               {PAYMENT_STATUS_LABELS[paymentStatus]}
             </Badge>
             <Badge variant="outline">{CAMPAIGN_STATUS_LABELS[campaign.status]}</Badge>
+            <Badge variant="outline">{campaign.pricing_model}</Badge>
           </div>
           <p className="mt-0.5 text-sm text-muted-foreground">
             {pkg.name} · {formatMoney(order ? Number(order.amount) : pkg.priceUsd)} ·{" "}
@@ -168,6 +169,11 @@ function CampaignCard({ row }: { row: Row }) {
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {campaign.description}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {campaign.maker_name ? `Maker: ${campaign.maker_name}` : "Legacy campaign"}
+            {campaign.maker_email ? ` · ${campaign.maker_email}` : ""}
+            {campaign.email ? ` · campaign: ${campaign.email}` : ""}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {[campaign.x_url, campaign.linkedin_url, campaign.other_url]
@@ -191,6 +197,27 @@ function CampaignCard({ row }: { row: Row }) {
           </div>
         </div>
       </div>
+
+      {(campaign.image_urls?.length ?? 0) > 0 && (
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {(campaign.image_urls ?? []).map((imageUrl, index) => (
+            <a
+              key={`${imageUrl}-${index}`}
+              href={imageUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block size-20 shrink-0 overflow-hidden rounded-xl bg-muted"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageUrl}
+                alt={`${campaign.startup_name} image ${index + 1}`}
+                className="size-full object-cover"
+              />
+            </a>
+          ))}
+        </div>
+      )}
 
       <div className="mt-3 flex flex-wrap gap-1.5">
         {GET_LISTED_CAMPAIGN_STATUSES.map((status) => (

@@ -3,10 +3,18 @@
 import * as React from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { ImagePlus, Loader2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CATEGORIES } from "@/lib/categories";
 import {
   GET_LISTED_PACKAGE_LIST,
@@ -19,6 +27,7 @@ import {
 } from "@/lib/get-listed";
 import { getListedCampaignSchema } from "@/lib/validation";
 import { formatMoney, cn } from "@/lib/utils";
+import type { CampaignPricingModel } from "@/lib/types";
 
 type Step = "details" | "review";
 
@@ -38,6 +47,12 @@ export function StartCampaignForm({ initialPackage }: { initialPackage?: string 
   const [startupName, setStartupName] = React.useState("");
   const [websiteUrl, setWebsiteUrl] = React.useState("");
   const [description, setDescription] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [makerName, setMakerName] = React.useState("");
+  const [makerEmail, setMakerEmail] = React.useState("");
+  const [pricingModel, setPricingModel] = React.useState<CampaignPricingModel | "">("");
+  const [imageUrls, setImageUrls] = React.useState<string[]>([]);
+  const [uploading, setUploading] = React.useState(false);
   const [category, setCategory] = React.useState("startup");
   const [xHandle, setXHandle] = React.useState("");
   const [xUrl, setXUrl] = React.useState("");
@@ -58,6 +73,11 @@ export function StartCampaignForm({ initialPackage }: { initialPackage?: string 
       startup_name: startupName,
       website_url: websiteUrl,
       description,
+      email,
+      maker_name: makerName,
+      maker_email: makerEmail,
+      pricing_model: pricingModel,
+      image_urls: imageUrls,
       category,
       x_handle: xHandle,
       x_url: xUrl || null,
@@ -65,6 +85,47 @@ export function StartCampaignForm({ initialPackage }: { initialPackage?: string 
       other_url: otherUrl || null,
       accept_terms: acceptTerms,
     };
+  }
+
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (files.length === 0) return;
+
+    const slotsLeft = 5 - imageUrls.length;
+    if (files.length > slotsLeft) {
+      toast.error(`You can add ${slotsLeft} more ${slotsLeft === 1 ? "image" : "images"}.`);
+      return;
+    }
+    if (files.some((file) => file.size > 5 * 1024 * 1024)) {
+      toast.error("Each image must be under 5MB.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const uploaded: string[] = [];
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        const data = await res.json();
+        if (!res.ok || !data.url) {
+          throw new Error(data.message ?? "Couldn't upload an image.");
+        }
+        uploaded.push(data.url);
+      }
+      setImageUrls((current) => [...current, ...uploaded].slice(0, 5));
+      setErrors((current) => ({ ...current, image_urls: "" }));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't upload images. Try again.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function clearImage(index: number) {
+    setImageUrls((current) => current.filter((_, imageIndex) => imageIndex !== index));
   }
 
   function goToReview(e: React.FormEvent) {
@@ -145,6 +206,17 @@ export function StartCampaignForm({ initialPackage }: { initialPackage?: string 
             />
             <Row label="Startup" value={startupName} />
             <Row label="Website" value={websiteUrl} />
+            <Row label="Campaign email" value={email} />
+            <Row label="Maker" value={makerName} />
+            <Row label="Maker email" value={makerEmail} />
+            <Row
+              label="Pricing"
+              value={pricingModel.charAt(0).toUpperCase() + pricingModel.slice(1)}
+            />
+            <Row
+              label="Product images"
+              value={`${imageUrls.length} ${imageUrls.length === 1 ? "image" : "images"}`}
+            />
             <Row label="Category" value={category} />
             {xUrl && <Row label="X" value={xUrl} />}
             {linkedinUrl && <Row label="LinkedIn" value={linkedinUrl} />}
@@ -156,6 +228,22 @@ export function StartCampaignForm({ initialPackage }: { initialPackage?: string 
               <dd className="text-sm">{description}</dd>
             </div>
           </dl>
+
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+            {imageUrls.map((imageUrl, index) => (
+              <div
+                key={`${imageUrl}-${index}`}
+                className="aspect-square overflow-hidden rounded-xl bg-muted"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imageUrl}
+                  alt={`Product image ${index + 1}`}
+                  className="size-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
         </div>
 
         <label className="flex items-start gap-3 rounded-2xl border border-border p-4">
@@ -256,6 +344,65 @@ export function StartCampaignForm({ initialPackage }: { initialPackage?: string 
         />
       </Field>
 
+      <Field label="Campaign email" error={errors.email} htmlFor="email">
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="hello@yourproduct.com"
+          autoComplete="email"
+          maxLength={254}
+          required
+        />
+        <p className="text-xs text-muted-foreground">
+          Kept private and used only for updates about this distribution campaign.
+        </p>
+      </Field>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Maker name" error={errors.maker_name} htmlFor="maker_name">
+          <Input
+            id="maker_name"
+            value={makerName}
+            onChange={(e) => setMakerName(e.target.value)}
+            placeholder="Your name"
+            autoComplete="name"
+            maxLength={80}
+            required
+          />
+        </Field>
+
+        <Field label="Maker email" error={errors.maker_email} htmlFor="maker_email">
+          <Input
+            id="maker_email"
+            type="email"
+            value={makerEmail}
+            onChange={(e) => setMakerEmail(e.target.value)}
+            placeholder="you@example.com"
+            autoComplete="email"
+            maxLength={254}
+            required
+          />
+        </Field>
+      </div>
+
+      <Field label="Pricing" error={errors.pricing_model} htmlFor="pricing_model">
+        <Select
+          value={pricingModel}
+          onValueChange={(value) => setPricingModel(value as CampaignPricingModel)}
+        >
+          <SelectTrigger id="pricing_model">
+            <SelectValue placeholder="Choose a pricing model" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="free">Free</SelectItem>
+            <SelectItem value="freemium">Freemium</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
+
       <Field label="Short description" error={errors.description} htmlFor="description">
         <Textarea
           id="description"
@@ -280,6 +427,79 @@ export function StartCampaignForm({ initialPackage }: { initialPackage?: string 
           ))}
         </select>
       </Field>
+
+      <div className="flex flex-col gap-2">
+        <div className="flex items-baseline justify-between gap-3">
+          <Label htmlFor="get-listed-images">Product images</Label>
+          <span className="text-xs text-muted-foreground">{imageUrls.length}/5</span>
+        </div>
+
+        {imageUrls.length > 0 && (
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+            {imageUrls.map((imageUrl, index) => (
+              <div
+                key={`${imageUrl}-${index}`}
+                className="group relative aspect-square overflow-hidden rounded-xl bg-muted"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imageUrl}
+                  alt={`Product image ${index + 1}`}
+                  className="size-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => clearImage(index)}
+                  aria-label={`Remove product image ${index + 1}`}
+                  className="absolute right-1.5 top-1.5 rounded-full bg-background/90 p-1 text-foreground shadow-sm transition-transform hover:scale-105"
+                >
+                  <X className="size-3.5" />
+                </button>
+                {index === 0 && (
+                  <span className="absolute bottom-1.5 left-1.5 rounded-full bg-foreground px-2 py-0.5 text-[10px] font-bold text-background">
+                    Primary
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {imageUrls.length < 5 && (
+          <label
+            htmlFor="get-listed-images"
+            className="flex h-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {uploading ? (
+              <>
+                <Loader2 className="size-5 animate-spin" />
+                <span className="text-xs">Uploading images…</span>
+              </>
+            ) : (
+              <>
+                <ImagePlus className="size-5" />
+                <span className="text-xs">
+                  {imageUrls.length === 0 ? "Add at least one image" : "Add more images"}
+                </span>
+              </>
+            )}
+          </label>
+        )}
+
+        <p className="text-xs text-muted-foreground">
+          One image is required. Add up to five PNG, JPG, WebP, or GIF files, 5MB each.
+        </p>
+        {errors.image_urls && <p className="text-xs text-red-500">{errors.image_urls}</p>}
+
+        <input
+          id="get-listed-images"
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          multiple
+          className="sr-only"
+          onChange={handleImageChange}
+        />
+      </div>
 
       {/* Your handle, not the startup's profile link below: this is how we
           reach you about the campaign. */}
@@ -329,8 +549,14 @@ export function StartCampaignForm({ initialPackage }: { initialPackage?: string 
         />
       </Field>
 
-      <Button type="submit" size="lg" variant="abstract" className="w-fit">
-        Review order
+      <Button
+        type="submit"
+        size="lg"
+        variant="abstract"
+        className="w-fit"
+        disabled={uploading}
+      >
+        {uploading ? "Uploading images…" : "Review order"}
       </Button>
     </form>
   );

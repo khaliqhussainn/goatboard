@@ -250,6 +250,20 @@ export const getListedCampaignSchema = z.object({
     .trim()
     .min(4, "Tell us what your startup does.")
     .max(500, "Keep it under 500 characters."),
+  email: z.string().trim().email("Enter a valid campaign email.").max(254),
+  maker_name: z
+    .string()
+    .trim()
+    .min(2, "Enter the maker's name.")
+    .max(80, "Keep the maker name under 80 characters."),
+  maker_email: z.string().trim().email("Enter a valid maker email.").max(254),
+  pricing_model: z.enum(["free", "freemium", "paid"], {
+    error: "Choose a pricing model.",
+  }),
+  image_urls: z
+    .array(z.string().trim().refine(isSafeUrl, "Enter a valid image URL."))
+    .min(1, "Add at least one image.")
+    .max(5, "You can add up to five images."),
   category: z.enum([
     "product",
     "startup",
