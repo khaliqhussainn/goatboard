@@ -125,8 +125,8 @@ export function Leaderboard({
       )}
 
       {remaining.length > 0 && (
-        <section className="mt-4 grid items-start gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(560px,0.92fr)]">
-          <div className="grid grid-cols-2 gap-2.5">
+        <section className="mt-4 grid items-start gap-4 xl:h-[640px] xl:grid-cols-[minmax(0,1.08fr)_minmax(560px,0.92fr)]">
+          <div className="pretty-scroll grid grid-cols-2 gap-2.5 xl:h-full xl:content-start xl:overflow-y-auto xl:pr-2">
             {remaining.map((campaign, index) => (
               <CampaignSlot
                 key={campaign.id}
@@ -139,7 +139,7 @@ export function Leaderboard({
             ))}
           </div>
 
-          <WeeklyLaunches campaigns={remaining} />
+          <WeeklyLaunches campaigns={campaigns} />
         </section>
       )}
     </LayoutGroup>
