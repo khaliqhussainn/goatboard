@@ -7,9 +7,9 @@ const FOUNDER = { name: "Maryam", xHandle: "mrymonx" };
 /**
  * Directories that have featured us, shown as their own badge artwork.
  *
- * The image is served from the lister rather than copied into public/ - it is
- * their mark, and they get to restyle it. It is fixed-size and lazy so a slow
- * third party can neither shift the footer nor hold up the page.
+ * Most images are served by the lister so they can keep their mark current.
+ * Each badge has a fixed intrinsic size and is lazy-loaded to avoid layout
+ * shifts or blocking the page.
  */
 const FEATURED_ON = [
   {
@@ -32,7 +32,8 @@ const FEATURED_ON = [
   {
     name: "UdonBoost",
     href: "https://udonboost.com/",
-    src: "https://udonboost.com/badges/featured-partner.png",
+    // Local transparent version removes the supplied badge's brown matte.
+    src: "/udonboost-featured-partner-transparent.png",
     alt: "UdonBoost Featured Partner",
     width: 183,
     height: 54,
