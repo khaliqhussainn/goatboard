@@ -29,6 +29,15 @@ const FEATURED_ON = [
     width: 180,
     height: 40,
   },
+  {
+    name: "UdonBoost",
+    href: "https://udonboost.com/",
+    src: "https://udonboost.com/badges/featured-partner.png",
+    alt: "UdonBoost Featured Partner",
+    width: 183,
+    height: 54,
+    rel: "noopener noreferrer",
+  },
 ];
 
 /**
@@ -85,15 +94,15 @@ export function SiteFooter() {
                     key={badge.href}
                     href={badge.href}
                     target="_blank"
-                    // Not "noreferrer": the listing counts referrals from here,
-                    // and noopener alone is what closes the security hole.
-                    rel="noopener"
+                    // Existing listings count referrals; badges can override
+                    // this when their supplied embed explicitly requires it.
+                    rel={badge.rel ?? "noopener"}
                     className="w-fit transition-opacity hover:opacity-80"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={badge.src}
-                      alt={`Goatboard on ${badge.name}`}
+                      alt={badge.alt ?? `Goatboard on ${badge.name}`}
                       width={badge.width}
                       height={badge.height}
                       loading="lazy"
