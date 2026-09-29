@@ -9,6 +9,7 @@ import { VideoAdDisplay } from "@/components/billboard/video-ad-display";
 import { VisitorStatsCard } from "@/components/billboard/visitor-stats-card";
 import { DistributionPromo } from "@/components/distribution/distribution-promo";
 import { EmptyBoard } from "@/components/billboard/empty-board";
+import { WeeklyLaunches } from "@/components/billboard/weekly-launches";
 import type { Campaign, CurrentAd, CurrentVideoAd, VisitorStats } from "@/lib/types";
 
 export function Leaderboard({
@@ -41,7 +42,9 @@ export function Leaderboard({
     prevFirstId.current = currentFirst;
   }, [campaigns]);
 
-  const [first, ...rest] = campaigns;
+  const first = campaigns[0];
+  const podium = campaigns.slice(1, 3);
+  const remaining = campaigns.slice(3);
 
   return (
     <LayoutGroup>
@@ -107,9 +110,9 @@ export function Leaderboard({
         </div>
       </div>
 
-      {rest.length > 0 && (
+      {podium.length > 0 && (
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-          {rest.map((campaign, index) => (
+          {podium.map((campaign, index) => (
             <CampaignSlot
               key={campaign.id}
               campaign={campaign}
@@ -119,6 +122,25 @@ export function Leaderboard({
             />
           ))}
         </div>
+      )}
+
+      {remaining.length > 0 && (
+        <section className="mt-4 grid items-start gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(560px,0.92fr)]">
+          <div className="grid grid-cols-2 gap-2.5">
+            {remaining.map((campaign, index) => (
+              <CampaignSlot
+                key={campaign.id}
+                campaign={campaign}
+                rank={index + 4}
+                isNewFirst={justTookFirst === campaign.id}
+                onVoted={applyOptimisticVote}
+                denseList
+              />
+            ))}
+          </div>
+
+          <WeeklyLaunches campaigns={remaining} />
+        </section>
       )}
     </LayoutGroup>
   );

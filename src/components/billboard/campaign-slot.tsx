@@ -26,11 +26,13 @@ export function CampaignSlot({
   rank,
   isNewFirst,
   onVoted,
+  denseList = false,
 }: {
   campaign: Campaign;
   rank: number;
   isNewFirst: boolean;
   onVoted: (id: string, totalPower: number) => void;
+  denseList?: boolean;
 }) {
   const tier = tierOf(rank);
   const shouldReduceMotion = useReducedMotion();
@@ -90,6 +92,7 @@ export function CampaignSlot({
             <RankingRow
               campaign={campaign}
               rank={rank}
+              dense={denseList}
               onVoted={(power) => onVoted(campaign.id, power)}
             />
           )}

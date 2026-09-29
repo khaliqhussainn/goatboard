@@ -15,22 +15,34 @@ export function RankingRow({
   campaign,
   rank,
   onVoted,
+  dense = false,
 }: {
   campaign: Campaign;
   rank: number;
   onVoted?: (totalPower: number) => void;
+  dense?: boolean;
 }) {
   return (
     <div
       className={cn(
-        "billboard-surface-sm flex items-center gap-3 rounded-xl px-3 py-2.5 sm:px-4",
+        "billboard-surface-sm flex items-center rounded-xl",
+        dense ? "gap-2 px-2.5 py-2" : "gap-3 px-3 py-2.5 sm:px-4",
       )}
     >
-      <span className="w-7 shrink-0 text-sm font-bold tabular-nums text-muted-foreground">
+      <span
+        className={cn(
+          "shrink-0 font-bold tabular-nums text-muted-foreground",
+          dense ? "w-6 text-xs" : "w-7 text-sm",
+        )}
+      >
         #{rank}
       </span>
       <Link href={`/campaign/${campaign.slug}`} className="shrink-0">
-        <CampaignAvatar src={campaign.image_url} name={campaign.name} className="size-8" />
+        <CampaignAvatar
+          src={campaign.image_url}
+          name={campaign.name}
+          className={dense ? "size-7 rounded-lg text-[10px]" : "size-8"}
+        />
       </Link>
       <div className="flex min-w-0 flex-1 flex-col">
         <Link
@@ -39,6 +51,7 @@ export function RankingRow({
         >
           {campaign.name}
         </Link>
+        {dense && <ClickCount count={campaign.click_count} className="text-[10px] leading-none" />}
         {/*
           A phone row has no width to spare beside the name - dropping the
           money in next to it starves the name down to a character or two.
@@ -49,9 +62,14 @@ export function RankingRow({
       </div>
       {campaign.has_been_goat && <GoatBadge size="xs" className="shrink-0" />}
       {campaign.held_24h_at && <StreakBadge size="xs" className="shrink-0" />}
-      <ClickCount count={campaign.click_count} className="hidden shrink-0 text-xs sm:inline-flex" />
-      <PaidAmount paidPower={campaign.paid_power} className="hidden shrink-0 sm:inline-flex" />
-      <span className="shrink-0 text-sm font-bold tabular-nums">
+      {!dense && (
+        <ClickCount count={campaign.click_count} className="hidden shrink-0 text-xs sm:inline-flex" />
+      )}
+      <PaidAmount
+        paidPower={campaign.paid_power}
+        className={cn("hidden shrink-0", dense ? "2xl:inline-flex" : "sm:inline-flex")}
+      />
+      <span className={cn("shrink-0 font-bold tabular-nums", dense ? "text-xs" : "text-sm")}>
         {formatPower(campaign.total_power)}
       </span>
       <div className="flex shrink-0 items-center gap-1.5">
@@ -69,15 +87,17 @@ export function RankingRow({
           variant="outline"
           compact
         />
-        <ShareXButton
-          slug={campaign.slug}
-          name={campaign.name}
-          rank={rank}
-          totalPower={campaign.total_power}
-          size="sm"
-          variant="outline"
-          compact
-        />
+        {!dense && (
+          <ShareXButton
+            slug={campaign.slug}
+            name={campaign.name}
+            rank={rank}
+            totalPower={campaign.total_power}
+            size="sm"
+            variant="outline"
+            compact
+          />
+        )}
       </div>
     </div>
   );
