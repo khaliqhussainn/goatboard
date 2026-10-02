@@ -8,13 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { cn } from "@/lib/utils";
 import type { CurrentAd } from "@/lib/types";
 
-const SPARKLES = [
-  "absolute left-10 top-6 size-3 sm:left-16",
-  "absolute left-24 bottom-5 size-2.5 sm:left-36",
-  "absolute right-[38%] top-5 size-2",
-  "absolute right-[30%] bottom-6 size-3",
-  "absolute left-[46%] top-1/2 size-3 -translate-y-1/2",
-];
+const EMPTY_AD_MASCOT = "/mascots/goat-1.webp";
 
 /**
  * The goat stands on the banner's bottom edge and is deliberately taller
@@ -92,6 +86,124 @@ function AdSlotBackdrop({ src, rounded = "rounded-[4rem]" }: { src: string; roun
   );
 }
 
+/**
+ * The unsold ad slot mirrors the billboard creative itself: a warm editorial
+ * canvas, the GOAT pointing at an intentionally empty placement, and one
+ * direct booking CTA. It is a real button rather than a mock banner, so the
+ * entire surface still opens the existing checkout dialog.
+ */
+function EmptyAdSlot({ onClick, compact }: { onClick: () => void; compact?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "group relative w-full overflow-hidden border-[3px] border-white bg-[#ffdc68] text-left shadow-[0_18px_45px_-20px_rgba(118,75,10,0.5)] ring-1 ring-amber-200/70 transition-transform duration-300 hover:-translate-y-0.5",
+        compact
+          ? "h-full min-h-[260px] rounded-2xl sm:min-h-0"
+          : "min-h-[300px] rounded-[2.25rem] sm:min-h-[360px]",
+      )}
+    >
+      {/* Broad cream shapes reproduce the layered paper-like background from
+          the reference without baking text into an image. */}
+      <span
+        aria-hidden
+        className="absolute -left-[12%] -top-[55%] h-[150%] w-[75%] rotate-[8deg] rounded-[45%] bg-[#fff9e8] shadow-[0_0_70px_35px_rgba(255,249,232,0.82)]"
+      />
+      <span
+        aria-hidden
+        className="absolute -bottom-[48%] -left-[16%] h-[90%] w-[66%] -rotate-[7deg] rounded-[50%] bg-[#fff3cf]/90"
+      />
+      <span
+        aria-hidden
+        className="absolute -right-[8%] -top-[38%] h-[95%] w-[40%] rounded-[48%] bg-[#ffe883]/80"
+      />
+
+      <span
+        className={cn(
+          "absolute left-4 top-4 z-30 inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/45 px-3.5 py-2 text-[10px] font-extrabold uppercase tracking-wide text-[#30353e] shadow-[0_7px_18px_-10px_rgba(83,54,6,0.6)] backdrop-blur-sm",
+          !compact && "left-6 top-6 px-5 py-3 text-sm",
+        )}
+      >
+        Ad space · 7 days
+        <Sparkle className="size-3.5 fill-[#f5b91d] text-[#f5b91d]" aria-hidden />
+      </span>
+
+      <div
+        className={cn(
+          "relative z-20 flex h-full flex-col items-start justify-center pb-5 pl-5 pr-[38%] pt-16 sm:pr-[48%]",
+          compact ? "sm:pl-5 sm:pt-14 xl:pl-7" : "p-8 pt-20 sm:w-[62%] sm:p-12 sm:pt-24",
+        )}
+      >
+        <p
+          className={cn(
+            "font-black leading-[0.9] tracking-[-0.055em] text-black",
+            compact
+              ? "text-[clamp(1.65rem,3vw,2.35rem)]"
+              : "text-[clamp(2.5rem,5vw,5.25rem)]",
+          )}
+        >
+          Get in front of
+          <span className="block text-[#f5a313]">hundreds of eyes</span>
+        </p>
+        <p
+          className={cn(
+            "mt-3 max-w-xl font-semibold leading-snug text-[#55585d]",
+            compact ? "hidden text-xs xl:block" : "text-sm sm:text-lg",
+          )}
+        >
+          Advertise here and put your product where builders actually look.
+        </p>
+        <span
+          className={cn(
+            "mt-4 inline-flex items-center rounded-full bg-[#321707] font-extrabold text-white shadow-[0_10px_22px_-12px_rgba(50,23,7,0.8)] transition-colors group-hover:bg-black",
+            compact ? "px-4 py-2 text-xs" : "px-7 py-3.5 text-base sm:px-9 sm:py-4 sm:text-lg",
+          )}
+        >
+          Advertise here <span className="ml-2 text-lg leading-none">→</span>
+        </span>
+      </div>
+
+      {/* The empty dashed card is deliberately visible: it turns the abstract
+          promise into a literal placement waiting for the advertiser. */}
+      <span
+        aria-hidden
+        className={cn(
+          "absolute bottom-4 right-3 top-4 z-10 hidden rotate-[-2deg] rounded-[1.75rem] border-[3px] border-dashed border-[#dda51c]/75 bg-[#fff5c9]/55 shadow-[0_14px_30px_-20px_rgba(91,57,0,0.45)] sm:block",
+          compact ? "w-[27%]" : "bottom-8 right-8 top-8 w-[25%] rounded-[2.5rem]",
+        )}
+      >
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl font-light text-[#dca51d]/75">
+          +
+        </span>
+      </span>
+
+      {/* Fixed pose for the house creative; paid ads still use the hourly
+          rotating mascot supplied by the homepage. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={EMPTY_AD_MASCOT}
+        alt=""
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute bottom-[-3%] z-20 w-auto drop-shadow-[0_16px_24px_rgba(111,75,13,0.24)] transition-transform duration-300 group-hover:-translate-y-1",
+          compact
+            ? "-right-[4%] h-[60%] sm:right-[17%] sm:h-[74%] xl:h-[82%]"
+            : "right-[17%] h-[82%]",
+        )}
+      />
+
+      <Sparkle
+        aria-hidden
+        className={cn(
+          "absolute z-20 size-5 fill-[#ffc928] text-[#ffc928]",
+          compact ? "bottom-5 left-3" : "bottom-10 left-8 size-7",
+        )}
+      />
+    </button>
+  );
+}
+
 export function AdSlotDisplay({
   ad,
   mascot,
@@ -119,15 +231,17 @@ export function AdSlotDisplay({
           poking into that gap breaks the block's edge. On a phone the card is
           only as tall as its content, so it straddles the edge instead rather
           than landing on top of the ad's own name. */}
-      <span
-        className={cn(
-          "gold-surface absolute z-10 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-950 shadow-[0_4px_12px_-4px_rgba(146,105,16,0.6)] ring-1 ring-inset ring-white/60",
-          compact ? "-top-3 left-5 sm:left-3 sm:top-3" : "-top-3 left-5",
-        )}
-      >
-        {ad ? "Sponsored" : "Ad space · 7 days"}
-      </span>
-      {!compact && (
+      {ad && (
+        <span
+          className={cn(
+            "gold-surface absolute z-10 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-950 shadow-[0_4px_12px_-4px_rgba(146,105,16,0.6)] ring-1 ring-inset ring-white/60",
+            compact ? "-top-3 left-5 sm:left-3 sm:top-3" : "-top-3 left-5",
+          )}
+        >
+          {ad ? "Sponsored" : "Ad space · 7 days"}
+        </span>
+      )}
+      {!compact && ad && (
         <Sparkle className="absolute -top-4 left-0 z-10 size-5 fill-amber-400 text-amber-400 sm:-left-1" />
       )}
 
@@ -184,20 +298,7 @@ export function AdSlotDisplay({
             </button>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="gold-surface group relative flex h-full w-full flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl border-2 border-amber-300/90 px-5 py-4 pr-24 text-center shadow-[0_12px_32px_-16px_rgba(146,105,16,0.65)] ring-1 ring-inset ring-white/60 transition-shadow hover:shadow-[0_16px_38px_-16px_rgba(146,105,16,0.8)] sm:pr-40"
-          >
-            <GoldSheen rounded="rounded-2xl" />
-            {mascot && <CompactMascot src={mascot} />}
-            <p className="relative text-lg font-black leading-tight tracking-tight text-amber-950 sm:text-xl">
-              Your product could be here
-            </p>
-            <span className="relative inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-amber-950 px-3.5 py-1.5 text-xs font-bold text-amber-50 shadow-sm transition-colors group-hover:bg-amber-900">
-              Get noticed →
-            </span>
-          </button>
+          <EmptyAdSlot compact onClick={() => setOpen(true)} />
         )
       ) : ad ? (
         <div className="gold-surface-soft relative rounded-[4rem] border-2 border-amber-300/80 px-6 py-8 shadow-[0_18px_50px_-24px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70 sm:px-10">
@@ -234,36 +335,7 @@ export function AdSlotDisplay({
           </div>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="gold-surface group relative w-full rounded-[4rem] border-2 border-amber-300/90 px-5 py-6 text-left shadow-[0_18px_50px_-22px_rgba(146,105,16,0.65)] ring-1 ring-inset ring-white/60 transition-shadow hover:shadow-[0_22px_60px_-20px_rgba(146,105,16,0.8)] sm:px-10 sm:py-8"
-        >
-          <GoldSheen />
-
-          {SPARKLES.map((cls, i) => (
-            <Sparkle
-              key={i}
-              className={cn(cls, "fill-amber-200/90 text-amber-200/90")}
-              aria-hidden
-            />
-          ))}
-
-          {/* On a phone the goat tucks into the bottom-right instead of
-              stacking above the copy, which keeps this banner about a third
-              of the height it would be otherwise. */}
-          {mascot && <AdSlotMascot src={mascot} className="absolute right-1 top-1/2 -mt-16 h-32" />}
-
-          <div className="relative flex flex-col items-start gap-3 pr-20 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:pr-44">
-            <p className="font-handwritten text-xl leading-tight text-amber-950 drop-shadow-[0_1px_0_rgba(255,255,255,0.6)] sm:text-3xl">
-              Your product could be here
-            </p>
-
-            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-amber-950 px-4 py-2 text-sm font-bold text-amber-50 shadow-sm transition-colors group-hover:bg-amber-900 sm:px-5 sm:py-2.5">
-              Get noticed →
-            </span>
-          </div>
-        </button>
+        <EmptyAdSlot onClick={() => setOpen(true)} />
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
