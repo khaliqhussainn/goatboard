@@ -146,12 +146,12 @@ function EmptyAdSlot({ onClick, compact }: { onClick: () => void; compact?: bool
           )}
         >
           <span className="block">Get in front of</span>
-          <span className="block text-[#f5a313]">hundreds of eyes</span>
+          <span className="-mt-1 block text-[#f5a313] sm:-mt-1.5">hundreds of eyes</span>
         </p>
         <p
           className={cn(
             "max-w-xl font-semibold leading-snug text-[#55585d]",
-            compact ? "mt-2 hidden text-xs xl:block" : "mt-3 text-sm sm:text-lg",
+            compact ? "mt-0 hidden text-xs xl:block" : "mt-1 text-sm sm:text-lg",
           )}
         >
           Advertise here and put your product where builders actually look.
@@ -160,8 +160,8 @@ function EmptyAdSlot({ onClick, compact }: { onClick: () => void; compact?: bool
           className={cn(
             "inline-flex items-center rounded-full bg-[#321707] font-extrabold text-white shadow-[0_10px_22px_-12px_rgba(50,23,7,0.8)] transition-colors group-hover:bg-black",
             compact
-              ? "mt-2 px-4 py-2 text-xs"
-              : "mt-4 px-7 py-3.5 text-base sm:px-9 sm:py-4 sm:text-lg",
+              ? "mt-1 px-4 py-2 text-xs"
+              : "mt-2 px-7 py-3.5 text-base sm:px-9 sm:py-4 sm:text-lg",
           )}
         >
           Advertise here <span className="ml-2 text-lg leading-none">→</span>
