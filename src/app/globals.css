@@ -37,10 +37,10 @@
   --color-hero-teal: var(--hero-teal);
   --color-hero-pink: var(--hero-pink);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-handwritten: var(--font-kalam);
-  --font-rounded: var(--font-nunito);
+  --font-sans: var(--font-figtree);
+  --font-mono: var(--font-figtree);
+  --font-handwritten: var(--font-figtree);
+  --font-rounded: var(--font-figtree);
 }
 
 :root {

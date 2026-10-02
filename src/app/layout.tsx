@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Kalam, Nunito } from "next/font/google";
+import { Figtree } from "next/font/google";
 import { Toaster } from "sonner";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { Navbar } from "@/components/layout/navbar";
@@ -8,29 +8,8 @@ import { SplashScreen } from "@/components/layout/splash-screen";
 import { getSiteUrl } from "@/lib/utils";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// The casual marker-script used only for hand-drawn-style annotations (the
-// ad slot's "Your product could be here" / "Rent this spot" callouts).
-const kalam = Kalam({
-  variable: "--font-kalam",
-  weight: ["700"],
-  subsets: ["latin"],
-});
-
-// Rounded-terminal grotesque used for the Get Listed headings - the marker
-// face reads as a doodle where that page is asking for money. Variable, so
-// the display weights cost no extra requests.
-const nunito = Nunito({
-  variable: "--font-nunito",
+const figtree = Figtree({
+  variable: "--font-figtree",
   subsets: ["latin"],
 });
 
@@ -91,7 +70,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${kalam.variable} ${nunito.variable} h-full antialiased`}
+      className={`${figtree.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <SplashScreen />
