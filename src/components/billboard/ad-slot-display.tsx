@@ -131,33 +131,37 @@ function EmptyAdSlot({ onClick, compact }: { onClick: () => void; compact?: bool
 
       <div
         className={cn(
-          "relative z-20 flex h-full flex-col items-start justify-center pb-5 pl-5 pr-[38%] pt-16 sm:pr-[48%]",
-          compact ? "sm:pl-5 sm:pt-14 xl:pl-7" : "p-8 pt-20 sm:w-[62%] sm:p-12 sm:pt-24",
+          "relative z-20 flex h-full flex-col items-start",
+          compact
+            ? "justify-start pb-4 pl-5 pr-[38%] pt-14 sm:pr-[44%] xl:pl-7"
+            : "justify-center p-8 pt-20 sm:w-[62%] sm:p-12 sm:pt-24",
         )}
       >
         <p
           className={cn(
-            "font-black leading-[0.9] tracking-[-0.055em] text-black",
+            "flex flex-col gap-0 font-black leading-[0.88] tracking-[-0.045em] text-black",
             compact
-              ? "text-[clamp(1.65rem,3vw,2.35rem)]"
+              ? "text-[clamp(1.5rem,2.5vw,2rem)]"
               : "text-[clamp(2.5rem,5vw,5.25rem)]",
           )}
         >
-          Get in front of
+          <span className="block">Get in front of</span>
           <span className="block text-[#f5a313]">hundreds of eyes</span>
         </p>
         <p
           className={cn(
-            "mt-3 max-w-xl font-semibold leading-snug text-[#55585d]",
-            compact ? "hidden text-xs xl:block" : "text-sm sm:text-lg",
+            "max-w-xl font-semibold leading-snug text-[#55585d]",
+            compact ? "mt-2 hidden text-xs xl:block" : "mt-3 text-sm sm:text-lg",
           )}
         >
           Advertise here and put your product where builders actually look.
         </p>
         <span
           className={cn(
-            "mt-4 inline-flex items-center rounded-full bg-[#321707] font-extrabold text-white shadow-[0_10px_22px_-12px_rgba(50,23,7,0.8)] transition-colors group-hover:bg-black",
-            compact ? "px-4 py-2 text-xs" : "px-7 py-3.5 text-base sm:px-9 sm:py-4 sm:text-lg",
+            "inline-flex items-center rounded-full bg-[#321707] font-extrabold text-white shadow-[0_10px_22px_-12px_rgba(50,23,7,0.8)] transition-colors group-hover:bg-black",
+            compact
+              ? "mt-2 px-4 py-2 text-xs"
+              : "mt-4 px-7 py-3.5 text-base sm:px-9 sm:py-4 sm:text-lg",
           )}
         >
           Advertise here <span className="ml-2 text-lg leading-none">→</span>
