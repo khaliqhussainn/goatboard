@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkle } from "lucide-react";
+import { Check, Flame, MousePointer2, Sparkle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +13,7 @@ type ServiceSlide = {
   cta: string;
   href: string;
   image: string | null;
-  variant?: "distribution" | "rant";
+  variant?: "distribution" | "rant" | "review";
 };
 
 const ROTATION_MS = 10_000;
@@ -24,7 +24,7 @@ const SERVICES: ServiceSlide[] = [
     label: "STARTUP DISTRIBUTION ✦",
     headline: "Get your startup out there.",
     description:
-      "We manually submit your startup to relevant directories and discovery platforms.",
+      "We manually submit your startup to relevant directories and discovery platforms so you can reach more users.",
     cta: "Learn more →",
     href: "/get-listed",
     // A null image keeps using the mascot selected for the existing promo slot.
@@ -41,6 +41,16 @@ const SERVICES: ServiceSlide[] = [
     href: "/roast",
     image: "/mascots/goat-rant.png",
     variant: "rant",
+  },
+  {
+    label: "UI REVIEW",
+    headline: "Your UI might be the problem.",
+    description:
+      "Get a product designer's eyes on your product. I'll find what's confusing, weak, or costing you users.",
+    cta: "Get reviewed →",
+    href: "/ui-review",
+    image: "/mascots/goat-10.webp",
+    variant: "review",
   },
 ];
 
@@ -115,6 +125,7 @@ export function DistributionPromo({
       {SERVICES.map((slide, index) => {
         const isActive = index === activeIndex;
         const isRant = slide.variant === "rant";
+        const isReview = slide.variant === "review";
         const slideMascot = slide.image ?? mascot;
 
         return (
@@ -127,8 +138,10 @@ export function DistributionPromo({
               "absolute inset-0 flex flex-col gap-3 overflow-hidden transition-opacity duration-500 ease-in-out motion-reduce:transition-none",
               CARD_SPACING,
               isRant
-                ? "bg-[#fff1e7]"
-                : "bg-gradient-to-b from-[#fdf6d8] via-[#fdfaec] to-[#fcf3cf]",
+                ? "bg-[#ffdcdc]"
+                : isReview
+                  ? "bg-[#ddecff]"
+                  : "bg-[#fff8dc]",
               isActive ? "z-10 opacity-100" : "pointer-events-none z-0 opacity-0",
             )}
           >
@@ -138,8 +151,10 @@ export function DistributionPromo({
                 className={cn(
                   cls,
                   isRant
-                    ? "fill-orange-400/55 text-orange-400/55"
-                    : "fill-amber-300/70 text-amber-300/70",
+                    ? "fill-red-500/45 text-red-500/45"
+                    : isReview
+                      ? "fill-blue-400/35 text-blue-400/35"
+                      : "fill-amber-300/70 text-amber-300/70",
                 )}
                 aria-hidden
               />
@@ -154,35 +169,52 @@ export function DistributionPromo({
               </span>
             )}
 
-            <div className="relative flex min-w-0 flex-col items-start gap-3 xl:gap-2">
+            <div className="relative z-10 flex min-w-0 flex-col items-start gap-3 xl:gap-2.5">
               <span
                 className={cn(
-                  "inline-flex w-fit items-center rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em]",
-                  isRant ? "bg-orange-500 text-white" : "bg-accent-yellow text-yellow-900",
+                  "inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] xl:px-2.5 xl:py-1",
+                  isRant
+                    ? "bg-[#ffaaa9] text-black"
+                    : isReview
+                      ? "bg-[#acd4ff] text-black"
+                      : "bg-[#ffe88f] text-black",
                 )}
               >
+                {isRant && <Flame className="size-3.5 fill-red-500 text-red-600" aria-hidden />}
+                {isReview && <MousePointer2 className="size-3.5" aria-hidden />}
                 {slide.label}
               </span>
 
               <h2
                 className={cn(
-                  "font-black leading-[1.1] tracking-tight text-foreground sm:text-3xl",
-                  isRant ? "text-[1.35rem] xl:text-xl" : "text-2xl xl:text-2xl",
+                  "font-black leading-[0.98] tracking-[-0.045em] text-foreground sm:text-3xl",
+                  isRant ? "text-[1.65rem] xl:text-[1.55rem]" : "text-[1.75rem] xl:text-[1.65rem]",
                 )}
               >
-                {slide.headline}
+                {isReview ? (
+                  <>
+                    Your UI might be{" "}
+                    <span className="relative inline-block after:absolute after:-bottom-1 after:left-0 after:h-1.5 after:w-full after:-rotate-1 after:rounded-full after:bg-yellow-300">
+                      <span className="relative z-10">the problem.</span>
+                    </span>
+                  </>
+                ) : (
+                  slide.headline
+                )}
               </h2>
 
               {slide.subheadline && (
-                <p className="-mt-1 text-lg font-black leading-tight text-orange-600 xl:text-base">
-                  {slide.subheadline}
+                <p className="-mt-1 text-[1.55rem] font-black leading-[0.98] tracking-[-0.04em] text-black xl:text-[1.35rem]">
+                  <span className="box-decoration-clone rounded-sm bg-[#ffaaa9] px-1">
+                    {slide.subheadline}
+                  </span>
                 </p>
               )}
 
               <p
                 className={cn(
                   "max-w-md leading-snug text-muted-foreground",
-                  isRant ? "text-[13px] xl:text-xs" : "text-sm xl:line-clamp-4",
+                  "text-sm xl:text-[12px] xl:leading-[1.45]",
                 )}
               >
                 {slide.description}
@@ -191,7 +223,7 @@ export function DistributionPromo({
               <span
                 className={cn(
                   "mt-1 inline-flex w-fit items-center rounded-xl px-4 py-2 text-sm font-bold transition-opacity group-hover:opacity-85",
-                  isRant ? "bg-orange-600 text-white" : "bg-foreground text-background",
+                  "justify-center rounded-full bg-foreground text-background xl:w-full xl:py-2.5",
                 )}
               >
                 {slide.cta}
@@ -207,10 +239,38 @@ export function DistributionPromo({
                 className={cn(
                   "pointer-events-none absolute right-0 w-auto transition-transform duration-300 group-hover:-translate-y-1",
                   isRant
-                    ? "-bottom-2 h-32 drop-shadow-[0_14px_22px_rgba(154,52,18,0.22)] sm:right-4 sm:h-40 xl:-bottom-1 xl:right-0 xl:h-28"
-                    : "-bottom-3 h-28 drop-shadow-[0_14px_22px_rgba(133,77,14,0.28)] sm:right-2 sm:h-36 xl:right-0 xl:h-24",
+                    ? "-bottom-3 h-36 drop-shadow-[0_14px_22px_rgba(154,52,18,0.22)] sm:right-4 sm:h-40 xl:-bottom-2 xl:right-0 xl:h-28"
+                    : isReview
+                      ? "-bottom-3 h-36 drop-shadow-[0_14px_22px_rgba(30,64,175,0.16)] sm:right-5 sm:h-40 xl:-bottom-2 xl:right-0 xl:h-28"
+                      : "-bottom-3 h-32 drop-shadow-[0_14px_22px_rgba(133,77,14,0.28)] sm:right-2 sm:h-36 xl:right-0 xl:h-24",
                 )}
               />
+            )}
+
+            {isRant && (
+              <>
+                <Flame className="pointer-events-none absolute bottom-16 left-4 size-7 fill-red-500 text-red-500 xl:bottom-12 xl:size-6" aria-hidden />
+                <Flame className="pointer-events-none absolute bottom-8 left-10 size-4 fill-red-400 text-red-400 xl:bottom-7" aria-hidden />
+              </>
+            )}
+
+            {isReview && (
+              <div
+                aria-hidden
+                className="pointer-events-none absolute bottom-2 right-1 z-10 w-[74px] rotate-3 rounded-md border border-black/10 bg-white p-2 shadow-sm sm:right-3 sm:w-24 xl:right-0 xl:w-[72px]"
+              >
+                <p className="text-[8px] font-black uppercase leading-none xl:text-[7px]">UI Review</p>
+                <div className="mt-1.5 space-y-1">
+                  {[0, 1, 2].map((line) => (
+                    <div key={line} className="flex items-center gap-1">
+                      <span className="flex size-2.5 items-center justify-center border border-black xl:size-2">
+                        <Check className="size-2 xl:size-1.5" />
+                      </span>
+                      <span className="h-1 flex-1 rounded-full bg-black/35" />
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </Link>
         );
