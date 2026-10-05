@@ -61,7 +61,7 @@ export function VideoAdAdminPanel({ videoAds }: { videoAds: VideoAd[] }) {
         toast.error(data.message ?? "Couldn't create video ad.");
         return;
       }
-      toast.success("Video ad created for free — it's live now.");
+      toast.success("Video ad created for free. It is live now.");
       setName("");
       setDestinationUrl("");
       setXHandle("");

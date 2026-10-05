@@ -205,7 +205,7 @@ export default async function GetListedCampaignDetailPage({
                   {SUBMISSION_STATUS_LABELS[s.status]}
                 </Badge>
                 <span className="w-24 shrink-0 text-right text-xs text-muted-foreground">
-                  {s.submitted_at ? new Date(s.submitted_at).toLocaleDateString("en-US") : "—"}
+                  {s.submitted_at ? new Date(s.submitted_at).toLocaleDateString("en-US") : "Not submitted"}
                 </span>
               </li>
             ))}

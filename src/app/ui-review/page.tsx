@@ -248,7 +248,7 @@ function ReportPage({ type }: { type: "cover" | "summary" | "working" | "improve
                       : "bg-accent-yellow text-amber-700"
                 }`}
               >
-                {type === "working" ? "✓" : type === "improve" ? "!" : "•"}
+              {type === "working" ? <Check className="size-2" /> : type === "improve" ? "!" : <Lightbulb className="size-2" />}
               </span>
             )}
             <span className={`h-1.5 rounded-full bg-black/10 ${width}`} />

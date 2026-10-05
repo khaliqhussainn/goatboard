@@ -18,7 +18,7 @@ export function createAdminClient() {
   if (!url || !key) {
     throw new SupabaseConfigError(
       "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. Set the service role " +
-        "(or newer 'secret') key from Settings → API in your Supabase project — the anon/" +
+        "(or newer 'secret') key from Settings > API in your Supabase project. The anon/" +
         "publishable key alone isn't enough for server-side writes.",
     );
   }

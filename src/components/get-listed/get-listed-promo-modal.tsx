@@ -78,7 +78,7 @@ export function GetListedPromoModal({ mode, checkoutUrl }: GetListedPromoModalPr
               </DialogTitle>
               <DialogDescription className="max-w-xl text-sm leading-relaxed text-foreground/70 sm:text-base">
                 We do the distribution for you. Get your product listed on relevant directories,
-                startup platforms, and discovery sites—without spending days filling out forms.
+                startup platforms, and discovery sites without spending days filling out forms.
               </DialogDescription>
             </DialogHeader>
 
@@ -106,7 +106,7 @@ export function GetListedPromoModal({ mode, checkoutUrl }: GetListedPromoModalPr
                 onClick={() => handleOpenChange(false)}
                 className="mx-auto rounded-lg px-3 py-2 text-sm font-semibold text-foreground/65 underline decoration-foreground/25 underline-offset-4 transition-colors hover:text-foreground"
               >
-                {mode === "post-submit" ? "Maybe later — continue to checkout" : "Maybe later"}
+                {mode === "post-submit" ? "Maybe later, continue to checkout" : "Maybe later"}
               </button>
             </div>
           </div>

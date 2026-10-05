@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   description:
     "GOATBOARD is a public competitive billboard. Vote or boost anything - products, startups, ideas, memes - to the #1 spot. There's only one spotlight. Who's the GOAT?",
   openGraph: {
-    title: "GoatBoard — Get VOAT to become a GOAT",
+    title: "GoatBoard - Get VOAT to become a GOAT",
     description: "The billboard for startups.",
     siteName: "GoatBoard",
     type: "website",
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "GoatBoard — Get VOAT to become a GOAT",
+    title: "GoatBoard - Get VOAT to become a GOAT",
     description: "The billboard for startups.",
     images: [SHARE_IMAGE],
   },

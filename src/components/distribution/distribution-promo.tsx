@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Flame, MousePointer2, Sparkle } from "lucide-react";
+import { ArrowRight, Check, Flame, MousePointer2, Sparkle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -21,23 +21,23 @@ const ROTATION_MS = 10_000;
 /** Add future GoatBoard services here; the slideshow UI stays unchanged. */
 const SERVICES: ServiceSlide[] = [
   {
-    label: "STARTUP DISTRIBUTION ✦",
+    label: "STARTUP DISTRIBUTION",
     headline: "Get your startup out there.",
     description:
       "We manually submit your startup to relevant directories and discovery platforms so you can reach more users.",
-    cta: "Learn more →",
+    cta: "Learn more",
     href: "/get-listed",
     // A null image keeps using the mascot selected for the existing promo slot.
     image: null,
     variant: "distribution",
   },
   {
-    label: "🔥 GOAT RANT",
+    label: "GOAT RANT",
     headline: "Your audience won't stop crying?",
     subheadline: "Good. I'll roast them.",
     description:
       "Turn the problem your product solves into a brutally honest promo video.",
-    cta: "Get roasted →",
+    cta: "Get roasted",
     href: "/roast",
     image: "/mascots/goat-rant.png",
     variant: "rant",
@@ -47,7 +47,7 @@ const SERVICES: ServiceSlide[] = [
     headline: "Your UI might be the problem.",
     description:
       "Get a product designer's eyes on your product. I'll find what's confusing, weak, or costing you users.",
-    cta: "Get reviewed →",
+    cta: "Get reviewed",
     href: "/ui-review",
     image: "/mascots/goat-10.webp",
     variant: "review",
@@ -182,6 +182,7 @@ export function DistributionPromo({
               >
                 {isRant && <Flame className="size-3.5 fill-red-500 text-red-600" aria-hidden />}
                 {isReview && <MousePointer2 className="size-3.5" aria-hidden />}
+                {!isRant && !isReview && <Sparkle className="size-3.5 fill-amber-400 text-amber-500" aria-hidden />}
                 {slide.label}
               </span>
 
@@ -226,6 +227,7 @@ export function DistributionPromo({
                 )}
               >
                 {slide.cta}
+                <ArrowRight className="size-3.5" aria-hidden />
               </span>
             </div>
 

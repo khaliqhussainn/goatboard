@@ -76,7 +76,7 @@ export function AdSlotAdminPanel({ adSlots }: { adSlots: AdSlot[] }) {
         toast.error(data.message ?? "Couldn't create ad slot.");
         return;
       }
-      toast.success("Ad slot created for free — it's live now.");
+      toast.success("Ad slot created for free. It is live now.");
       setName("");
       setDescription("");
       setDestinationUrl("");
