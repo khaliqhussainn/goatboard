@@ -13,7 +13,9 @@ import {
   UsersRound,
   Video,
 } from "lucide-react";
-import { RantExperience, type RantProduct } from "@/components/roast/rant-experience";
+import { RantExperience } from "@/components/roast/rant-experience";
+import { getRants } from "@/lib/queries/rants";
+import type { RantProduct } from "@/lib/rants";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getVisitorId } from "@/lib/visitor";
 
@@ -79,14 +81,26 @@ async function getOwnedProducts(): Promise<RantProduct[]> {
   }
 }
 
-export default async function RoastPage() {
-  const ownedProducts = await getOwnedProducts();
+export default async function RoastPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ rant?: string }>;
+}) {
+  const visitorId = await getVisitorId();
+  const selectedRantId = (await searchParams).rant;
+  const [ownedProducts, initialRants] = await Promise.all([
+    getOwnedProducts(),
+    getRants(visitorId).catch((error) => {
+      console.error("GOAT Rant board lookup failed", error);
+      return [];
+    }),
+  ]);
 
   return (
     <div className="bg-[#fbfaf7] text-black">
-      <section className="overflow-hidden px-4 pb-12 pt-10 sm:px-6 sm:pb-16 lg:pt-14">
-        <div className="mx-auto grid max-w-6xl items-center gap-8 lg:grid-cols-[0.86fr_1.14fr] lg:gap-10">
-          <div className="relative z-10 flex flex-col items-start">
+      <section className="overflow-hidden px-4 pb-12 pt-8 sm:px-6 sm:pb-16 lg:pt-10">
+        <div className="mx-auto grid max-w-6xl gap-8 lg:min-h-[540px] lg:grid-cols-[0.86fr_1.14fr] lg:items-stretch lg:gap-10">
+          <div className="relative z-10 flex flex-col items-start justify-center py-2 lg:py-8">
             <span className="inline-flex items-center gap-2 rounded-full bg-[#ffd0cb] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.13em]">
               <Flame className="size-3.5 fill-[#ff5b4d] text-[#ff5b4d]" aria-hidden />
               GOAT Rant
@@ -113,8 +127,8 @@ export default async function RoastPage() {
             </p>
           </div>
 
-          <div aria-hidden className="relative mx-auto h-[390px] w-full max-w-[620px] sm:h-[470px]">
-            <div className="absolute inset-8 rounded-[3rem] bg-[#fff0e9] sm:inset-10" />
+          <div aria-hidden className="relative mx-auto h-[430px] w-full max-w-[620px] sm:h-[500px] lg:h-auto lg:min-h-[540px]">
+            <div className="absolute inset-x-8 inset-y-3 rounded-[3rem] bg-[#fff0e9] sm:inset-x-10 sm:inset-y-5" />
             <div className="absolute left-2 top-10 -rotate-6 rounded-xl bg-[#ffd3cf] px-4 py-3 text-sm font-black shadow-sm sm:left-6 sm:text-base">
               Why is this so hard?
             </div>
@@ -132,7 +146,7 @@ export default async function RoastPage() {
               width={2048}
               height={2048}
               loading="eager"
-              className="absolute -bottom-16 left-1/2 h-[84%] w-auto -translate-x-1/2 object-contain drop-shadow-[0_16px_18px_rgba(126,38,29,0.16)]"
+              className="absolute bottom-0 left-1/2 h-[82%] w-auto -translate-x-1/2 object-contain drop-shadow-[0_16px_18px_rgba(126,38,29,0.16)] sm:h-[86%] lg:h-[90%]"
             />
           </div>
         </div>
@@ -203,7 +217,11 @@ export default async function RoastPage() {
         </div>
       </section>
 
-      <RantExperience ownedProducts={ownedProducts} />
+      <RantExperience
+        initialRants={initialRants}
+        initialPurchaseContext={initialRants.find((rant) => rant.id === selectedRantId) ?? null}
+        ownedProducts={ownedProducts}
+      />
 
       <section className="px-4 pb-14 sm:px-6 sm:pb-20">
         <div className="relative mx-auto flex min-h-64 max-w-6xl items-center overflow-hidden rounded-[2rem] bg-[#fff0d8] p-6 sm:p-10">

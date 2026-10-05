@@ -1245,6 +1245,82 @@ update public.campaigns c
    );
 
 -- ---------------------------------------------------------------------------
+-- rants  (real community problems shown on the GOAT Rant board)
+--
+-- All writes go through the rate-limited server routes. Public reads are safe:
+-- author ids and reaction visitor ids never need to reach the browser.
+-- ---------------------------------------------------------------------------
+create table if not exists public.rants (
+  id uuid primary key default gen_random_uuid(),
+  author_id uuid not null,
+  body text not null check (char_length(body) between 12 and 180),
+  category text not null check (category in ('Analytics', 'Design', 'Distribution', 'Growth', 'Product', 'Security', 'Other')),
+  same_count integer not null default 0 check (same_count >= 0),
+  reply_count integer not null default 0 check (reply_count >= 0),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists rants_created_idx on public.rants (created_at desc);
+create index if not exists rants_top_idx on public.rants (same_count desc, created_at desc);
+
+create table if not exists public.rant_same_reactions (
+  rant_id uuid not null references public.rants (id) on delete cascade,
+  visitor_id uuid not null,
+  created_at timestamptz not null default now(),
+  primary key (rant_id, visitor_id)
+);
+
+create index if not exists rant_same_reactions_visitor_idx
+  on public.rant_same_reactions (visitor_id, rant_id);
+
+create table if not exists public.rant_solutions (
+  rant_id uuid not null references public.rants (id) on delete cascade,
+  campaign_id uuid not null references public.campaigns (id) on delete cascade,
+  owner_id uuid not null,
+  created_at timestamptz not null default now(),
+  primary key (rant_id, campaign_id)
+);
+
+create index if not exists rant_solutions_campaign_idx
+  on public.rant_solutions (campaign_id);
+
+create or replace function public.sync_rant_same_count()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+begin
+  if tg_op = 'INSERT' then
+    update public.rants set same_count = same_count + 1, updated_at = now() where id = new.rant_id;
+    return new;
+  end if;
+
+  update public.rants set same_count = greatest(0, same_count - 1), updated_at = now() where id = old.rant_id;
+  return old;
+end;
+$fn$;
+
+drop trigger if exists rant_same_reactions_count on public.rant_same_reactions;
+create trigger rant_same_reactions_count
+  after insert or delete on public.rant_same_reactions
+  for each row execute function public.sync_rant_same_count();
+
+alter table public.rants enable row level security;
+alter table public.rant_same_reactions enable row level security;
+alter table public.rant_solutions enable row level security;
+
+drop policy if exists "rants are publicly readable" on public.rants;
+create policy "rants are publicly readable" on public.rants for select using (true);
+
+drop policy if exists "rant solutions are publicly readable" on public.rant_solutions;
+create policy "rant solutions are publicly readable" on public.rant_solutions for select using (true);
+
+-- Reactions stay private because their visitor ids are implementation data.
+-- There are deliberately no public write policies for any of these tables.
+
+-- ---------------------------------------------------------------------------
 -- video_ads  (a single paid, time-boxed autoplay video spot beside the ad slot)
 --
 -- Same booking-queue shape as ad_slots (one row per purchase attempt, a

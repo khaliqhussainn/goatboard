@@ -108,6 +108,30 @@ export type CampaignComment = {
   created_at: string;
 };
 
+export type RantRecord = {
+  id: string;
+  author_id: string;
+  body: string;
+  category: string;
+  same_count: number;
+  reply_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RantSameReaction = {
+  rant_id: string;
+  visitor_id: string;
+  created_at: string;
+};
+
+export type RantSolution = {
+  rant_id: string;
+  campaign_id: string;
+  owner_id: string;
+  created_at: string;
+};
+
 export type Vote = {
   id: string;
   campaign_id: string;
@@ -302,6 +326,24 @@ export interface Database {
         Insert: Partial<CampaignComment> &
           Pick<CampaignComment, "campaign_id" | "author_id" | "body">;
         Update: Partial<CampaignComment>;
+        Relationships: [];
+      };
+      rants: {
+        Row: RantRecord;
+        Insert: Partial<RantRecord> & Pick<RantRecord, "author_id" | "body" | "category">;
+        Update: Partial<RantRecord>;
+        Relationships: [];
+      };
+      rant_same_reactions: {
+        Row: RantSameReaction;
+        Insert: Partial<RantSameReaction> & Pick<RantSameReaction, "rant_id" | "visitor_id">;
+        Update: Partial<RantSameReaction>;
+        Relationships: [];
+      };
+      rant_solutions: {
+        Row: RantSolution;
+        Insert: Partial<RantSolution> & Pick<RantSolution, "rant_id" | "campaign_id" | "owner_id">;
+        Update: Partial<RantSolution>;
         Relationships: [];
       };
       votes: {

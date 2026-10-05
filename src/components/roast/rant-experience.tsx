@@ -4,7 +4,6 @@ import Link from "next/link";
 import {
   ArrowRight,
   BadgeCheck,
-  Bookmark,
   Check,
   Flame,
   MessageCircle,
@@ -13,7 +12,7 @@ import {
   Repeat2,
   ShieldCheck,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
 import { Button } from "@/components/ui/button";
@@ -25,149 +24,58 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { RANT_CATEGORIES, type PublicRant, type RantProduct } from "@/lib/rants";
 import { cn } from "@/lib/utils";
 
-export type RantProduct = {
-  id: string;
-  name: string;
-  slug: string;
-  imageUrl: string | null;
-  href: string | null;
-};
+const CATEGORIES = ["All topics", ...RANT_CATEGORIES];
 
-type Rant = {
-  id: string;
-  body: string;
-  category: string;
-  sameCount: number;
-  replies: number;
-  products: RantProduct[];
-};
-
-const STARTER_RANTS: Rant[] = [
-  {
-    id: "analytics-overload",
-    body: "Why do analytics tools show me 400 metrics but never tell me what I should actually do next?",
-    category: "Analytics",
-    sameCount: 84,
-    replies: 12,
-    products: [
-      { id: "metric-goat", name: "SignalStack", slug: "signalstack", imageUrl: null, href: null },
-      { id: "action-map", name: "ActionMap", slug: "actionmap", imageUrl: null, href: null },
-    ],
-  },
-  {
-    id: "directory-weekend",
-    body: "I hate spending an entire weekend submitting my startup to directories.",
-    category: "Distribution",
-    sameCount: 63,
-    replies: 8,
-    products: [{ id: "goatboard-listed", name: "Get Listed", slug: "get-listed", imageUrl: "/logo-gb.png", href: "/get-listed" }],
-  },
-  {
-    id: "security-degree",
-    body: "Why does protecting a tiny SaaS require enterprise-level cybersecurity knowledge?",
-    category: "Security",
-    sameCount: 44,
-    replies: 6,
-    products: [{ id: "eagle-eye", name: "Eagle Eye Security", slug: "eagle-eye-security", imageUrl: null, href: null }],
-  },
-  {
-    id: "first-users",
-    body: "Why is it so hard to get real users? I build and it just sits there with zero traction.",
-    category: "Growth",
-    sameCount: 38,
-    replies: 14,
-    products: [],
-  },
-  {
-    id: "social-tool-stack",
-    body: "Why do I need five different tools just to create decent social media graphics?",
-    category: "Design",
-    sameCount: 27,
-    replies: 9,
-    products: [],
-  },
-  {
-    id: "feedback-cost",
-    body: "Why is good UI feedback so expensive? I just want someone to tell me what is wrong.",
-    category: "Product",
-    sameCount: 52,
-    replies: 11,
-    products: [{ id: "ui-review", name: "GOAT UI Review", slug: "ui-review", imageUrl: "/logo-gb.png", href: "/ui-review" }],
-  },
-];
-
-const CATEGORIES = ["All topics", "Analytics", "Design", "Distribution", "Growth", "Product", "Security"];
-const RANT_STORAGE_KEY = "goatboard_rant_board_v1";
-
-export function RantExperience({ ownedProducts }: { ownedProducts: RantProduct[] }) {
-  const [rants, setRants] = useState(STARTER_RANTS);
+export function RantExperience({
+  initialRants,
+  initialPurchaseContext,
+  ownedProducts,
+}: {
+  initialRants: PublicRant[];
+  initialPurchaseContext: PublicRant | null;
+  ownedProducts: RantProduct[];
+}) {
+  const [rants, setRants] = useState(initialRants);
   const [category, setCategory] = useState("All topics");
   const [sort, setSort] = useState<"top" | "recent">("top");
-  const [sameRants, setSameRants] = useState<Set<string>>(() => new Set());
   const [postOpen, setPostOpen] = useState(false);
-  const [solveRant, setSolveRant] = useState<Rant | null>(null);
+  const [solveRant, setSolveRant] = useState<PublicRant | null>(null);
   const [selectedProductId, setSelectedProductId] = useState(ownedProducts[0]?.id ?? "");
   const [newRant, setNewRant] = useState("");
   const [newCategory, setNewCategory] = useState("Product");
-  const [purchaseContext, setPurchaseContext] = useState<Rant | null>(null);
-  const [storageReady, setStorageReady] = useState(false);
-
-  useEffect(() => {
-    const restore = window.setTimeout(() => {
-      let restoredRants = STARTER_RANTS;
-
-      try {
-        const saved = window.localStorage.getItem(RANT_STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved) as { rants?: Rant[]; sameRants?: string[] };
-          if (Array.isArray(parsed.rants)) {
-            restoredRants = parsed.rants;
-            setRants(parsed.rants);
-          }
-          if (Array.isArray(parsed.sameRants)) setSameRants(new Set(parsed.sameRants));
-        }
-      } catch {
-        window.localStorage.removeItem(RANT_STORAGE_KEY);
-      }
-
-      const selectedId = new URLSearchParams(window.location.search).get("rant");
-      if (selectedId) setPurchaseContext(restoredRants.find((rant) => rant.id === selectedId) ?? null);
-      setStorageReady(true);
-    }, 0);
-
-    return () => window.clearTimeout(restore);
-  }, []);
-
-  useEffect(() => {
-    if (!storageReady) return;
-    window.localStorage.setItem(
-      RANT_STORAGE_KEY,
-      JSON.stringify({ rants, sameRants: [...sameRants] }),
-    );
-  }, [rants, sameRants, storageReady]);
+  const [purchaseContext, setPurchaseContext] = useState<PublicRant | null>(initialPurchaseContext);
+  const [isPending, startTransition] = useTransition();
 
   const visibleRants = useMemo(() => {
     const filtered = category === "All topics" ? rants : rants.filter((rant) => rant.category === category);
-    return [...filtered].sort((a, b) => (sort === "top" ? b.sameCount - a.sameCount : b.id.localeCompare(a.id)));
+    return [...filtered].sort((a, b) =>
+      sort === "top"
+        ? b.sameCount - a.sameCount
+        : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
   }, [category, rants, sort]);
 
   function toggleSame(rantId: string) {
-    const alreadySame = sameRants.has(rantId);
-    setSameRants((current) => {
-      const next = new Set(current);
-      if (alreadySame) next.delete(rantId);
-      else next.add(rantId);
-      return next;
+    startTransition(async () => {
+      const response = await fetch(`/api/rants/${rantId}/same`, { method: "POST" });
+      const payload = (await response.json().catch(() => null)) as
+        | { didSame?: boolean; sameCount?: number; message?: string }
+        | null;
+      if (!response.ok || typeof payload?.sameCount !== "number") {
+        toast.error(payload?.message ?? "Couldn't update your reaction.");
+        return;
+      }
+      setRants((current) =>
+        current.map((rant) =>
+          rant.id === rantId
+            ? { ...rant, sameCount: payload.sameCount!, didSame: Boolean(payload.didSame) }
+            : rant,
+        ),
+      );
     });
-    setRants((current) =>
-      current.map((rant) =>
-        rant.id === rantId
-          ? { ...rant, sameCount: Math.max(0, rant.sameCount + (alreadySame ? -1 : 1)) }
-          : rant,
-      ),
-    );
   }
 
   function submitRant() {
@@ -177,20 +85,25 @@ export function RantExperience({ ownedProducts }: { ownedProducts: RantProduct[]
       return;
     }
 
-    const rant: Rant = {
-      id: `local-${Date.now()}`,
-      body,
-      category: newCategory,
-      sameCount: 1,
-      replies: 0,
-      products: [],
-    };
-    setRants((current) => [rant, ...current]);
-    setSameRants((current) => new Set(current).add(rant.id));
-    setNewRant("");
-    setPostOpen(false);
-    setSort("recent");
-    toast.success("Your rant is on the board.");
+    startTransition(async () => {
+      const response = await fetch("/api/rants", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ body, category: newCategory }),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { rant?: PublicRant; message?: string }
+        | null;
+      if (!response.ok || !payload?.rant) {
+        toast.error(payload?.message ?? "Couldn't post your rant.");
+        return;
+      }
+      setRants((current) => [payload.rant!, ...current]);
+      setNewRant("");
+      setPostOpen(false);
+      setSort("recent");
+      toast.success("Your rant is on the board.");
+    });
   }
 
   function attachProduct() {
@@ -198,18 +111,32 @@ export function RantExperience({ ownedProducts }: { ownedProducts: RantProduct[]
     const product = ownedProducts.find((item) => item.id === selectedProductId);
     if (!product) return;
 
-    setRants((current) =>
-      current.map((rant) =>
-        rant.id === solveRant.id && !rant.products.some((item) => item.id === product.id)
-          ? { ...rant, products: [...rant.products, product] }
-          : rant,
-      ),
-    );
-    setSolveRant(null);
-    toast.success(`${product.name} now appears under this problem.`);
+    startTransition(async () => {
+      const response = await fetch(`/api/rants/${solveRant.id}/solutions`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ campaignId: product.id }),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { product?: RantProduct; message?: string }
+        | null;
+      if (!response.ok || !payload?.product) {
+        toast.error(payload?.message ?? "Couldn't connect that product.");
+        return;
+      }
+      setRants((current) =>
+        current.map((rant) =>
+          rant.id === solveRant.id && !rant.products.some((item) => item.id === payload.product!.id)
+            ? { ...rant, products: [...rant.products, payload.product!] }
+            : rant,
+        ),
+      );
+      setSolveRant(null);
+      toast.success(`${product.name} now appears under this problem.`);
+    });
   }
 
-  function chooseForRoast(rant: Rant) {
+  function chooseForRoast(rant: PublicRant) {
     setPurchaseContext(rant);
     window.history.replaceState(null, "", `/roast?rant=${encodeURIComponent(rant.id)}#purchase`);
     window.setTimeout(() => document.getElementById("purchase")?.scrollIntoView({ behavior: "smooth" }), 0);
@@ -268,7 +195,9 @@ export function RantExperience({ ownedProducts }: { ownedProducts: RantProduct[]
                 >
                   {CATEGORIES.slice(1).map((item) => <option key={item}>{item}</option>)}
                 </select>
-                <Button onClick={submitRant} className="mt-1 rounded-full">Post problem</Button>
+                <Button onClick={submitRant} disabled={isPending} className="mt-1 rounded-full">
+                  {isPending ? "Posting..." : "Post problem"}
+                </Button>
               </DialogContent>
             </Dialog>
           </div>
@@ -308,7 +237,6 @@ export function RantExperience({ ownedProducts }: { ownedProducts: RantProduct[]
 
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
             {visibleRants.map((rant) => {
-              const didSame = sameRants.has(rant.id);
               return (
                 <article key={rant.id} className="group flex min-h-56 flex-col rounded-2xl border border-black/10 bg-[#fffdf9] p-4 transition-colors hover:border-[#ff6a5d]/45">
                   <div className="flex items-start gap-3">
@@ -321,9 +249,6 @@ export function RantExperience({ ownedProducts }: { ownedProducts: RantProduct[]
                         {rant.category}
                       </span>
                     </div>
-                    <button type="button" aria-label="Save rant" className="rounded-lg p-1.5 text-black/45 hover:bg-black/5 hover:text-black">
-                      <Bookmark className="size-4" />
-                    </button>
                   </div>
 
                   <div className="mt-4 rounded-xl bg-white p-3 ring-1 ring-inset ring-black/5">
@@ -373,11 +298,12 @@ export function RantExperience({ ownedProducts }: { ownedProducts: RantProduct[]
                   <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
                     <button
                       type="button"
-                      aria-pressed={didSame}
+                      aria-pressed={rant.didSame}
+                      disabled={isPending}
                       onClick={() => toggleSame(rant.id)}
                       className={cn(
                         "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-black transition-colors",
-                        didSame ? "bg-[#ff5f50] text-white" : "bg-[#ffe2de] text-[#d73a2c] hover:bg-[#ffd3ce]",
+                        rant.didSame ? "bg-[#ff5f50] text-white" : "bg-[#ffe2de] text-[#d73a2c] hover:bg-[#ffd3ce]",
                       )}
                     >
                       <Repeat2 className="size-3.5" /> {rant.sameCount} SAME
@@ -399,6 +325,21 @@ export function RantExperience({ ownedProducts }: { ownedProducts: RantProduct[]
               );
             })}
           </div>
+
+          {visibleRants.length === 0 && (
+            <div className="mt-4 flex min-h-56 flex-col items-center justify-center rounded-2xl border border-dashed border-black/15 bg-[#fffdf9] px-6 text-center">
+              <MessageCircle className="size-9 text-[#ff6a5d]" aria-hidden />
+              <h3 className="mt-3 text-xl font-black">
+                {rants.length === 0 ? "The board is ready for its first real rant." : "No rants in this topic yet."}
+              </h3>
+              <p className="mt-1 max-w-md text-sm text-muted-foreground">
+                Share a repeated product problem. New posts will appear here for everyone, not just in this browser.
+              </p>
+              <Button onClick={() => setPostOpen(true)} className="mt-4 rounded-full">
+                <Plus className="size-4" /> Post the first problem
+              </Button>
+            </div>
+          )}
 
           {ownedProducts.length === 0 && (
             <p className="mt-4 rounded-xl bg-[#f6f3ed] px-4 py-3 text-xs font-semibold text-muted-foreground">
@@ -423,7 +364,7 @@ export function RantExperience({ ownedProducts }: { ownedProducts: RantProduct[]
           >
             {ownedProducts.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}
           </select>
-          <Button onClick={attachProduct} className="rounded-full">
+          <Button onClick={attachProduct} disabled={isPending || !selectedProductId} className="rounded-full">
             <PackageCheck className="size-4" /> Add product
           </Button>
         </DialogContent>
