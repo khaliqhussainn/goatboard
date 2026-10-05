@@ -222,8 +222,7 @@ export function DistributionPromo({
 
               <span
                 className={cn(
-                  "mt-1 inline-flex w-fit items-center rounded-xl px-4 py-2 text-sm font-bold transition-opacity group-hover:opacity-85",
-                  "justify-center rounded-full bg-foreground text-background xl:w-full xl:py-2.5",
+                  "mt-1 inline-flex w-fit items-center justify-center rounded-full bg-foreground px-4 py-2 text-sm font-bold text-background transition-opacity group-hover:opacity-85 xl:px-3.5 xl:py-2 xl:text-xs",
                 )}
               >
                 {slide.cta}
@@ -241,7 +240,7 @@ export function DistributionPromo({
                   isRant
                     ? "-bottom-3 h-36 drop-shadow-[0_14px_22px_rgba(154,52,18,0.22)] sm:right-4 sm:h-40 xl:-bottom-2 xl:right-0 xl:h-28"
                     : isReview
-                      ? "-bottom-3 h-36 drop-shadow-[0_14px_22px_rgba(30,64,175,0.16)] sm:right-5 sm:h-40 xl:-bottom-2 xl:right-0 xl:h-28"
+                      ? "-bottom-3 h-36 drop-shadow-[0_14px_22px_rgba(30,64,175,0.16)] sm:left-4 sm:right-auto sm:h-40 xl:-bottom-1 xl:left-2 xl:right-auto xl:h-24"
                       : "-bottom-3 h-32 drop-shadow-[0_14px_22px_rgba(133,77,14,0.28)] sm:right-2 sm:h-36 xl:right-0 xl:h-24",
                 )}
               />
@@ -257,7 +256,7 @@ export function DistributionPromo({
             {isReview && (
               <div
                 aria-hidden
-                className="pointer-events-none absolute bottom-2 right-1 z-10 w-[74px] rotate-3 rounded-md border border-black/10 bg-white p-2 shadow-sm sm:right-3 sm:w-24 xl:right-0 xl:w-[72px]"
+                className="pointer-events-none absolute bottom-2 right-1 z-10 w-[74px] rotate-3 rounded-md border border-black/10 bg-white p-2 shadow-sm sm:right-3 sm:w-24 xl:right-1 xl:w-16 xl:p-1.5"
               >
                 <p className="text-[8px] font-black uppercase leading-none xl:text-[7px]">UI Review</p>
                 <div className="mt-1.5 space-y-1">
