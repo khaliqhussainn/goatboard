@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {
+  AtSign,
   ArrowRight,
   BadgeCheck,
   Check,
@@ -9,15 +10,19 @@ import {
   Loader2,
   MessageCircle,
   PackageCheck,
+  PackageSearch,
   Plus,
   Reply,
   Repeat2,
+  Search,
   ShieldCheck,
   UserRound,
+  X,
 } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
+import { XHandleLink } from "@/components/campaign/x-handle-link";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -40,6 +45,22 @@ const CATEGORIES = ["All topics", ...RANT_CATEGORIES];
 function formatReplyDate(value: string) {
   return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(
     new Date(value),
+  );
+}
+
+function SuggestedProductCard({ product }: { product: RantProduct }) {
+  return (
+    <Link
+      href={product.href}
+      className="mt-3 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 transition-colors hover:border-emerald-300"
+    >
+      <CampaignAvatar src={product.imageUrl} name={product.name} className="size-9 rounded-lg" />
+      <span className="min-w-0 flex-1">
+        <span className="block text-[10px] font-black uppercase tracking-[0.1em] text-emerald-700">Suggested product</span>
+        <span className="block truncate text-sm font-black text-black">{product.name}</span>
+      </span>
+      <ArrowRight className="size-4 shrink-0 text-emerald-700" />
+    </Link>
   );
 }
 
@@ -67,7 +88,17 @@ export function RantExperience({
   const [replyPending, setReplyPending] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [replyingTo, setReplyingTo] = useState<PublicRantReply | null>(null);
+  const [replyXHandle, setReplyXHandle] = useState("");
+  const [productSearchOpen, setProductSearchOpen] = useState(false);
+  const [productQuery, setProductQuery] = useState("");
+  const [productResults, setProductResults] = useState<RantProduct[]>([]);
+  const [productSearching, setProductSearching] = useState(false);
+  const [productSearchAttempted, setProductSearchAttempted] = useState(false);
+  const [suggestedProduct, setSuggestedProduct] = useState<RantProduct | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const normalizedReplyXHandle = replyXHandle.trim().replace(/^@/, "");
+  const replyXHandleIsValid = /^[A-Za-z0-9_]{1,15}$/.test(normalizedReplyXHandle);
 
   const visibleRants = useMemo(() => {
     const filtered = category === "All topics" ? rants : rants.filter((rant) => rant.category === category);
@@ -166,7 +197,13 @@ export function RantExperience({
     setThreadRant(rant);
     setThreadReplies([]);
     setReplyText("");
+    setReplyXHandle("");
     setReplyingTo(null);
+    setProductSearchOpen(false);
+    setProductQuery("");
+    setProductResults([]);
+    setProductSearchAttempted(false);
+    setSuggestedProduct(null);
     setThreadLoading(true);
 
     const response = await fetch(`/api/rants/${rant.id}/replies`);
@@ -188,12 +225,21 @@ export function RantExperience({
       toast.error("Write a reply first.");
       return;
     }
+    if (!replyXHandleIsValid) {
+      toast.error("Enter a valid X handle before replying.");
+      return;
+    }
 
     setReplyPending(true);
     const response = await fetch(`/api/rants/${threadRant.id}/replies`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ body, parentId: replyingTo?.id ?? null }),
+      body: JSON.stringify({
+        authorXHandle: normalizedReplyXHandle,
+        body,
+        parentId: replyingTo?.id ?? null,
+        suggestedCampaignId: suggestedProduct?.id ?? null,
+      }),
     });
     const payload = (await response.json().catch(() => null)) as
       | { reply?: PublicRantReply; replyCount?: number | null; message?: string }
@@ -207,6 +253,11 @@ export function RantExperience({
     setThreadReplies((current) => [...current, payload.reply!]);
     setReplyText("");
     setReplyingTo(null);
+    setProductSearchOpen(false);
+    setProductQuery("");
+    setProductResults([]);
+    setProductSearchAttempted(false);
+    setSuggestedProduct(null);
     setRants((current) =>
       current.map((rant) =>
         rant.id === threadRant.id
@@ -220,6 +271,28 @@ export function RantExperience({
         : current,
     );
     toast.success("Reply posted.");
+  }
+
+  async function searchProducts() {
+    const query = productQuery.trim();
+    if (query.length < 2) {
+      toast.error("Enter at least two characters to search products.");
+      return;
+    }
+
+    setProductSearching(true);
+    setProductSearchAttempted(false);
+    const response = await fetch(`/api/rants/products?query=${encodeURIComponent(query)}`);
+    const payload = (await response.json().catch(() => null)) as
+      | { products?: RantProduct[]; message?: string }
+      | null;
+    setProductSearching(false);
+    if (!response.ok || !payload?.products) {
+      toast.error(payload?.message ?? "Couldn't search products.");
+      return;
+    }
+    setProductResults(payload.products);
+    setProductSearchAttempted(true);
   }
 
   const topLevelReplies = threadReplies.filter((reply) => !reply.parentId);
@@ -463,7 +536,13 @@ export function RantExperience({
             setThreadRant(null);
             setThreadReplies([]);
             setReplyText("");
+            setReplyXHandle("");
             setReplyingTo(null);
+            setProductSearchOpen(false);
+            setProductQuery("");
+            setProductResults([]);
+            setProductSearchAttempted(false);
+            setSuggestedProduct(null);
           }
         }}
       >
@@ -504,10 +583,16 @@ export function RantExperience({
                         <span className="flex size-7 items-center justify-center rounded-full bg-[#ffe6b6]">
                           <UserRound className="size-3.5" />
                         </span>
-                        <p className="text-xs font-black">{reply.isMine ? "You" : "Community member"}</p>
+                        {reply.isMine && <p className="text-xs font-black">You</p>}
+                        {reply.authorXHandle ? (
+                          <XHandleLink handle={reply.authorXHandle} className="text-xs font-black text-black" />
+                        ) : (
+                          <p className="text-xs font-black">Community member</p>
+                        )}
                         <span className="text-[11px] text-muted-foreground">{formatReplyDate(reply.createdAt)}</span>
                       </div>
                       <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{reply.body}</p>
+                      {reply.suggestedProduct && <SuggestedProductCard product={reply.suggestedProduct} />}
                       <button
                         type="button"
                         onClick={() => {
@@ -527,10 +612,16 @@ export function RantExperience({
                                 <span className="flex size-6 items-center justify-center rounded-full bg-[#eef1f4]">
                                   <UserRound className="size-3" />
                                 </span>
-                                <p className="text-xs font-black">{child.isMine ? "You" : "Community member"}</p>
+                                {child.isMine && <p className="text-xs font-black">You</p>}
+                                {child.authorXHandle ? (
+                                  <XHandleLink handle={child.authorXHandle} className="text-xs font-black text-black" />
+                                ) : (
+                                  <p className="text-xs font-black">Community member</p>
+                                )}
                                 <span className="text-[11px] text-muted-foreground">{formatReplyDate(child.createdAt)}</span>
                               </div>
                               <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{child.body}</p>
+                              {child.suggestedProduct && <SuggestedProductCard product={child.suggestedProduct} />}
                               <button
                                 type="button"
                                 onClick={() => {
@@ -559,18 +650,130 @@ export function RantExperience({
                 <button type="button" onClick={() => setReplyingTo(null)} className="font-black text-[#d73a2c]">Cancel</button>
               </div>
             )}
+            <div>
+              <label htmlFor="rant-reply-x" className="mb-1.5 block text-xs font-black">Your X account</label>
+              <div className="relative">
+                <AtSign className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  id="rant-reply-x"
+                  value={replyXHandle}
+                  maxLength={16}
+                  onChange={(event) => setReplyXHandle(event.target.value)}
+                  placeholder="yourhandle"
+                  autoComplete="off"
+                  className={cn(
+                    "h-10 w-full rounded-xl border bg-white pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-[#ff6a5d]/35",
+                    replyXHandle.length > 0 && !replyXHandleIsValid ? "border-red-400" : "border-black/15",
+                  )}
+                />
+              </div>
+              <p className={cn("mt-1 text-[11px]", replyXHandle.length > 0 && !replyXHandleIsValid ? "text-red-600" : "text-muted-foreground")}>
+                {replyXHandle.length > 0 && !replyXHandleIsValid
+                  ? "Enter a valid X handle with up to 15 letters, numbers, or underscores."
+                  : "Required so people know who is joining the discussion."}
+              </p>
+            </div>
+
             <label htmlFor="rant-reply-body" className="sr-only">Write a reply</label>
             <textarea
               id="rant-reply-body"
               value={replyText}
               maxLength={500}
+              disabled={!replyXHandleIsValid}
               onChange={(event) => setReplyText(event.target.value)}
-              placeholder={replyingTo ? "Write your response..." : "Add a useful reply..."}
-              className="min-h-20 w-full resize-none rounded-xl border border-black/15 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-[#ff6a5d]/35"
+              placeholder={
+                !replyXHandleIsValid
+                  ? "Enter your X handle before writing a reply."
+                  : replyingTo
+                    ? "Write your response..."
+                    : "Add a useful reply..."
+              }
+              className="mt-3 min-h-20 w-full resize-none rounded-xl border border-black/15 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-[#ff6a5d]/35 disabled:cursor-not-allowed disabled:bg-black/[0.03]"
             />
+
+            {suggestedProduct ? (
+              <div className="mt-2 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-2.5">
+                <CampaignAvatar src={suggestedProduct.imageUrl} name={suggestedProduct.name} className="size-9 rounded-lg" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[10px] font-black uppercase tracking-[0.1em] text-emerald-700">Product attached</span>
+                  <span className="block truncate text-sm font-black">{suggestedProduct.name}</span>
+                </span>
+                <button
+                  type="button"
+                  aria-label="Remove suggested product"
+                  onClick={() => setSuggestedProduct(null)}
+                  className="flex size-8 items-center justify-center rounded-full hover:bg-black/5"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={() => setProductSearchOpen((open) => !open)}
+                  className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-700 hover:text-emerald-900"
+                >
+                  <PackageSearch className="size-4" /> Suggest an existing GoatBoard product
+                </button>
+                {productSearchOpen && (
+                  <div className="mt-2 rounded-xl border border-black/10 bg-[#f8f8f6] p-2.5">
+                    <div className="flex gap-2">
+                      <input
+                        value={productQuery}
+                        onChange={(event) => {
+                          setProductQuery(event.target.value);
+                          setProductSearchAttempted(false);
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            void searchProducts();
+                          }
+                        }}
+                        placeholder="Search listed products"
+                        className="h-9 min-w-0 flex-1 rounded-lg border border-black/10 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500/25"
+                      />
+                      <Button type="button" size="sm" onClick={() => void searchProducts()} disabled={productSearching} className="rounded-lg">
+                        {productSearching ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
+                        <span className="sr-only">Search products</span>
+                      </Button>
+                    </div>
+                    {productResults.length > 0 ? (
+                      <div className="mt-2 max-h-36 space-y-1 overflow-y-auto">
+                        {productResults.map((product) => (
+                          <button
+                            key={product.id}
+                            type="button"
+                            onClick={() => {
+                              setSuggestedProduct(product);
+                              setProductSearchOpen(false);
+                              setProductResults([]);
+                              setProductSearchAttempted(false);
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg bg-white p-2 text-left hover:bg-emerald-50"
+                          >
+                            <CampaignAvatar src={product.imageUrl} name={product.name} className="size-7 rounded-md" />
+                            <span className="min-w-0 flex-1 truncate text-xs font-black">{product.name}</span>
+                            <Plus className="size-3.5 text-emerald-700" />
+                          </button>
+                        ))}
+                      </div>
+                    ) : productSearchAttempted && !productSearching ? (
+                      <p className="mt-2 px-1 text-xs text-muted-foreground">No matching GoatBoard products found.</p>
+                    ) : null}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="mt-2 flex items-center justify-between gap-3">
               <span className="text-xs text-muted-foreground">{replyText.length}/500</span>
-              <Button onClick={() => void submitReply()} disabled={replyPending || threadLoading} className="rounded-full px-5">
+              <Button
+                onClick={() => void submitReply()}
+                disabled={replyPending || threadLoading || !replyXHandleIsValid || replyText.trim().length === 0}
+                className="rounded-full px-5"
+              >
                 {replyPending ? <Loader2 className="size-4 animate-spin" /> : <Reply className="size-4" />}
                 {replyPending ? "Posting..." : "Post reply"}
               </Button>

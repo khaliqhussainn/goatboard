@@ -33,6 +33,8 @@ export type PublicRantReply = {
   id: string;
   parentId: string | null;
   body: string;
+  authorXHandle: string | null;
+  suggestedProduct: RantProduct | null;
   isMine: boolean;
   createdAt: string;
 };

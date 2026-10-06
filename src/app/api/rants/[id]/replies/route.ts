@@ -2,12 +2,15 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { xHandleSchema } from "@/lib/validation";
 import { getVisitorId } from "@/lib/visitor";
 
 const idSchema = z.string().uuid();
 const replySchema = z.object({
+  authorXHandle: xHandleSchema,
   body: z.string().trim().min(1, "Write a reply first.").max(500),
   parentId: z.string().uuid().nullable().optional(),
+  suggestedCampaignId: z.string().uuid().nullable().optional(),
 });
 
 export async function GET(
@@ -27,16 +30,45 @@ export async function GET(
 
     const { data, error } = await admin
       .from("rant_replies")
-      .select("id, parent_id, body, author_id, created_at")
+      .select("id, parent_id, body, author_id, author_x_handle, suggested_campaign_id, created_at")
       .eq("rant_id", id)
       .order("created_at", { ascending: true });
     if (error) throw error;
+
+    const campaignIds = [
+      ...new Set((data ?? []).flatMap((reply) => reply.suggested_campaign_id ? [reply.suggested_campaign_id] : [])),
+    ];
+    const campaignsById = new Map<
+      string,
+      { id: string; name: string; slug: string; imageUrl: string | null; href: string }
+    >();
+    if (campaignIds.length > 0) {
+      const { data: campaigns, error: campaignError } = await admin
+        .from("campaigns")
+        .select("id, name, slug, image_url")
+        .eq("status", "active")
+        .in("id", campaignIds);
+      if (campaignError) throw campaignError;
+      for (const campaign of campaigns ?? []) {
+        campaignsById.set(campaign.id, {
+          id: campaign.id,
+          name: campaign.name,
+          slug: campaign.slug,
+          imageUrl: campaign.image_url,
+          href: `/campaign/${campaign.slug}`,
+        });
+      }
+    }
 
     return NextResponse.json({
       replies: (data ?? []).map((reply) => ({
         id: reply.id,
         parentId: reply.parent_id,
         body: reply.body,
+        authorXHandle: reply.author_x_handle,
+        suggestedProduct: reply.suggested_campaign_id
+          ? (campaignsById.get(reply.suggested_campaign_id) ?? null)
+          : null,
         isMine: Boolean(visitorId && reply.author_id === visitorId),
         createdAt: reply.created_at,
       })),
@@ -86,9 +118,42 @@ export async function POST(
       parentId = parent.parent_id ?? parent.id;
     }
 
+    let suggestedProduct: {
+      id: string;
+      name: string;
+      slug: string;
+      imageUrl: string | null;
+      href: string;
+    } | null = null;
+    if (parsed.data.suggestedCampaignId) {
+      const { data: campaign } = await admin
+        .from("campaigns")
+        .select("id, name, slug, image_url")
+        .eq("id", parsed.data.suggestedCampaignId)
+        .eq("status", "active")
+        .maybeSingle();
+      if (!campaign) {
+        return NextResponse.json({ message: "That product is no longer listed." }, { status: 404 });
+      }
+      suggestedProduct = {
+        id: campaign.id,
+        name: campaign.name,
+        slug: campaign.slug,
+        imageUrl: campaign.image_url,
+        href: `/campaign/${campaign.slug}`,
+      };
+    }
+
     const { data, error } = await admin
       .from("rant_replies")
-      .insert({ rant_id: id, author_id: visitorId, parent_id: parentId, body: parsed.data.body })
+      .insert({
+        rant_id: id,
+        author_id: visitorId,
+        author_x_handle: parsed.data.authorXHandle,
+        parent_id: parentId,
+        suggested_campaign_id: parsed.data.suggestedCampaignId ?? null,
+        body: parsed.data.body,
+      })
       .select("id, parent_id, body, created_at")
       .single();
     if (error || !data) throw error;
@@ -105,6 +170,8 @@ export async function POST(
           id: data.id,
           parentId: data.parent_id,
           body: data.body,
+          authorXHandle: parsed.data.authorXHandle,
+          suggestedProduct,
           isMine: true,
           createdAt: data.created_at,
         },

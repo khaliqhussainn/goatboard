@@ -136,7 +136,9 @@ export type RantReply = {
   id: string;
   rant_id: string;
   author_id: string;
+  author_x_handle: string | null;
   parent_id: string | null;
+  suggested_campaign_id: string | null;
   body: string;
   created_at: string;
 };

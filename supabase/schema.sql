@@ -1289,15 +1289,26 @@ create table if not exists public.rant_replies (
   id uuid primary key default gen_random_uuid(),
   rant_id uuid not null references public.rants (id) on delete cascade,
   author_id uuid not null,
+  author_x_handle text check (author_x_handle is null or author_x_handle ~ '^[A-Za-z0-9_]{1,15}$'),
   parent_id uuid references public.rant_replies (id) on delete cascade,
+  suggested_campaign_id uuid references public.campaigns (id) on delete set null,
   body text not null check (char_length(body) between 1 and 500),
   created_at timestamptz not null default now()
 );
+
+alter table public.rant_replies
+  add column if not exists author_x_handle text
+  check (author_x_handle is null or author_x_handle ~ '^[A-Za-z0-9_]{1,15}$');
+alter table public.rant_replies
+  add column if not exists suggested_campaign_id uuid references public.campaigns (id) on delete set null;
 
 create index if not exists rant_replies_rant_idx
   on public.rant_replies (rant_id, created_at);
 create index if not exists rant_replies_parent_idx
   on public.rant_replies (parent_id, created_at);
+create index if not exists rant_replies_suggested_campaign_idx
+  on public.rant_replies (suggested_campaign_id)
+  where suggested_campaign_id is not null;
 
 create or replace function public.sync_rant_reply_count()
 returns trigger
