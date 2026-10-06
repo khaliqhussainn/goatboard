@@ -7,11 +7,8 @@ import {
   Lightbulb,
   MessageCircleWarning,
   PackageCheck,
-  Play,
-  ShieldCheck,
   Sparkles,
   UsersRound,
-  Video,
 } from "lucide-react";
 import { RantExperience } from "@/components/roast/rant-experience";
 import { getRants } from "@/lib/queries/rants";
@@ -169,50 +166,6 @@ export default async function RoastPage({
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{body}</p>
               </article>
             ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="px-4 py-12 sm:px-6 sm:py-16">
-        <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-black/10 bg-[#fff7f3] p-5 sm:p-7">
-          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch">
-            <div className="flex flex-col">
-              <span className="inline-flex w-fit items-center gap-2 rounded-full bg-[#ffd4d0] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em]">
-                <Video className="size-3.5" /> Example roast: Eagle Eye Security
-              </span>
-              <h2 className="mt-4 text-3xl font-black leading-[1] tracking-[-0.045em] sm:text-4xl">
-                “You built an entire SaaS and secured it with hopes and prayers?”
-              </h2>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                A sample of how audience frustration becomes a funny, effective promotional roast.
-              </p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-3 lg:mt-auto">
-                {[
-                  { title: "The cry", body: "Getting hacked, losing accounts, and security feeling too expensive.", icon: MessageCircleWarning },
-                  { title: "The roast", body: "Months of building, then production is protected by one forgotten password.", icon: Flame },
-                  { title: "The solution", body: "Eagle Eye makes security simple for indie teams.", icon: ShieldCheck },
-                ].map(({ title, body, icon: Icon }) => (
-                  <div key={title} className="rounded-xl border border-black/5 bg-white p-3">
-                    <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.1em]"><Icon className="size-3.5" /> {title}</p>
-                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative flex min-h-72 items-center justify-center overflow-hidden rounded-2xl bg-[#07111e] text-white sm:min-h-96">
-              <div className="absolute inset-0 opacity-35 [background-image:radial-gradient(circle_at_65%_35%,#ff6254_0,transparent_26%),linear-gradient(135deg,transparent_35%,#153047_100%)]" />
-              <ShieldCheck className="absolute left-8 top-8 size-16 text-white/10 sm:size-24" />
-              <div className="relative z-10 text-center">
-                <button type="button" aria-label="Play Eagle Eye Security example" className="mx-auto flex size-20 items-center justify-center rounded-full border border-white/80 bg-black/25 backdrop-blur-sm transition-transform hover:scale-105">
-                  <Play className="ml-1 size-8 fill-white text-white" />
-                </button>
-                <p className="mt-5 text-sm font-black uppercase tracking-[0.18em]">Eagle Eye Security</p>
-                <p className="mt-1 text-xs text-white/60">GOAT Rant example video</p>
-              </div>
-              <p className="absolute right-6 top-7 -rotate-6 text-right text-lg font-black leading-tight sm:text-2xl">Hopes<br />and prayers?</p>
-              <span className="absolute bottom-5 right-5 rounded-full bg-white/10 px-3 py-1 text-xs font-bold">1:28</span>
-            </div>
           </div>
         </div>
       </section>
