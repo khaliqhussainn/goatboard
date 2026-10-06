@@ -38,6 +38,15 @@ const FEATURED_ON = [
     height: 54,
     rel: "noopener noreferrer",
   },
+  {
+    name: "PostYourStartup",
+    href: "https://postyourstartup.co/startup/goatboard?ref=badge",
+    src: "https://postyourstartup.co/api/badge/goatboard?theme=light",
+    alt: "Featured on PostYourStartup",
+    width: 212,
+    height: 55,
+    rel: "noopener noreferrer",
+  },
 ];
 
 /**
