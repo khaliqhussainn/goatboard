@@ -15,7 +15,8 @@ import {
   ScanSearch,
   TriangleAlert,
 } from "lucide-react";
-import { UiReviewCheckoutDialog } from "@/components/ui-review/ui-review-checkout-dialog";
+import { AbstractBackdrop } from "@/components/layout/abstract-backdrop";
+import { UiReviewPlanCard } from "@/components/ui-review/ui-review-plan-card";
 import { UI_REVIEW_PLANS } from "@/lib/ui-review";
 
 export const metadata: Metadata = {
@@ -73,7 +74,6 @@ const PLANS = [
   {
     key: "landing",
     name: "Landing Page Review",
-    price: `$${UI_REVIEW_PLANS.landing.priceUsd}`,
     priceUsd: UI_REVIEW_PLANS.landing.priceUsd,
     popular: false,
     features: [
@@ -86,7 +86,6 @@ const PLANS = [
   {
     key: "product",
     name: "Full Product Review",
-    price: `$${UI_REVIEW_PLANS.product.priceUsd}`,
     priceUsd: UI_REVIEW_PLANS.product.priceUsd,
     popular: true,
     features: [
@@ -99,7 +98,6 @@ const PLANS = [
   {
     key: "design",
     name: "Review + Design Suggestions",
-    price: `$${UI_REVIEW_PLANS.design.priceUsd}`,
     priceUsd: UI_REVIEW_PLANS.design.priceUsd,
     popular: false,
     features: [
@@ -289,7 +287,8 @@ function ReportPage({ type }: { type: "cover" | "summary" | "working" | "improve
 
 export default function UiReviewPage() {
   return (
-    <div className="bg-[#fbfaf7] text-black">
+    <div className="on-backdrop text-black">
+      <AbstractBackdrop />
       <main>
         <section className="mx-auto grid max-w-6xl items-center gap-8 px-4 pb-10 pt-12 sm:px-6 sm:pb-14 lg:grid-cols-[0.88fr_1.12fr] lg:gap-10 lg:pt-14">
           <div className="flex flex-col items-start">
@@ -396,46 +395,21 @@ export default function UiReviewPage() {
           </div>
         </section>
 
-        <section id="pricing" className="scroll-mt-24 px-4 pb-12 sm:px-6 sm:pb-16">
-          <div className="mx-auto max-w-6xl rounded-3xl bg-accent-yellow/25 p-5 sm:p-7">
-            <div className="text-center">
-              <SectionEyebrow>Pick a plan</SectionEyebrow>
-              <h2 className="mt-1 text-3xl font-black tracking-[-0.04em] sm:text-4xl">
-                Simple pricing for founders
-              </h2>
-            </div>
+        <section id="pricing" className="mx-auto max-w-6xl scroll-mt-24 px-4 py-12 sm:px-6 sm:py-16">
+          <div className="flex flex-col items-start gap-3">
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#dceeff] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[#245b89]">
+              <MousePointer2 className="size-3.5" /> Pick a plan
+            </span>
+            <h2 className="text-3xl font-black tracking-[-0.04em] sm:text-4xl">
+              Simple pricing for founders
+            </h2>
+            <p className="max-w-lg text-sm leading-relaxed text-muted-foreground">
+              Choose how deep you want the review to go. Every plan includes a practical PDF report you can act on.
+            </p>
+          </div>
 
-            <div className="mt-6 grid gap-4 lg:grid-cols-3">
-              {PLANS.map((plan) => (
-                <article
-                  key={plan.key}
-                  className={`relative flex flex-col rounded-2xl border bg-white p-5 ${
-                    plan.popular ? "border-[#efbd22]" : "border-black/5"
-                  }`}
-                >
-                  {plan.popular && (
-                    <span className="absolute right-4 top-4 rounded-full bg-[#f2bd1d] px-3 py-1 text-[10px] font-black">
-                      Most Popular
-                    </span>
-                  )}
-                  <h3 className="pr-24 text-lg font-black">{plan.name}</h3>
-                  <p className="mt-1 text-3xl font-black">{plan.price}</p>
-                  <ul className="mt-4 space-y-2">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2 text-sm text-muted-foreground">
-                        <Check className="mt-0.5 size-4 shrink-0 text-black" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <UiReviewCheckoutDialog
-                    planKey={plan.key}
-                    planName={plan.name}
-                    priceUsd={plan.priceUsd}
-                  />
-                </article>
-              ))}
-            </div>
+          <div className="mt-10 grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {PLANS.map((plan) => <UiReviewPlanCard key={plan.key} plan={plan} />)}
           </div>
         </section>
 

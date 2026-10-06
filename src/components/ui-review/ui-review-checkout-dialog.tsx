@@ -16,15 +16,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { UiReviewPlanKey } from "@/lib/ui-review";
 import { uiReviewCheckoutSchema } from "@/lib/validation";
+import { cn } from "@/lib/utils";
 
 export function UiReviewCheckoutDialog({
   planKey,
   planName,
   priceUsd,
+  triggerClassName,
+  triggerLabel = "Get Started",
 }: {
   planKey: UiReviewPlanKey;
   planName: string;
   priceUsd: number;
+  triggerClassName?: string;
+  triggerLabel?: string;
 }) {
   const [productUrl, setProductUrl] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
@@ -83,9 +88,12 @@ export function UiReviewCheckoutDialog({
       <DialogTrigger asChild>
         <button
           type="button"
-          className="mt-6 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-black px-5 text-sm font-extrabold text-white transition-transform hover:-translate-y-0.5 lg:mt-auto lg:translate-y-1"
+          className={cn(
+            "inline-flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-base font-bold transition-colors",
+            triggerClassName ?? "bg-black text-white hover:opacity-85",
+          )}
         >
-          Get Started <ArrowRight className="size-4" />
+          {triggerLabel} <ArrowRight className="size-4" />
         </button>
       </DialogTrigger>
 
