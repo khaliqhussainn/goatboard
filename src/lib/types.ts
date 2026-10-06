@@ -132,6 +132,15 @@ export type RantSolution = {
   created_at: string;
 };
 
+export type RantReply = {
+  id: string;
+  rant_id: string;
+  author_id: string;
+  parent_id: string | null;
+  body: string;
+  created_at: string;
+};
+
 export type Vote = {
   id: string;
   campaign_id: string;
@@ -344,6 +353,12 @@ export interface Database {
         Row: RantSolution;
         Insert: Partial<RantSolution> & Pick<RantSolution, "rant_id" | "campaign_id" | "owner_id">;
         Update: Partial<RantSolution>;
+        Relationships: [];
+      };
+      rant_replies: {
+        Row: RantReply;
+        Insert: Partial<RantReply> & Pick<RantReply, "rant_id" | "author_id" | "body">;
+        Update: Partial<RantReply>;
         Relationships: [];
       };
       votes: {

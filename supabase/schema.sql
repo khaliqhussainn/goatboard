@@ -1285,6 +1285,42 @@ create table if not exists public.rant_solutions (
 create index if not exists rant_solutions_campaign_idx
   on public.rant_solutions (campaign_id);
 
+create table if not exists public.rant_replies (
+  id uuid primary key default gen_random_uuid(),
+  rant_id uuid not null references public.rants (id) on delete cascade,
+  author_id uuid not null,
+  parent_id uuid references public.rant_replies (id) on delete cascade,
+  body text not null check (char_length(body) between 1 and 500),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists rant_replies_rant_idx
+  on public.rant_replies (rant_id, created_at);
+create index if not exists rant_replies_parent_idx
+  on public.rant_replies (parent_id, created_at);
+
+create or replace function public.sync_rant_reply_count()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+begin
+  if tg_op = 'INSERT' then
+    update public.rants set reply_count = reply_count + 1, updated_at = now() where id = new.rant_id;
+    return new;
+  end if;
+
+  update public.rants set reply_count = greatest(0, reply_count - 1), updated_at = now() where id = old.rant_id;
+  return old;
+end;
+$fn$;
+
+drop trigger if exists rant_replies_count on public.rant_replies;
+create trigger rant_replies_count
+  after insert or delete on public.rant_replies
+  for each row execute function public.sync_rant_reply_count();
+
 create or replace function public.sync_rant_same_count()
 returns trigger
 language plpgsql
@@ -1310,6 +1346,7 @@ create trigger rant_same_reactions_count
 alter table public.rants enable row level security;
 alter table public.rant_same_reactions enable row level security;
 alter table public.rant_solutions enable row level security;
+alter table public.rant_replies enable row level security;
 
 drop policy if exists "rants are publicly readable" on public.rants;
 create policy "rants are publicly readable" on public.rants for select using (true);
@@ -1318,6 +1355,7 @@ drop policy if exists "rant solutions are publicly readable" on public.rant_solu
 create policy "rant solutions are publicly readable" on public.rant_solutions for select using (true);
 
 -- Reactions stay private because their visitor ids are implementation data.
+-- Replies are also served through the API so their author ids stay private.
 -- There are deliberately no public write policies for any of these tables.
 
 -- ---------------------------------------------------------------------------

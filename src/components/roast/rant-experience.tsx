@@ -6,11 +6,14 @@ import {
   BadgeCheck,
   Check,
   Flame,
+  Loader2,
   MessageCircle,
   PackageCheck,
   Plus,
+  Reply,
   Repeat2,
   ShieldCheck,
+  UserRound,
 } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -24,10 +27,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { RANT_CATEGORIES, type PublicRant, type RantProduct } from "@/lib/rants";
+import {
+  RANT_CATEGORIES,
+  type PublicRant,
+  type PublicRantReply,
+  type RantProduct,
+} from "@/lib/rants";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = ["All topics", ...RANT_CATEGORIES];
+
+function formatReplyDate(value: string) {
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(
+    new Date(value),
+  );
+}
 
 export function RantExperience({
   initialRants,
@@ -47,6 +61,12 @@ export function RantExperience({
   const [newRant, setNewRant] = useState("");
   const [newCategory, setNewCategory] = useState("Product");
   const [purchaseContext, setPurchaseContext] = useState<PublicRant | null>(initialPurchaseContext);
+  const [threadRant, setThreadRant] = useState<PublicRant | null>(null);
+  const [threadReplies, setThreadReplies] = useState<PublicRantReply[]>([]);
+  const [threadLoading, setThreadLoading] = useState(false);
+  const [replyPending, setReplyPending] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [replyingTo, setReplyingTo] = useState<PublicRantReply | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const visibleRants = useMemo(() => {
@@ -141,6 +161,68 @@ export function RantExperience({
     window.history.replaceState(null, "", `/roast?rant=${encodeURIComponent(rant.id)}#purchase`);
     window.setTimeout(() => document.getElementById("purchase")?.scrollIntoView({ behavior: "smooth" }), 0);
   }
+
+  async function openReplyThread(rant: PublicRant) {
+    setThreadRant(rant);
+    setThreadReplies([]);
+    setReplyText("");
+    setReplyingTo(null);
+    setThreadLoading(true);
+
+    const response = await fetch(`/api/rants/${rant.id}/replies`);
+    const payload = (await response.json().catch(() => null)) as
+      | { replies?: PublicRantReply[]; message?: string }
+      | null;
+    setThreadLoading(false);
+    if (!response.ok || !payload?.replies) {
+      toast.error(payload?.message ?? "Couldn't load the replies.");
+      return;
+    }
+    setThreadReplies(payload.replies);
+  }
+
+  async function submitReply() {
+    if (!threadRant) return;
+    const body = replyText.trim();
+    if (!body) {
+      toast.error("Write a reply first.");
+      return;
+    }
+
+    setReplyPending(true);
+    const response = await fetch(`/api/rants/${threadRant.id}/replies`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ body, parentId: replyingTo?.id ?? null }),
+    });
+    const payload = (await response.json().catch(() => null)) as
+      | { reply?: PublicRantReply; replyCount?: number | null; message?: string }
+      | null;
+    setReplyPending(false);
+    if (!response.ok || !payload?.reply) {
+      toast.error(payload?.message ?? "Couldn't post your reply.");
+      return;
+    }
+
+    setThreadReplies((current) => [...current, payload.reply!]);
+    setReplyText("");
+    setReplyingTo(null);
+    setRants((current) =>
+      current.map((rant) =>
+        rant.id === threadRant.id
+          ? { ...rant, replies: payload.replyCount ?? rant.replies + 1 }
+          : rant,
+      ),
+    );
+    setThreadRant((current) =>
+      current
+        ? { ...current, replies: payload.replyCount ?? current.replies + 1 }
+        : current,
+    );
+    toast.success("Reply posted.");
+  }
+
+  const topLevelReplies = threadReplies.filter((reply) => !reply.parentId);
 
   return (
     <>
@@ -308,9 +390,13 @@ export function RantExperience({
                     >
                       <Repeat2 className="size-3.5" /> {rant.sameCount} SAME
                     </button>
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <button
+                      type="button"
+                      onClick={() => void openReplyThread(rant)}
+                      className="inline-flex h-8 items-center gap-1.5 rounded-full px-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-black/5 hover:text-black"
+                    >
                       <MessageCircle className="size-3.5" /> {rant.replies} replies
-                    </span>
+                    </button>
                     {rant.sameCount >= 40 && (
                       <button
                         type="button"
@@ -367,6 +453,129 @@ export function RantExperience({
           <Button onClick={attachProduct} disabled={isPending || !selectedProductId} className="rounded-full">
             <PackageCheck className="size-4" /> Add product
           </Button>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(threadRant)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setThreadRant(null);
+            setThreadReplies([]);
+            setReplyText("");
+            setReplyingTo(null);
+          }
+        }}
+      >
+        <DialogContent className="max-h-[min(48rem,calc(100vh-2rem))] max-w-2xl grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0">
+          <div className="border-b border-black/10 p-5 pr-12 sm:p-6 sm:pr-14">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-black tracking-[-0.035em]">Rant replies</DialogTitle>
+              <DialogDescription>Discuss the problem and keep the conversation useful.</DialogDescription>
+            </DialogHeader>
+            {threadRant && (
+              <div className="mt-4 rounded-2xl bg-[#fff0ee] p-4 ring-1 ring-inset ring-[#ff8b81]/25">
+                <p className="text-sm font-bold leading-relaxed">“{threadRant.body}”</p>
+                <p className="mt-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#d73a2c]">
+                  {threadRant.replies} {threadRant.replies === 1 ? "reply" : "replies"}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="min-h-0 overflow-y-auto px-5 py-4 sm:px-6">
+            {threadLoading ? (
+              <div className="flex min-h-40 items-center justify-center text-sm font-semibold text-muted-foreground">
+                <Loader2 className="mr-2 size-4 animate-spin" /> Loading replies
+              </div>
+            ) : topLevelReplies.length === 0 ? (
+              <div className="flex min-h-40 flex-col items-center justify-center text-center">
+                <MessageCircle className="size-8 text-[#ff6a5d]" />
+                <p className="mt-3 font-black">No replies yet.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Start the conversation with something useful.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {topLevelReplies.map((reply) => {
+                  const children = threadReplies.filter((item) => item.parentId === reply.id);
+                  return (
+                    <article key={reply.id} className="rounded-2xl border border-black/10 bg-[#fffdf9] p-4">
+                      <div className="flex items-center gap-2">
+                        <span className="flex size-7 items-center justify-center rounded-full bg-[#ffe6b6]">
+                          <UserRound className="size-3.5" />
+                        </span>
+                        <p className="text-xs font-black">{reply.isMine ? "You" : "Community member"}</p>
+                        <span className="text-[11px] text-muted-foreground">{formatReplyDate(reply.createdAt)}</span>
+                      </div>
+                      <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{reply.body}</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReplyingTo(reply);
+                          window.setTimeout(() => document.getElementById("rant-reply-body")?.focus(), 0);
+                        }}
+                        className="mt-3 inline-flex items-center gap-1.5 text-xs font-black text-muted-foreground hover:text-black"
+                      >
+                        <Reply className="size-3.5" /> Reply
+                      </button>
+
+                      {children.length > 0 && (
+                        <div className="mt-4 space-y-3 border-l-2 border-[#ffd0cb] pl-3 sm:pl-4">
+                          {children.map((child) => (
+                            <div key={child.id} className="rounded-xl bg-white p-3 ring-1 ring-inset ring-black/5">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="flex size-6 items-center justify-center rounded-full bg-[#eef1f4]">
+                                  <UserRound className="size-3" />
+                                </span>
+                                <p className="text-xs font-black">{child.isMine ? "You" : "Community member"}</p>
+                                <span className="text-[11px] text-muted-foreground">{formatReplyDate(child.createdAt)}</span>
+                              </div>
+                              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{child.body}</p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setReplyingTo(child);
+                                  window.setTimeout(() => document.getElementById("rant-reply-body")?.focus(), 0);
+                                }}
+                                className="mt-2 inline-flex items-center gap-1.5 text-xs font-black text-muted-foreground hover:text-black"
+                              >
+                                <Reply className="size-3.5" /> Reply to thread
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-black/10 bg-white p-4 sm:p-5">
+            {replyingTo && (
+              <div className="mb-2 flex items-center justify-between gap-3 rounded-lg bg-[#fff0ee] px-3 py-2 text-xs">
+                <span className="font-bold">Replying to {replyingTo.isMine ? "your comment" : "a community member"}</span>
+                <button type="button" onClick={() => setReplyingTo(null)} className="font-black text-[#d73a2c]">Cancel</button>
+              </div>
+            )}
+            <label htmlFor="rant-reply-body" className="sr-only">Write a reply</label>
+            <textarea
+              id="rant-reply-body"
+              value={replyText}
+              maxLength={500}
+              onChange={(event) => setReplyText(event.target.value)}
+              placeholder={replyingTo ? "Write your response..." : "Add a useful reply..."}
+              className="min-h-20 w-full resize-none rounded-xl border border-black/15 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-[#ff6a5d]/35"
+            />
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <span className="text-xs text-muted-foreground">{replyText.length}/500</span>
+              <Button onClick={() => void submitReply()} disabled={replyPending || threadLoading} className="rounded-full px-5">
+                {replyPending ? <Loader2 className="size-4 animate-spin" /> : <Reply className="size-4" />}
+                {replyPending ? "Posting..." : "Post reply"}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

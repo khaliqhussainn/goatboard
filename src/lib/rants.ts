@@ -28,3 +28,11 @@ export type PublicRant = {
   products: RantProduct[];
   createdAt: string;
 };
+
+export type PublicRantReply = {
+  id: string;
+  parentId: string | null;
+  body: string;
+  isMine: boolean;
+  createdAt: string;
+};
