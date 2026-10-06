@@ -134,6 +134,43 @@ async function handleVideoAdOrder(videoAdId: string, orderId: string) {
   return true;
 }
 
+/** Marks a GOAT Rant brief paid while keeping webhook retries idempotent. */
+async function handleGoatRantOrder(orderRowId: string, providerOrderId: string) {
+  const admin = createAdminClient();
+  const { data: order, error: fetchError } = await admin
+    .from("goat_rant_orders")
+    .select("id, status, provider_order_id")
+    .eq("id", orderRowId)
+    .maybeSingle();
+
+  if (fetchError || !order) {
+    console.error("GOAT Rant webhook: order row not found", orderRowId, fetchError);
+    return false;
+  }
+
+  if (order.status === "paid") {
+    return order.provider_order_id === providerOrderId;
+  }
+
+  const { data: paidOrder, error: updateError } = await admin
+    .from("goat_rant_orders")
+    .update({
+      provider_order_id: providerOrderId,
+      status: "paid",
+      paid_at: new Date().toISOString(),
+    })
+    .eq("id", orderRowId)
+    .eq("status", "pending")
+    .select("id")
+    .maybeSingle();
+
+  if (updateError || !paidOrder) {
+    console.error("GOAT Rant webhook: payment update failed", orderRowId, updateError);
+    return false;
+  }
+  return true;
+}
+
 /**
  * Confirms a paid Get Listed order.
  *
@@ -306,6 +343,8 @@ export async function POST(request: Request) {
     }
   } else if (customData.video_ad_id) {
     ok = await handleVideoAdOrder(customData.video_ad_id, orderId);
+  } else if (customData.goat_rant_order_id) {
+    ok = await handleGoatRantOrder(customData.goat_rant_order_id, orderId);
   } else if (customData.campaign_id) {
     ok = await handleBoostOrder(customData.campaign_id, orderId, total / 100, currency ?? "USD");
   }

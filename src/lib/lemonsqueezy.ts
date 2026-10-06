@@ -324,6 +324,42 @@ export async function createVideoAdCheckout({
   return { url, variantId };
 }
 
+/** The fixed-price Lemon Squeezy variant for the $149 GOAT Rant service. */
+export function resolveGoatRantVariantId(): string {
+  const variantId = process.env.LEMONSQUEEZY_GOAT_RANT_VARIANT_ID?.trim();
+
+  if (!variantId) {
+    throw new Error(
+      "LEMONSQUEEZY_GOAT_RANT_VARIANT_ID is not set - create the $149 GOAT Rant product " +
+        "in Lemon Squeezy and put its variant id there.",
+    );
+  }
+  return variantId;
+}
+
+export async function createGoatRantCheckout({
+  orderId,
+  productUrl,
+  redirectUrl,
+}: {
+  orderId: string;
+  productUrl: string;
+  redirectUrl: string;
+}): Promise<{ url: string; variantId: string }> {
+  const variantId = resolveGoatRantVariantId();
+  const productHost = new URL(productUrl).hostname.replace(/^www\./, "");
+
+  const url = await createCheckoutSession({
+    variantId,
+    customData: { goat_rant_order_id: orderId },
+    productName: `GOAT Rant for ${productHost}`,
+    productDescription: "A custom promotional roast video that positions your product as the solution.",
+    redirectUrl,
+  });
+
+  return { url, variantId };
+}
+
 /**
  * Verifies the X-Signature header on an incoming webhook using the raw body.
  *

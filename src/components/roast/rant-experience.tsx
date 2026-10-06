@@ -23,6 +23,7 @@ import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
 import { XHandleLink } from "@/components/campaign/x-handle-link";
+import { GoatRantCheckoutDialog } from "@/components/roast/goat-rant-checkout-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -82,6 +83,7 @@ export function RantExperience({
   const [newRant, setNewRant] = useState("");
   const [newCategory, setNewCategory] = useState("Product");
   const [purchaseContext, setPurchaseContext] = useState<PublicRant | null>(initialPurchaseContext);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [threadRant, setThreadRant] = useState<PublicRant | null>(null);
   const [threadReplies, setThreadReplies] = useState<PublicRantReply[]>([]);
   const [threadLoading, setThreadLoading] = useState(false);
@@ -189,8 +191,8 @@ export function RantExperience({
 
   function chooseForRoast(rant: PublicRant) {
     setPurchaseContext(rant);
-    window.history.replaceState(null, "", `/roast?rant=${encodeURIComponent(rant.id)}#purchase`);
-    window.setTimeout(() => document.getElementById("purchase")?.scrollIntoView({ behavior: "smooth" }), 0);
+    window.history.replaceState(null, "", `/roast?rant=${encodeURIComponent(rant.id)}`);
+    setCheckoutOpen(true);
   }
 
   async function openReplyThread(rant: PublicRant) {
@@ -815,20 +817,26 @@ export function RantExperience({
                 <li key={item} className="flex items-start gap-2"><Check className="mt-0.5 size-4 shrink-0 text-black" /> {item}</li>
               ))}
             </ul>
-            <Link
-              href="https://x.com/mrymonx"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => setCheckoutOpen(true)}
               className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-black px-6 text-sm font-black text-white hover:opacity-85"
             >
               Start my GOAT Rant <ArrowRight className="size-4" />
-            </Link>
+            </button>
             <p className="mt-3 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
               <ShieldCheck className="mt-0.5 size-4 shrink-0 text-black" /> We roast frustrating patterns and problems, never protected characteristics or individual users.
             </p>
           </div>
         </div>
       </section>
+
+      <GoatRantCheckoutDialog
+        rant={purchaseContext ? { id: purchaseContext.id, body: purchaseContext.body } : null}
+        open={checkoutOpen}
+        onOpenChange={setCheckoutOpen}
+        trigger={null}
+      />
     </>
   );
 }

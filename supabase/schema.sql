@@ -1576,3 +1576,39 @@ $$;
 -- Only the service-role key reaches this, through /api/admin/video-ads/[id].
 revoke all on function public.admin_activate_video_ad(uuid) from public;
 grant execute on function public.admin_activate_video_ad(uuid) to service_role;
+
+-- ---------------------------------------------------------------------------
+-- goat_rant_orders  (GOAT Rant service briefs and payment state)
+--
+-- The brief is saved before checkout so the product link, requested focus,
+-- and contact handle stay attached to the Lemon Squeezy order. There are no
+-- public policies: creation and payment updates both use service-role routes.
+-- ---------------------------------------------------------------------------
+create table if not exists public.goat_rant_orders (
+  id uuid primary key default gen_random_uuid(),
+  product_url text not null,
+  video_notes text check (video_notes is null or char_length(video_notes) <= 2000),
+  x_handle text not null check (x_handle ~ '^[A-Za-z0-9_]{1,15}$'),
+  rant_id uuid references public.rants (id) on delete set null,
+  amount numeric(10, 2) not null check (amount > 0),
+  currency text not null default 'USD',
+  provider text not null default 'lemonsqueezy',
+  provider_variant_id text,
+  provider_order_id text unique,
+  status text not null default 'pending'
+    check (status in ('pending', 'paid', 'cancelled', 'refunded')),
+  paid_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists goat_rant_orders_status_idx
+  on public.goat_rant_orders (status, created_at desc);
+
+alter table public.goat_rant_orders enable row level security;
+
+drop trigger if exists goat_rant_orders_touch_updated_at on public.goat_rant_orders;
+create trigger goat_rant_orders_touch_updated_at
+  before update on public.goat_rant_orders
+  for each row
+  execute function public.touch_updated_at();

@@ -220,6 +220,31 @@ export const videoCheckoutSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// GOAT Rant (paid promotional video service)
+// ---------------------------------------------------------------------------
+
+export const GOAT_RANT_PRICE_USD = 149;
+
+export const goatRantCheckoutSchema = z.object({
+  product_url: z
+    .string()
+    .trim()
+    .min(1, "A product link is required.")
+    .max(2048, "Keep the product link under 2048 characters.")
+    .refine(isSafeUrl, "Enter a valid http(s) product link."),
+  video_notes: z
+    .string()
+    .trim()
+    .max(2000, "Keep your video notes under 2000 characters.")
+    .optional()
+    .nullable(),
+  x_handle: xHandleSchema,
+  rant_id: z.string().uuid().optional().nullable(),
+});
+
+export type GoatRantCheckoutInput = z.infer<typeof goatRantCheckoutSchema>;
+
+// ---------------------------------------------------------------------------
 // Get Listed (paid startup distribution service)
 //
 // The client sends a package key and never a price. Every amount charged is

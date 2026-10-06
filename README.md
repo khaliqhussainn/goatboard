@@ -69,6 +69,9 @@ in `supabase/schema.sql` — the server route is the trust boundary, not RLS.
      "pay what you want"). Required for the video ad spot's checkout to work;
      the homepage still renders without it, just with the video checkout
      route failing.
+   - `LEMONSQUEEZY_GOAT_RANT_VARIANT_ID` — the variant id for the fixed $149
+     "GOAT Rant" service. Required for the GOAT Rant brief popup to open a
+     Lemon Squeezy checkout.
    - `ADMIN_PASSWORD` for the `/admin` moderation area
 3. In Lemon Squeezy, point a webhook at `/api/webhooks/lemonsqueezy`
    subscribed to the `order_created` event.

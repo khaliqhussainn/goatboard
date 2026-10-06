@@ -237,6 +237,25 @@ export type CurrentVideoAd = {
   ends_at: string;
 };
 
+export type GoatRantOrderStatus = "pending" | "paid" | "cancelled" | "refunded";
+
+export type GoatRantOrder = {
+  id: string;
+  product_url: string;
+  video_notes: string | null;
+  x_handle: string;
+  rant_id: string | null;
+  amount: number;
+  currency: string;
+  provider: string;
+  provider_variant_id: string | null;
+  provider_order_id: string | null;
+  status: GoatRantOrderStatus;
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 // --- Get Listed (paid distribution service) --------------------------------
 // Separate from the billboard Campaign type above: these are never ranked,
 // voted on, or boosted.
@@ -394,6 +413,13 @@ export interface Database {
         Insert: Partial<VideoAd> &
           Pick<VideoAd, "name" | "destination_url" | "video_url" | "amount">;
         Update: Partial<VideoAd>;
+        Relationships: [];
+      };
+      goat_rant_orders: {
+        Row: GoatRantOrder;
+        Insert: Partial<GoatRantOrder> &
+          Pick<GoatRantOrder, "product_url" | "x_handle" | "amount">;
+        Update: Partial<GoatRantOrder>;
         Relationships: [];
       };
       get_listed_campaigns: {

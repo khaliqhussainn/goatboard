@@ -10,6 +10,7 @@ import {
   Sparkles,
   UsersRound,
 } from "lucide-react";
+import { GoatRantCheckoutDialog } from "@/components/roast/goat-rant-checkout-dialog";
 import { RantExperience } from "@/components/roast/rant-experience";
 import { getRants } from "@/lib/queries/rants";
 import type { RantProduct } from "@/lib/rants";
@@ -112,9 +113,7 @@ export default async function RoastPage({
               I turn the problem your audience cannot stop complaining about into a brutally honest promotional roast. Then your product arrives as the solution.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <a href="#purchase" className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-black px-7 text-sm font-black text-white hover:opacity-85">
-                Get your audience roasted <ArrowRight className="size-4" />
-              </a>
+              <GoatRantCheckoutDialog />
               <a href="#rant-board" className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-black/15 bg-white px-6 text-sm font-black hover:bg-black/5">
                 Explore the Rant Board
               </a>
@@ -183,9 +182,13 @@ export default async function RoastPage({
             <h2 className="mt-2 text-4xl font-black leading-[0.94] tracking-[-0.05em] sm:text-5xl">
               Your audience has the complaint. Your product has the answer.
             </h2>
-            <a href="#purchase" className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-black px-6 text-sm font-black text-white hover:opacity-85">
-              Get roasted <ArrowRight className="size-4" />
-            </a>
+            <GoatRantCheckoutDialog
+              trigger={(
+                <button type="button" className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-black px-6 text-sm font-black text-white hover:opacity-85">
+                  Get roasted <ArrowRight className="size-4" />
+                </button>
+              )}
+            />
           </div>
           <Image src="/mascots/goat-rant.png" alt="" width={2048} height={2048} className="absolute -bottom-24 right-0 hidden h-80 w-auto sm:block" />
           <Lightbulb className="absolute right-[28%] top-8 hidden size-9 text-[#ffb61f] lg:block" />
