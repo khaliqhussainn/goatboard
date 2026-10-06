@@ -178,6 +178,7 @@ import type {
   GetListedRequirementType,
   GetListedSubmissionStatus,
 } from "@/lib/get-listed";
+import type { UiReviewPlanKey } from "@/lib/ui-review";
 
 export type AdSlotStatus = "pending" | "paid";
 export type AdSlotDuration = 7 | 14 | 30;
@@ -251,6 +252,25 @@ export type GoatRantOrder = {
   provider_variant_id: string | null;
   provider_order_id: string | null;
   status: GoatRantOrderStatus;
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type UiReviewOrderStatus = "pending" | "paid" | "cancelled" | "refunded";
+
+export type UiReviewOrder = {
+  id: string;
+  plan_key: UiReviewPlanKey;
+  product_url: string;
+  review_notes: string | null;
+  x_handle: string;
+  amount: number;
+  currency: string;
+  provider: string;
+  provider_variant_id: string | null;
+  provider_order_id: string | null;
+  status: UiReviewOrderStatus;
   paid_at: string | null;
   created_at: string;
   updated_at: string;
@@ -420,6 +440,13 @@ export interface Database {
         Insert: Partial<GoatRantOrder> &
           Pick<GoatRantOrder, "product_url" | "x_handle" | "amount">;
         Update: Partial<GoatRantOrder>;
+        Relationships: [];
+      };
+      ui_review_orders: {
+        Row: UiReviewOrder;
+        Insert: Partial<UiReviewOrder> &
+          Pick<UiReviewOrder, "plan_key" | "product_url" | "x_handle" | "amount">;
+        Update: Partial<UiReviewOrder>;
         Relationships: [];
       };
       get_listed_campaigns: {

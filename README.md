@@ -72,6 +72,10 @@ in `supabase/schema.sql` — the server route is the trust boundary, not RLS.
    - `LEMONSQUEEZY_GOAT_RANT_VARIANT_ID` — the variant id for the fixed $149
      "GOAT Rant" service. Required for the GOAT Rant brief popup to open a
      Lemon Squeezy checkout.
+   - `LEMONSQUEEZY_UI_REVIEW_LANDING_VARIANT_ID`,
+     `LEMONSQUEEZY_UI_REVIEW_PRODUCT_VARIANT_ID`, and
+     `LEMONSQUEEZY_UI_REVIEW_DESIGN_VARIANT_ID` — the fixed-price Lemon
+     Squeezy variants for the $49, $99, and $149 UI Review tiers.
    - `ADMIN_PASSWORD` for the `/admin` moderation area
 3. In Lemon Squeezy, point a webhook at `/api/webhooks/lemonsqueezy`
    subscribed to the `order_created` event.

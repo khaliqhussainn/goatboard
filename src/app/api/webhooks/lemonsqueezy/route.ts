@@ -7,6 +7,7 @@ import { AD_SLOT_PRICING, POWER_PER_DOLLAR } from "@/lib/validation";
 import { allowedGetListedAmounts, isGetListedPackageKey } from "@/lib/get-listed";
 import { LISTING_PRICE_USD } from "@/lib/listing";
 import type { AdSlotDuration } from "@/lib/types";
+import { isUiReviewPlanKey, UI_REVIEW_PLANS } from "@/lib/ui-review";
 
 interface LemonSqueezyWebhookBody {
   meta: {
@@ -166,6 +167,51 @@ async function handleGoatRantOrder(orderRowId: string, providerOrderId: string) 
 
   if (updateError || !paidOrder) {
     console.error("GOAT Rant webhook: payment update failed", orderRowId, updateError);
+    return false;
+  }
+  return true;
+}
+
+/** Confirms the selected UI Review tier and records the paid order once. */
+async function handleUiReviewOrder(orderRowId: string, providerOrderId: string) {
+  const admin = createAdminClient();
+  const { data: order, error: fetchError } = await admin
+    .from("ui_review_orders")
+    .select("id, plan_key, amount, status, provider_order_id")
+    .eq("id", orderRowId)
+    .maybeSingle();
+
+  if (fetchError || !order) {
+    console.error("UI Review webhook: order row not found", orderRowId, fetchError);
+    return false;
+  }
+
+  if (!isUiReviewPlanKey(order.plan_key)) {
+    console.error("UI Review webhook: unknown plan", order.plan_key);
+    return false;
+  }
+  if (Number(order.amount) !== UI_REVIEW_PLANS[order.plan_key].priceUsd) {
+    console.error("UI Review webhook: stored price mismatch", orderRowId, order.amount);
+    return false;
+  }
+  if (order.status === "paid") {
+    return order.provider_order_id === providerOrderId;
+  }
+
+  const { data: paidOrder, error: updateError } = await admin
+    .from("ui_review_orders")
+    .update({
+      provider_order_id: providerOrderId,
+      status: "paid",
+      paid_at: new Date().toISOString(),
+    })
+    .eq("id", orderRowId)
+    .eq("status", "pending")
+    .select("id")
+    .maybeSingle();
+
+  if (updateError || !paidOrder) {
+    console.error("UI Review webhook: payment update failed", orderRowId, updateError);
     return false;
   }
   return true;
@@ -345,6 +391,8 @@ export async function POST(request: Request) {
     ok = await handleVideoAdOrder(customData.video_ad_id, orderId);
   } else if (customData.goat_rant_order_id) {
     ok = await handleGoatRantOrder(customData.goat_rant_order_id, orderId);
+  } else if (customData.ui_review_order_id) {
+    ok = await handleUiReviewOrder(customData.ui_review_order_id, orderId);
   } else if (customData.campaign_id) {
     ok = await handleBoostOrder(customData.campaign_id, orderId, total / 100, currency ?? "USD");
   }

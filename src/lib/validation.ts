@@ -4,6 +4,7 @@ import {
   GET_LISTED_REQUIREMENT_TYPES,
   GET_LISTED_SUBMISSION_STATUSES,
 } from "@/lib/get-listed";
+import { UI_REVIEW_PLAN_KEYS } from "@/lib/ui-review";
 
 const SAFE_URL_PROTOCOLS = ["http:", "https:"];
 
@@ -243,6 +244,25 @@ export const goatRantCheckoutSchema = z.object({
 });
 
 export type GoatRantCheckoutInput = z.infer<typeof goatRantCheckoutSchema>;
+
+export const uiReviewCheckoutSchema = z.object({
+  plan_key: z.enum(UI_REVIEW_PLAN_KEYS),
+  product_url: z
+    .string()
+    .trim()
+    .min(1, "A product link is required.")
+    .max(2048, "Keep the product link under 2048 characters.")
+    .refine(isSafeUrl, "Enter a valid http(s) product link."),
+  review_notes: z
+    .string()
+    .trim()
+    .max(2000, "Keep your review notes under 2000 characters.")
+    .optional()
+    .nullable(),
+  x_handle: xHandleSchema,
+});
+
+export type UiReviewCheckoutInput = z.infer<typeof uiReviewCheckoutSchema>;
 
 // ---------------------------------------------------------------------------
 // Get Listed (paid startup distribution service)

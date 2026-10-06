@@ -4,6 +4,7 @@ import { AD_SLOT_VARIANT_NAMES } from "@/lib/validation";
 import { getListedPackage, type GetListedPackageKey } from "@/lib/get-listed";
 import { LISTING_PRICE_USD, LISTING_VARIANT_ENV_VAR } from "@/lib/listing";
 import type { AdSlotDuration } from "@/lib/types";
+import { UI_REVIEW_PLANS, type UiReviewPlanKey } from "@/lib/ui-review";
 
 const LEMONSQUEEZY_API = "https://api.lemonsqueezy.com/v1";
 
@@ -354,6 +355,45 @@ export async function createGoatRantCheckout({
     customData: { goat_rant_order_id: orderId },
     productName: `GOAT Rant for ${productHost}`,
     productDescription: "A custom promotional roast video that positions your product as the solution.",
+    redirectUrl,
+  });
+
+  return { url, variantId };
+}
+
+export function resolveUiReviewVariantId(planKey: UiReviewPlanKey): string {
+  const plan = UI_REVIEW_PLANS[planKey];
+  const variantId = process.env[plan.variantEnvVar]?.trim();
+
+  if (!variantId) {
+    throw new Error(
+      `${plan.variantEnvVar} is not set - create the $${plan.priceUsd} "${plan.name}" ` +
+        "variant in Lemon Squeezy and put its id there.",
+    );
+  }
+  return variantId;
+}
+
+export async function createUiReviewCheckout({
+  orderId,
+  planKey,
+  productUrl,
+  redirectUrl,
+}: {
+  orderId: string;
+  planKey: UiReviewPlanKey;
+  productUrl: string;
+  redirectUrl: string;
+}): Promise<{ url: string; variantId: string }> {
+  const plan = UI_REVIEW_PLANS[planKey];
+  const variantId = resolveUiReviewVariantId(planKey);
+  const productHost = new URL(productUrl).hostname.replace(/^www\./, "");
+
+  const url = await createCheckoutSession({
+    variantId,
+    customData: { ui_review_order_id: orderId },
+    productName: `${plan.name} for ${productHost}`,
+    productDescription: "A practical GoatBoard UI review with prioritized recommendations.",
     redirectUrl,
   });
 

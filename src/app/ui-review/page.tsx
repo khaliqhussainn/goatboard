@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import {
   ArrowRight,
   Check,
@@ -16,14 +15,14 @@ import {
   ScanSearch,
   TriangleAlert,
 } from "lucide-react";
+import { UiReviewCheckoutDialog } from "@/components/ui-review/ui-review-checkout-dialog";
+import { UI_REVIEW_PLANS } from "@/lib/ui-review";
 
 export const metadata: Metadata = {
   title: "UI Review",
   description:
     "Get a clear, practical UI review with annotated screenshots and prioritized recommendations from a product designer.",
 };
-
-const CONTACT_URL = "https://x.com/mrymonx";
 
 const REVIEW_FEATURES = [
   {
@@ -74,7 +73,9 @@ const PLANS = [
   {
     key: "landing",
     name: "Landing Page Review",
-    price: "$49",
+    price: `$${UI_REVIEW_PLANS.landing.priceUsd}`,
+    priceUsd: UI_REVIEW_PLANS.landing.priceUsd,
+    popular: false,
     features: [
       "Detailed PDF report (8–12 pages)",
       "Full landing page review",
@@ -85,7 +86,8 @@ const PLANS = [
   {
     key: "product",
     name: "Full Product Review",
-    price: "$99",
+    price: `$${UI_REVIEW_PLANS.product.priceUsd}`,
+    priceUsd: UI_REVIEW_PLANS.product.priceUsd,
     popular: true,
     features: [
       "Detailed PDF report (12–20 pages)",
@@ -97,7 +99,9 @@ const PLANS = [
   {
     key: "design",
     name: "Review + Design Suggestions",
-    price: "$149",
+    price: `$${UI_REVIEW_PLANS.design.priceUsd}`,
+    priceUsd: UI_REVIEW_PLANS.design.priceUsd,
+    popular: false,
     features: [
       "Detailed PDF report (20+ pages)",
       "Full review + design recommendations",
@@ -105,7 +109,7 @@ const PLANS = [
       "Optional redesigned screen concepts",
     ],
   },
-];
+] as const;
 
 function SectionEyebrow({ children }: { children: React.ReactNode }) {
   return (
@@ -424,14 +428,11 @@ export default function UiReviewPage() {
                       </li>
                     ))}
                   </ul>
-                  <Link
-                    href={CONTACT_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-6 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-black px-5 text-sm font-extrabold text-white transition-transform hover:-translate-y-0.5 lg:mt-auto lg:translate-y-1"
-                  >
-                    Get Started <ArrowRight className="size-4" />
-                  </Link>
+                  <UiReviewCheckoutDialog
+                    planKey={plan.key}
+                    planName={plan.name}
+                    priceUsd={plan.priceUsd}
+                  />
                 </article>
               ))}
             </div>

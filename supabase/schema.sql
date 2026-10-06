@@ -1612,3 +1612,35 @@ create trigger goat_rant_orders_touch_updated_at
   before update on public.goat_rant_orders
   for each row
   execute function public.touch_updated_at();
+
+-- ---------------------------------------------------------------------------
+-- ui_review_orders  (UI Review briefs, selected tiers, and payment state)
+-- ---------------------------------------------------------------------------
+create table if not exists public.ui_review_orders (
+  id uuid primary key default gen_random_uuid(),
+  plan_key text not null check (plan_key in ('landing', 'product', 'design')),
+  product_url text not null,
+  review_notes text check (review_notes is null or char_length(review_notes) <= 2000),
+  x_handle text not null check (x_handle ~ '^[A-Za-z0-9_]{1,15}$'),
+  amount numeric(10, 2) not null check (amount > 0),
+  currency text not null default 'USD',
+  provider text not null default 'lemonsqueezy',
+  provider_variant_id text,
+  provider_order_id text unique,
+  status text not null default 'pending'
+    check (status in ('pending', 'paid', 'cancelled', 'refunded')),
+  paid_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists ui_review_orders_status_idx
+  on public.ui_review_orders (status, created_at desc);
+
+alter table public.ui_review_orders enable row level security;
+
+drop trigger if exists ui_review_orders_touch_updated_at on public.ui_review_orders;
+create trigger ui_review_orders_touch_updated_at
+  before update on public.ui_review_orders
+  for each row
+  execute function public.touch_updated_at();
