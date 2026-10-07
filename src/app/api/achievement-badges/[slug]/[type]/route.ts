@@ -4,7 +4,7 @@ import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-function badgeSvg(type: keyof typeof ACHIEVEMENT_DEFINITIONS): string {
+function badgeSvg(type: keyof typeof ACHIEVEMENT_DEFINITIONS, iconUrl: string): string {
   const badge = ACHIEVEMENT_DEFINITIONS[type];
   const variants = {
     launched: {
@@ -67,27 +67,20 @@ function badgeSvg(type: keyof typeof ACHIEVEMENT_DEFINITIONS): string {
   <title id="title">${badge.label}</title>
   <desc id="description">Verified GoatBoard achievement badge</desc>
   <defs>
-    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ffba16"/><stop offset=".28" stop-color="#283878"/>
-      <stop offset=".57" stop-color="#38b99b"/><stop offset="1" stop-color="#a96ff1"/>
-    </linearGradient>
     <linearGradient id="wave" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="${variant.wave}" stop-opacity=".15"/>
       <stop offset="1" stop-color="${variant.wave}" stop-opacity=".78"/>
     </linearGradient>
     <clipPath id="frame"><rect x="1" y="1" width="318" height="70" rx="21"/></clipPath>
+    <clipPath id="icon-frame"><circle cx="37" cy="36" r="28"/></clipPath>
   </defs>
   <rect x="1" y="1" width="318" height="70" rx="21" fill="${variant.background}" stroke="${variant.border}" stroke-width="2"/>
   <g clip-path="url(#frame)">
     <path d="M210 73c30-18 59-6 111-31v31z" fill="url(#wave)"/>
     <path d="M244 73c25-12 48-11 78-28v28z" fill="${variant.wave}" fill-opacity=".22"/>
   </g>
-  <g transform="translate(15 9)">
-    <path d="M12 16C4 12 2 4 7 2c5-2 9 4 11 10M44 16c8-4 10-12 5-14-5-2-9 4-11 10" fill="none" stroke="url(#mark)" stroke-width="7" stroke-linecap="round"/>
-    <path d="M12 20c0-8 7-14 16-14s16 6 16 14v17c0 11-8 17-17 17-10 0-17-6-17-16 0-8 5-13 13-13 6 0 10 4 10 9 0 4-3 7-7 7-3 0-5-2-5-5" fill="none" stroke="url(#mark)" stroke-width="9" stroke-linecap="round"/>
-    <circle cx="27" cy="22" r="5.5" fill="${variant.background}"/>
-    <path d="M18 49c5 4 12 4 17-1" fill="none" stroke="${variant.primary}" stroke-width="2" stroke-linecap="round" opacity=".75"/>
-  </g>
+  <circle cx="37" cy="36" r="28" fill="#ffffff" fill-opacity="${isGoatOfWeek ? ".96" : ".72"}"/>
+  <image href="${iconUrl}" x="5" y="4" width="64" height="64" preserveAspectRatio="xMidYMid meet" clip-path="url(#icon-frame)"/>
   <text x="${variant.eyebrowX}" y="${isTopThree || isGoatOfWeek ? 36 : 28}" fill="${variant.primary}" font-family="Figtree,Arial,sans-serif" font-size="${eyebrowSize}" font-weight="900" letter-spacing="${isTopThree || isGoatOfWeek ? 1 : 2}">${variant.eyebrow}</text>
   <text x="78" y="${headlineY}" fill="${isTopThree ? variant.secondary : isGoatOfWeek ? variant.secondary : variant.primary}" font-family="Figtree,Arial,sans-serif" font-size="${variant.headlineSize}" font-weight="850" letter-spacing="${isTopThree || isGoatOfWeek || type === "trending" ? 1.4 : -.3}">${variant.headline}</text>
   ${isTopThree ? '<path d="M280 14l5 7 8-3-2 9 7 5-9 1-4 8-4-8-9-1 7-5-2-9 8 3z" fill="#f4b91d"/><path d="M275 44h20" stroke="#f4b91d" stroke-width="2" stroke-linecap="round"/>' : ""}
@@ -140,7 +133,8 @@ export async function GET(
     if (error) console.error("achievement badge view tracking failed", error);
   }
 
-  return new Response(badgeSvg(type), {
+  const iconUrl = new URL("/icon.png", request.url).toString();
+  return new Response(badgeSvg(type, iconUrl), {
     headers: {
       "Content-Type": "image/svg+xml; charset=utf-8",
       "Cache-Control": "private, no-store, max-age=0",
