@@ -11,7 +11,17 @@ const FOUNDER = { name: "Maryam", xHandle: "mrymonx" };
  * their mark, and they get to restyle it. It is fixed-size and lazy so a slow
  * third party can neither shift the footer nor hold up the page.
  */
-const FEATURED_ON = [
+type FeaturedBadge = {
+  name: string;
+  href: string;
+  src: string;
+  alt?: string;
+  width?: number;
+  height: number;
+  rel?: string;
+};
+
+const FEATURED_ON: FeaturedBadge[] = [
   {
     name: "Nick Launches",
     href: "https://nicklaunches.com/products/goatboard/?utm_source=goatboard.lol&utm_medium=badge&utm_campaign=featured",
@@ -45,6 +55,14 @@ const FEATURED_ON = [
     alt: "Featured on PostYourStartup",
     width: 212,
     height: 55,
+    rel: "noopener noreferrer",
+  },
+  {
+    name: "AI X Collection",
+    href: "https://aixcollection.com/ai/goatboard",
+    src: "https://aixcollection.com/assets/images/badge-dark.png",
+    alt: "AI X Collection",
+    height: 54,
     rel: "noopener noreferrer",
   },
 ];
