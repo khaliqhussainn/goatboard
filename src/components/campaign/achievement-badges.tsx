@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Award, Check, Code2, Flame, Rocket, Trophy } from "lucide-react";
+import { Check, Code2 } from "lucide-react";
 import { toast } from "sonner";
 import { XLogo } from "@/components/icons/x-logo";
 import {
@@ -10,13 +10,6 @@ import {
   achievementPublicUrl,
 } from "@/lib/achievements";
 import type { CampaignAchievement, CampaignAchievementType } from "@/lib/types";
-
-const ICONS: Record<CampaignAchievementType, React.ComponentType<{ className?: string }>> = {
-  launched: Rocket,
-  top_3: Trophy,
-  goat_of_week: Award,
-  trending: Flame,
-};
 
 export function AchievementBadges({
   achievements,
@@ -62,55 +55,54 @@ export function AchievementBadges({
       <div className="grid gap-2 sm:grid-cols-2">
         {achievements.map((achievement) => {
           const definition = ACHIEVEMENT_DEFINITIONS[achievement.achievement_type];
-          const Icon = ICONS[achievement.achievement_type];
           const publicUrl = achievementPublicUrl(siteUrl, slug);
+          const badgeUrl = `${siteUrl}/api/achievement-badges/${encodeURIComponent(slug)}/${achievement.achievement_type}`;
           const shareText = `${campaignName} earned “${definition.label}”.`;
           const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(publicUrl)}`;
 
           return (
             <article
               key={achievement.achievement_type}
-              className="rounded-2xl border border-black/10 p-3"
-              style={{ backgroundColor: definition.background }}
+              className="min-w-0"
             >
-              <div className="flex items-start gap-2.5">
-                <span
-                  className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-black/10"
-                  style={{ backgroundColor: definition.accent }}
-                >
-                  <Icon className="size-4 text-black" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-black leading-tight">{definition.label}</p>
-                  {!compact && (
-                    <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-                      {definition.description}
-                    </p>
-                  )}
-                </div>
-              </div>
+              {/* The preview query keeps dashboard impressions out of external
+                  embed analytics. The copied badge URL does not include it. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`${badgeUrl}?preview=1`}
+                alt={definition.label}
+                width={320}
+                height={72}
+                className="block h-auto w-full max-w-[320px]"
+              />
 
-              <div className="mt-3 flex flex-wrap gap-1.5">
+              <div className="mt-2 flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => copyEmbed(achievement.achievement_type)}
-                  className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-black px-2.5 text-[11px] font-bold text-white transition-opacity hover:opacity-80"
+                  aria-label={copied === achievement.achievement_type ? "Embed code copied" : "Copy Embed Code"}
+                  className="group relative inline-flex size-8 items-center justify-center rounded-lg bg-black text-white transition-opacity hover:opacity-80"
                 >
                   {copied === achievement.achievement_type ? (
                     <Check className="size-3.5" />
                   ) : (
                     <Code2 className="size-3.5" />
                   )}
-                  {copied === achievement.achievement_type ? "Copied" : "Copy Embed Code"}
+                  <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-2 py-1 text-[10px] font-bold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                    {copied === achievement.achievement_type ? "Copied" : "Copy Embed Code"}
+                  </span>
                 </button>
                 <a
                   href={shareUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-black/15 bg-white/75 px-2.5 text-[11px] font-bold text-black transition-colors hover:bg-white"
+                  aria-label={`Share ${definition.label} on X`}
+                  className="group relative inline-flex size-8 items-center justify-center rounded-lg border border-black/15 bg-white text-black transition-colors hover:bg-muted"
                 >
                   <XLogo className="size-3.5" />
-                  Share on X
+                  <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-2 py-1 text-[10px] font-bold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                    Share on X
+                  </span>
                 </a>
               </div>
 
