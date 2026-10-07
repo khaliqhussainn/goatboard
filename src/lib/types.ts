@@ -70,6 +70,26 @@ export type Campaign = {
   updated_at: string;
 };
 
+export type CampaignAchievementType =
+  | "launched"
+  | "top_3"
+  | "goat_of_week"
+  | "trending";
+
+/** A verified, database-awarded milestone. Awards are append-only so a
+ * campaign keeps the achievement after the live board changes. */
+export type CampaignAchievement = {
+  id: string;
+  campaign_id: string;
+  achievement_type: CampaignAchievementType;
+  /** Empty for one-time achievements; ISO week for weekly awards. */
+  period_key: string;
+  metadata: Record<string, unknown>;
+  view_count: number;
+  click_count: number;
+  awarded_at: string;
+};
+
 /** Private campaign contact data. This table has no public RLS read policy. */
 export type CampaignContact = {
   campaign_id: string;
@@ -371,6 +391,13 @@ export interface Database {
         Update: Partial<CampaignContact>;
         Relationships: [];
       };
+      campaign_achievements: {
+        Row: CampaignAchievement;
+        Insert: Partial<CampaignAchievement> &
+          Pick<CampaignAchievement, "campaign_id" | "achievement_type">;
+        Update: Partial<CampaignAchievement>;
+        Relationships: [];
+      };
       campaign_comments: {
         Row: CampaignComment;
         Insert: Partial<CampaignComment> &
@@ -542,6 +569,18 @@ export interface Database {
       sync_first_place: {
         Args: Record<string, never>;
         Returns: undefined;
+      };
+      sync_campaign_achievements: {
+        Args: Record<string, never>;
+        Returns: undefined;
+      };
+      record_campaign_achievement_view: {
+        Args: { p_campaign_id: string; p_achievement_type: CampaignAchievementType };
+        Returns: boolean;
+      };
+      record_campaign_achievement_click: {
+        Args: { p_campaign_id: string; p_achievement_type: CampaignAchievementType };
+        Returns: boolean;
       };
       activate_get_listed_order: {
         Args: {

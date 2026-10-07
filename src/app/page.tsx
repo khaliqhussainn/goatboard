@@ -9,6 +9,7 @@ import { getVisitorStats } from "@/lib/queries/visitors";
 import { getCurrentAd } from "@/lib/queries/ad-slots";
 import { getCurrentVideoAd } from "@/lib/queries/video-ads";
 import { syncFirstPlace } from "@/lib/queries/first-place";
+import { syncCampaignAchievements } from "@/lib/queries/achievements";
 import { MASCOT_IMAGES, pickHourlyMascot } from "@/lib/mascots";
 import type { Campaign } from "@/lib/types";
 
@@ -18,6 +19,7 @@ async function getCampaigns(): Promise<Campaign[]> {
   // Advance the #1 streak before reading, so the board and the clock can
   // never disagree about who is top.
   await syncFirstPlace();
+  await syncCampaignAchievements();
 
   const supabase = await createClient();
   const { data } = await supabase

@@ -130,6 +130,13 @@ export async function POST(request: Request) {
       );
     }
 
+    const { error: achievementError } = await admin.rpc("sync_campaign_achievements");
+    if (achievementError) {
+      // The vote is already committed. Badge reconciliation is retryable on
+      // the next board/dashboard read and must never make a real vote fail.
+      console.error("post-vote achievement sync failed", achievementError);
+    }
+
     console.info("vote cast", { campaignId: parsed.data.campaignId });
     return NextResponse.json({ success: true, totalPower: result.total_power });
   } catch (error) {

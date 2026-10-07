@@ -1115,6 +1115,236 @@ revoke all on function public.sync_first_place() from public;
 grant execute on function public.sync_first_place() to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
+-- campaign achievements
+--
+-- These are evidence-backed, append-only awards. sync_campaign_achievements
+-- is the sole writer: clients cannot grant or remove badges. Live ranks only
+-- decide whether an award is inserted; once inserted, an achievement remains
+-- after the board changes. Weekly awards use immutable vote/purchase event
+-- timestamps, not today's total, so historical winners do not drift.
+-- ---------------------------------------------------------------------------
+create table if not exists public.campaign_achievements (
+  id uuid primary key default gen_random_uuid(),
+  campaign_id uuid not null references public.campaigns(id) on delete cascade,
+  achievement_type text not null check (
+    achievement_type in ('launched', 'top_3', 'goat_of_week', 'trending')
+  ),
+  -- Empty for lifetime milestones, ISO week (for example 2026-W41) for a
+  -- weekly award. Non-null makes the uniqueness guarantee race-safe.
+  period_key text not null default '',
+  metadata jsonb not null default '{}'::jsonb,
+  view_count bigint not null default 0 check (view_count >= 0),
+  click_count bigint not null default 0 check (click_count >= 0),
+  awarded_at timestamptz not null default now(),
+  unique (campaign_id, achievement_type, period_key)
+);
+
+create index if not exists campaign_achievements_campaign_idx
+  on public.campaign_achievements (campaign_id, awarded_at desc);
+
+alter table public.campaign_achievements enable row level security;
+
+-- No public write policy. Public badge routes read and update through the
+-- server-side service role after verifying that the campaign and award exist.
+drop policy if exists "achievements are publicly readable" on public.campaign_achievements;
+create policy "achievements are publicly readable"
+  on public.campaign_achievements for select
+  using (true);
+
+create or replace function public.sync_campaign_achievements()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+begin
+  -- Every campaign earns this only when it actually becomes publicly active.
+  insert into public.campaign_achievements (
+    campaign_id, achievement_type, period_key, metadata, awarded_at
+  )
+  select id, 'launched', '', jsonb_build_object('launched_at', created_at), created_at
+  from public.campaigns
+  where status = 'active'
+  on conflict (campaign_id, achievement_type, period_key) do nothing;
+
+  -- The same ordering as the public leaderboard. The rank stored in metadata
+  -- is the position that caused the award, not a claim about today's rank.
+  with ranked as (
+    select id, row_number() over (
+      order by total_power desc, updated_at asc
+    )::integer as board_rank
+    from public.campaigns
+    where status = 'active'
+  )
+  insert into public.campaign_achievements (
+    campaign_id, achievement_type, period_key, metadata
+  )
+  select id, 'top_3', '', jsonb_build_object('earned_rank', board_rank)
+  from ranked
+  where board_rank <= 3
+  on conflict (campaign_id, achievement_type, period_key) do nothing;
+
+  -- A completed UTC week's winner is the campaign that earned the most Power
+  -- during that week. A verified launch contributes one point, free votes one
+  -- each, and paid purchases their actual granted Power. Events are immutable,
+  -- so a late reconciliation still produces the same historical winner.
+  with activity as (
+    select
+      id as campaign_id,
+      date_trunc('week', timezone('utc', created_at)) as week_start,
+      1::bigint as earned_power
+    from public.campaigns
+    where status = 'active'
+    union all
+    select
+      campaign_id,
+      date_trunc('week', timezone('utc', created_at)) as week_start,
+      count(*)::bigint as earned_power
+    from public.votes
+    group by campaign_id, date_trunc('week', timezone('utc', created_at))
+    union all
+    select
+      campaign_id,
+      date_trunc('week', timezone('utc', created_at)) as week_start,
+      sum(power_granted)::bigint as earned_power
+    from public.purchases
+    where status = 'paid'
+    group by campaign_id, date_trunc('week', timezone('utc', created_at))
+  ), weekly_scores as (
+    select
+      a.campaign_id,
+      a.week_start,
+      sum(a.earned_power)::bigint as earned_power,
+      min(c.created_at) as launched_at
+    from activity a
+    join public.campaigns c on c.id = a.campaign_id and c.status = 'active'
+    where a.week_start < date_trunc('week', timezone('utc', now()))
+    group by a.campaign_id, a.week_start
+  ), weekly_ranked as (
+    select
+      weekly_scores.*,
+      row_number() over (
+        partition by week_start
+        order by earned_power desc, launched_at asc, campaign_id asc
+      ) as week_rank
+    from weekly_scores
+  )
+  insert into public.campaign_achievements (
+    campaign_id, achievement_type, period_key, metadata, awarded_at
+  )
+  select
+    campaign_id,
+    'goat_of_week',
+    to_char(week_start, 'IYYY-"W"IW'),
+    jsonb_build_object(
+      'week', to_char(week_start, 'IYYY-"W"IW'),
+      'power_earned', earned_power
+    ),
+    (week_start + interval '7 days') at time zone 'UTC'
+  from weekly_ranked
+  where week_rank = 1
+  on conflict (campaign_id, achievement_type, period_key) do nothing;
+
+  -- Trending is the strongest verified 24-hour Power gain. Requiring at least
+  -- three Power prevents a single isolated vote from creating the claim.
+  with recent_activity as (
+    select campaign_id, count(*)::bigint as earned_power
+    from public.votes
+    where created_at >= now() - interval '24 hours'
+    group by campaign_id
+    union all
+    select campaign_id, sum(power_granted)::bigint as earned_power
+    from public.purchases
+    where status = 'paid' and created_at >= now() - interval '24 hours'
+    group by campaign_id
+  ), recent_scores as (
+    select a.campaign_id, sum(a.earned_power)::bigint as earned_power
+    from recent_activity a
+    join public.campaigns c on c.id = a.campaign_id and c.status = 'active'
+    group by a.campaign_id
+  ), trend_leader as (
+    select campaign_id, earned_power
+    from recent_scores
+    where earned_power >= 3
+    order by earned_power desc, campaign_id asc
+    limit 1
+  )
+  insert into public.campaign_achievements (
+    campaign_id, achievement_type, period_key, metadata
+  )
+  select
+    campaign_id,
+    'trending',
+    '',
+    jsonb_build_object('power_in_24_hours', earned_power)
+  from trend_leader
+  on conflict (campaign_id, achievement_type, period_key) do nothing;
+end;
+$fn$;
+
+revoke all on function public.sync_campaign_achievements() from public;
+grant execute on function public.sync_campaign_achievements() to anon, authenticated;
+
+create or replace function public.record_campaign_achievement_view(
+  p_campaign_id uuid,
+  p_achievement_type text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_id uuid;
+begin
+  select id into v_id
+  from public.campaign_achievements
+  where campaign_id = p_campaign_id
+    and achievement_type = p_achievement_type
+  order by awarded_at desc
+  limit 1;
+
+  if v_id is null then return false; end if;
+
+  update public.campaign_achievements
+  set view_count = view_count + 1
+  where id = v_id;
+  return true;
+end;
+$fn$;
+
+create or replace function public.record_campaign_achievement_click(
+  p_campaign_id uuid,
+  p_achievement_type text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_id uuid;
+begin
+  select id into v_id
+  from public.campaign_achievements
+  where campaign_id = p_campaign_id
+    and achievement_type = p_achievement_type
+  order by awarded_at desc
+  limit 1;
+
+  if v_id is null then return false; end if;
+
+  update public.campaign_achievements
+  set click_count = click_count + 1
+  where id = v_id;
+  return true;
+end;
+$fn$;
+
+revoke all on function public.record_campaign_achievement_view(uuid, text) from public;
+revoke all on function public.record_campaign_achievement_click(uuid, text) from public;
+
+-- ---------------------------------------------------------------------------
 -- campaign_comments  (public feedback on a listed campaign)
 --
 -- Authored by the same anonymous goatboard_uid cookie everything else uses, so
