@@ -65,6 +65,14 @@ const FEATURED_ON: FeaturedBadge[] = [
     height: 54,
     rel: "noopener noreferrer",
   },
+  {
+    name: "App Hub List",
+    href: "https://apphublist.com/products/goatboard",
+    src: "https://apphublist.com/assets/images/badge.png",
+    alt: "App Hub List",
+    height: 54,
+    rel: "noopener noreferrer",
+  },
 ];
 
 /**
