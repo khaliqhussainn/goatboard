@@ -10,10 +10,17 @@ import { VisitorStatsCard } from "@/components/billboard/visitor-stats-card";
 import { DistributionPromo } from "@/components/distribution/distribution-promo";
 import { EmptyBoard } from "@/components/billboard/empty-board";
 import { WeeklyLaunches } from "@/components/billboard/weekly-launches";
-import type { Campaign, CurrentAd, CurrentVideoAd, VisitorStats } from "@/lib/types";
+import type {
+  Campaign,
+  CurrentAd,
+  CurrentVideoAd,
+  VisitorStats,
+  WeeklyVoteLeader,
+} from "@/lib/types";
 
 export function Leaderboard({
   initialCampaigns,
+  initialWeeklyVoteLeaders,
   adSlot,
   adSlotMascot,
   videoAd,
@@ -21,6 +28,7 @@ export function Leaderboard({
   visitorStats,
 }: {
   initialCampaigns: Campaign[];
+  initialWeeklyVoteLeaders: WeeklyVoteLeader[];
   adSlot: CurrentAd | null;
   adSlotMascot: string | null;
   videoAd: CurrentVideoAd | null;
@@ -139,7 +147,10 @@ export function Leaderboard({
             ))}
           </div>
 
-          <WeeklyLaunches campaigns={campaigns} />
+          <WeeklyLaunches
+            initialLeaders={initialWeeklyVoteLeaders}
+            voteSignal={campaigns.map((campaign) => `${campaign.id}:${campaign.vote_power}`).join("|")}
+          />
         </section>
       )}
     </LayoutGroup>

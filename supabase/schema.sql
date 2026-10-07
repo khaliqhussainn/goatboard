@@ -100,6 +100,8 @@ create table if not exists public.votes (
 
 create index if not exists votes_campaign_idx on public.votes (campaign_id);
 create index if not exists votes_voter_date_idx on public.votes (voter_id, vote_date);
+create index if not exists votes_created_at_campaign_idx
+  on public.votes (created_at desc, campaign_id);
 
 -- Same convergence fix as campaigns_created_by_fkey above, for the other
 -- column that used to reference auth.users(id).
@@ -273,6 +275,34 @@ $$;
 
 revoke all on function public.record_click(uuid) from public;
 grant execute on function public.record_click(uuid) to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- get_weekly_vote_leaders()
+-- The three products with the most free votes in the rolling seven-day
+-- window. This reads vote events directly: lifetime votes, paid Power, and a
+-- campaign's launch date have no effect. For equal counts, the campaign that
+-- reached that count first (earlier latest vote) wins the tie.
+-- ---------------------------------------------------------------------------
+create or replace function public.get_weekly_vote_leaders()
+returns table(campaign_id uuid, vote_count bigint)
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  select v.campaign_id, count(*)::bigint as vote_count
+  from public.votes v
+  join public.campaigns c on c.id = v.campaign_id
+  where c.status = 'active'
+    and v.created_at >= now() - interval '7 days'
+    and v.created_at <= now()
+  group by v.campaign_id
+  order by count(*) desc, max(v.created_at) asc, v.campaign_id asc
+  limit 3;
+$fn$;
+
+revoke all on function public.get_weekly_vote_leaders() from public;
+grant execute on function public.get_weekly_vote_leaders() to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- grant_purchase_power(order_id, campaign_id, amount, currency, power)

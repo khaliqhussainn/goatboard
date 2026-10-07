@@ -3,12 +3,11 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Plus, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowUp, Plus, Sparkles } from "lucide-react";
 import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
-import { ClickCount } from "@/components/campaign/click-count";
 import { Badge } from "@/components/ui/badge";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
-import type { Campaign } from "@/lib/types";
+import type { WeeklyVoteLeader } from "@/lib/types";
 
 const FEATURE_BACKGROUNDS = [
   "from-accent-blue/70 to-accent-blue/25",
@@ -16,34 +15,45 @@ const FEATURE_BACKGROUNDS = [
   "from-accent-purple/70 to-accent-purple/25",
 ];
 
-const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
 /**
- * A live editorial window into campaigns listed during the last seven days.
- * Realtime inserts arrive through the parent leaderboard, then sort to the
- * front here without changing the Power-based order of the board itself.
+ * The top three products by free votes created during the rolling last seven
+ * days. A one-minute refresh lets old votes fall out of the window even when
+ * nobody casts a new vote; voteSignal also refreshes immediately after any
+ * live vote-power change. Neither paid nor lifetime Power is used here.
  */
-export function WeeklyLaunches({ campaigns }: { campaigns: Campaign[] }) {
-  const scrollerRef = React.useRef<HTMLDivElement>(null);
-  const [weekCutoff] = React.useState(() => Date.now() - ONE_WEEK_MS);
-  const launches = React.useMemo(
-    () =>
-      campaigns
-        .map((campaign, index) => ({ campaign, rank: index + 1 }))
-        .filter(({ campaign }) => new Date(campaign.created_at).getTime() >= weekCutoff)
-        .sort(
-          (a, b) =>
-            new Date(b.campaign.created_at).getTime() -
-            new Date(a.campaign.created_at).getTime(),
-        ),
-    [campaigns, weekCutoff],
-  );
+export function WeeklyLaunches({
+  initialLeaders,
+  voteSignal,
+}: {
+  initialLeaders: WeeklyVoteLeader[];
+  voteSignal: string;
+}) {
+  const [leaders, setLeaders] = React.useState(initialLeaders);
 
-  function scrollLaunches(direction: -1 | 1) {
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
-    scroller.scrollBy({ left: direction * scroller.clientWidth * 0.86, behavior: "smooth" });
-  }
+  React.useEffect(() => {
+    const controller = new AbortController();
+
+    async function refresh() {
+      try {
+        const response = await fetch("/api/weekly-vote-leaders", {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (response.ok) setLeaders((await response.json()) as WeeklyVoteLeader[]);
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error("weekly vote leaders refresh failed", error);
+        }
+      }
+    }
+
+    void refresh();
+    const timer = window.setInterval(refresh, 60_000);
+    return () => {
+      controller.abort();
+      window.clearInterval(timer);
+    };
+  }, [voteSignal]);
 
   return (
     <aside className="billboard-surface relative isolate flex h-full min-h-0 flex-col overflow-hidden rounded-[2rem] bg-gradient-to-br from-white via-[#fffdf7] to-[#fff4d8] p-4 sm:p-5">
@@ -67,7 +77,7 @@ export function WeeklyLaunches({ campaigns }: { campaigns: Campaign[] }) {
           </h2>
           <div className="mt-2 h-2 w-36 -rotate-2 rounded-full bg-accent-yellow sm:w-44" />
           <p className="mt-4 max-w-xs text-sm font-semibold leading-snug text-muted-foreground">
-            Fresh startups getting noticed. Discover, support and be early.
+            The three products with the most votes in the last seven days.
           </p>
         </div>
 
@@ -83,39 +93,16 @@ export function WeeklyLaunches({ campaigns }: { campaigns: Campaign[] }) {
         </div>
       </header>
 
-      {launches.length > 0 ? (
+      {leaders.length > 0 ? (
         <div className="relative min-h-0 flex-1">
-          <div className="mb-2 flex items-center justify-between gap-3 px-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-              Newest first{launches.length > 3 ? " · scroll for more" : ""}
-            </p>
-            {launches.length > 3 && (
-              <div className="flex shrink-0 gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => scrollLaunches(-1)}
-                  aria-label="Show earlier launches"
-                  className="flex size-8 items-center justify-center rounded-full bg-white text-[#08162f] shadow-sm ring-1 ring-black/[0.06] transition-transform hover:-translate-y-0.5"
-                >
-                  <ArrowLeft className="size-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => scrollLaunches(1)}
-                  aria-label="Show more launches"
-                  className="flex size-8 items-center justify-center rounded-full bg-[#08162f] text-white shadow-sm transition-transform hover:-translate-y-0.5"
-                >
-                  <ArrowRight className="size-3.5" />
-                </button>
-              </div>
-            )}
-          </div>
+          <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+            Ranked by votes in this window
+          </p>
 
           <div
-            ref={scrollerRef}
             className="pretty-scroll -mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-3"
           >
-            {launches.map(({ campaign, rank }, index) => (
+            {leaders.map(({ campaign, voteCount }, index) => (
               <article
                 key={campaign.id}
                 className="flex w-[82%] min-w-0 shrink-0 snap-start flex-col rounded-2xl bg-white/90 p-2.5 shadow-[0_12px_30px_-18px_rgba(8,22,47,0.5)] ring-1 ring-black/[0.04] sm:w-[calc((100%-1.5rem)/3)]"
@@ -126,7 +113,7 @@ export function WeeklyLaunches({ campaigns }: { campaigns: Campaign[] }) {
                   aria-label={`View ${campaign.name}`}
                 >
                   <span className="absolute left-2 top-2 rounded-lg bg-accent-yellow px-2 py-1 text-xs font-black tabular-nums text-black shadow-sm">
-                    #{rank}
+                    #{index + 1}
                   </span>
                   <CampaignAvatar
                     src={campaign.image_url}
@@ -153,7 +140,10 @@ export function WeeklyLaunches({ campaigns }: { campaigns: Campaign[] }) {
                   </Badge>
 
                   <div className="mt-3 flex items-end justify-between gap-1.5">
-                    <ClickCount count={campaign.click_count} className="min-w-0 text-[10px]" />
+                    <span className="inline-flex min-w-0 items-center gap-1 text-[10px] font-bold text-muted-foreground">
+                      <ArrowUp className="size-3" />
+                      {voteCount.toLocaleString("en-US")} {voteCount === 1 ? "vote" : "votes"}
+                    </span>
                     <Link
                       href={`/campaign/${campaign.slug}`}
                       className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg bg-black px-2.5 text-[11px] font-bold text-white transition-transform hover:-translate-y-0.5"
@@ -170,10 +160,10 @@ export function WeeklyLaunches({ campaigns }: { campaigns: Campaign[] }) {
         <div className="flex flex-1 items-center justify-center rounded-2xl border-2 border-dashed border-[#efbe31]/70 bg-white/55 px-6 py-8 text-center">
           <div>
             <p className="font-rounded text-lg font-black text-[#08162f]">
-              The next launch could be yours
+              Your product could be next
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              No new campaigns have been listed in the last seven days.
+              No products have received votes in the last seven days.
             </p>
           </div>
         </div>
@@ -186,10 +176,10 @@ export function WeeklyLaunches({ campaigns }: { campaigns: Campaign[] }) {
           </span>
           <div className="min-w-0">
             <p className="font-rounded text-sm font-black leading-tight text-[#08162f] sm:text-base">
-              Claim a spot in this week&apos;s launches
+              Rise into this week&apos;s top three
             </p>
             <p className="mt-0.5 text-[11px] text-muted-foreground sm:text-xs">
-              Put your campaign in front of builders and early adopters.
+              Every verified vote in the rolling seven-day window counts.
             </p>
           </div>
         </div>

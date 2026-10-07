@@ -12,6 +12,7 @@ import { syncFirstPlace } from "@/lib/queries/first-place";
 import { syncCampaignAchievements } from "@/lib/queries/achievements";
 import { MASCOT_IMAGES, pickHourlyMascot } from "@/lib/mascots";
 import type { Campaign } from "@/lib/types";
+import { getWeeklyVoteLeaders } from "@/lib/queries/campaign";
 
 export const revalidate = 0;
 
@@ -33,8 +34,9 @@ async function getCampaigns(): Promise<Campaign[]> {
 }
 
 export default async function Home() {
-  const [campaigns, visitorStats, adSlot, videoAd] = await Promise.all([
+  const [campaigns, weeklyVoteLeaders, visitorStats, adSlot, videoAd] = await Promise.all([
     getCampaigns(),
+    getWeeklyVoteLeaders(),
     getVisitorStats(),
     getCurrentAd(),
     getCurrentVideoAd(),
@@ -60,6 +62,7 @@ export default async function Home() {
 
         <Leaderboard
           initialCampaigns={campaigns}
+          initialWeeklyVoteLeaders={weeklyVoteLeaders}
           adSlot={adSlot}
           adSlotMascot={adSlotMascot}
           videoAd={videoAd}

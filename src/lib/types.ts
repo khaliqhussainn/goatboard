@@ -90,6 +90,12 @@ export type CampaignAchievement = {
   awarded_at: string;
 };
 
+/** A campaign's position in the rolling seven-day vote-only panel. */
+export type WeeklyVoteLeader = {
+  campaign: Campaign;
+  voteCount: number;
+};
+
 /** Private campaign contact data. This table has no public RLS read policy. */
 export type CampaignContact = {
   campaign_id: string;
@@ -536,6 +542,10 @@ export interface Database {
       record_click: {
         Args: { p_campaign_id: string };
         Returns: { success: boolean; new_click_count: number | null }[];
+      };
+      get_weekly_vote_leaders: {
+        Args: Record<string, never>;
+        Returns: { campaign_id: string; vote_count: number }[];
       };
       record_site_visit: {
         Args: { p_visitor_id: string | null };
