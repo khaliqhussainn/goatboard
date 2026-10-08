@@ -253,33 +253,29 @@ export function AdSlotDisplay({
           <div className="gold-surface-soft relative flex h-full flex-col justify-center overflow-hidden rounded-2xl border-2 border-amber-300/80 px-4 py-3 pr-20 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70 sm:pr-36">
             {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} rounded="rounded-2xl" />}
             <GoldSheen rounded="rounded-2xl" />
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 left-0 z-10 w-[76%] bg-black/35 shadow-[14px_0_38px_-24px_rgba(0,0,0,0.8)] backdrop-blur-2xl backdrop-saturate-150 sm:w-[70%]"
-            />
             {mascot && <CompactMascot src={mascot} />}
             <div className="relative z-20 flex flex-col items-start gap-2">
-              {/* Extra right padding on this row alone, not on the card: the
-                  "Book next" chip is pinned to the top-right corner and its
-                  left edge lands just inside the card's own padding, so a name
-                  long enough to truncate put its ellipsis under the chip.
-                  Padding the whole card instead would take the width back off
-                  the description. */}
-              <div className="flex items-center gap-2 pr-3 sm:pr-0">
-                <CampaignAvatar
-                  src={ad.image_url}
-                  name={ad.name}
-                  className="size-10 shrink-0 rounded-xl text-sm shadow-sm ring-2 ring-white"
-                />
-                <p className="min-w-0 truncate text-lg font-black tracking-tight text-white sm:text-xl">
-                  {ad.name}
+              <div className="max-w-full rounded-2xl bg-white/10 px-3 py-2.5 shadow-[0_14px_34px_-24px_rgba(0,0,0,0.9)] backdrop-blur-lg backdrop-saturate-150">
+                {/* Extra right padding on this row alone, not on the card: the
+                    "Book next" chip is pinned to the top-right corner and its
+                    left edge lands just inside the card's own padding, so a name
+                    long enough to truncate put its ellipsis under the chip. */}
+                <div className="flex items-center gap-2 pr-3 sm:pr-0">
+                  <CampaignAvatar
+                    src={ad.image_url}
+                    name={ad.name}
+                    className="size-10 shrink-0 rounded-xl text-sm shadow-sm ring-2 ring-white"
+                  />
+                  <p className="min-w-0 truncate text-lg font-black tracking-tight text-white sm:text-xl">
+                    {ad.name}
+                  </p>
+                </div>
+                {/* Keep the message to three compact lines so the CTA remains
+                    visible inside this fixed-height placement. */}
+                <p className="mt-2 line-clamp-3 max-w-[34ch] text-[13px] font-medium leading-[1.25] text-white/90 sm:text-sm">
+                  {ad.description}
                 </p>
               </div>
-              {/* Keep the message to three compact lines so the CTA remains
-                  visible inside this fixed-height placement. */}
-              <p className="line-clamp-3 max-w-[34ch] text-[13px] font-medium leading-[1.25] text-white/90 sm:text-sm">
-                {ad.description}
-              </p>
               <a
                 href={ad.destination_url}
                 target="_blank"
@@ -310,20 +306,21 @@ export function AdSlotDisplay({
         <div className="gold-surface-soft relative rounded-[4rem] border-2 border-amber-300/80 px-6 py-8 shadow-[0_18px_50px_-24px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70 sm:px-10">
           {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} />}
           <GoldSheen />
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-full rounded-[4rem] bg-black/35 shadow-[16px_0_42px_-26px_rgba(0,0,0,0.85)] backdrop-blur-2xl backdrop-saturate-150 sm:w-[calc(100%-10rem)] sm:rounded-r-[2rem]"
-          />
           {mascot && <AdSlotMascot src={mascot} className="mx-auto mb-5 block h-24" />}
           <div className="relative z-20 flex flex-col items-center gap-3 text-center sm:w-[calc(100%-10rem)] sm:items-start sm:pr-6 sm:text-left">
-            <div className="flex min-w-0 items-center gap-3">
-              <CampaignAvatar
-                src={ad.image_url}
-                name={ad.name}
-                className="size-14 shrink-0 rounded-2xl text-xl shadow-sm ring-2 ring-white"
-              />
-              <p className="min-w-0 break-words text-xl font-black tracking-tight text-white">
-                {ad.name}
+            <div className="max-w-full rounded-2xl bg-white/10 px-4 py-3 shadow-[0_14px_34px_-24px_rgba(0,0,0,0.9)] backdrop-blur-lg backdrop-saturate-150">
+              <div className="flex min-w-0 items-center gap-3">
+                <CampaignAvatar
+                  src={ad.image_url}
+                  name={ad.name}
+                  className="size-14 shrink-0 rounded-2xl text-xl shadow-sm ring-2 ring-white"
+                />
+                <p className="min-w-0 break-words text-xl font-black tracking-tight text-white">
+                  {ad.name}
+                </p>
+              </div>
+              <p className="mt-2 line-clamp-3 max-w-[44ch] break-words text-sm leading-snug text-white/90">
+                {ad.description}
               </p>
             </div>
             {/* Nothing is clipped here. The advertiser paid for this space and
@@ -332,9 +329,6 @@ export function AdSlotDisplay({
                 break-words is what stops a single long unbroken word (a URL
                 pasted into the name, say) pushing the row wider than the
                 banner instead of wrapping. */}
-            <p className="line-clamp-3 max-w-[44ch] break-words text-sm leading-snug text-white/90">
-              {ad.description}
-            </p>
             <a
               href={ad.destination_url}
               target="_blank"
