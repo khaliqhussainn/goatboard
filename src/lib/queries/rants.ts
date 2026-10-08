@@ -14,8 +14,13 @@ export async function getRants(visitorId: string | null): Promise<PublicRant[]> 
   if (!rows?.length) return [];
 
   const rantIds = rows.map((rant) => rant.id);
-  const [solutionResult, reactionResult] = await Promise.all([
+  const [solutionResult, replySuggestionResult, reactionResult] = await Promise.all([
     admin.from("rant_solutions").select("rant_id, campaign_id").in("rant_id", rantIds),
+    admin
+      .from("rant_replies")
+      .select("rant_id, suggested_campaign_id")
+      .in("rant_id", rantIds)
+      .not("suggested_campaign_id", "is", null),
     visitorId
       ? admin
           .from("rant_same_reactions")
@@ -26,9 +31,21 @@ export async function getRants(visitorId: string | null): Promise<PublicRant[]> 
   ]);
 
   if (solutionResult.error) throw solutionResult.error;
+  if (replySuggestionResult.error) throw replySuggestionResult.error;
   if (reactionResult.error) throw reactionResult.error;
 
-  const campaignIds = [...new Set((solutionResult.data ?? []).map((item) => item.campaign_id))];
+  const productLinks = [
+    ...(solutionResult.data ?? []).map((item) => ({
+      rantId: item.rant_id,
+      campaignId: item.campaign_id,
+    })),
+    ...(replySuggestionResult.data ?? []).flatMap((item) =>
+      item.suggested_campaign_id
+        ? [{ rantId: item.rant_id, campaignId: item.suggested_campaign_id }]
+        : [],
+    ),
+  ];
+  const campaignIds = [...new Set(productLinks.map((item) => item.campaignId))];
   const campaignsById = new Map<string, RantProduct>();
 
   if (campaignIds.length > 0) {
@@ -50,11 +67,13 @@ export async function getRants(visitorId: string | null): Promise<PublicRant[]> 
     }
   }
 
-  const productsByRant = new Map<string, RantProduct[]>();
-  for (const solution of solutionResult.data ?? []) {
-    const product = campaignsById.get(solution.campaign_id);
+  const productsByRant = new Map<string, Map<string, RantProduct>>();
+  for (const link of productLinks) {
+    const product = campaignsById.get(link.campaignId);
     if (!product) continue;
-    productsByRant.set(solution.rant_id, [...(productsByRant.get(solution.rant_id) ?? []), product]);
+    const products = productsByRant.get(link.rantId) ?? new Map<string, RantProduct>();
+    products.set(product.id, product);
+    productsByRant.set(link.rantId, products);
   }
 
   const reactedIds = new Set((reactionResult.data ?? []).map((reaction) => reaction.rant_id));
@@ -66,7 +85,7 @@ export async function getRants(visitorId: string | null): Promise<PublicRant[]> 
     sameCount: rant.same_count,
     replies: rant.reply_count,
     didSame: reactedIds.has(rant.id),
-    products: productsByRant.get(rant.id) ?? [],
+    products: [...(productsByRant.get(rant.id)?.values() ?? [])],
     createdAt: rant.created_at,
   }));
 }

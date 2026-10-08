@@ -49,6 +49,12 @@ function formatReplyDate(value: string) {
   );
 }
 
+function mergeProducts(current: RantProduct[], incoming: RantProduct[]): RantProduct[] {
+  const products = new Map(current.map((product) => [product.id, product]));
+  for (const product of incoming) products.set(product.id, product);
+  return [...products.values()];
+}
+
 function SuggestedProductCard({ product }: { product: RantProduct }) {
   return (
     <Link
@@ -218,6 +224,29 @@ export function RantExperience({
       return;
     }
     setThreadReplies(payload.replies);
+    const productsFromReplies = payload.replies.flatMap((reply) =>
+      reply.suggestedProduct ? [reply.suggestedProduct] : [],
+    );
+    if (productsFromReplies.length > 0) {
+      setRants((current) =>
+        current.map((item) =>
+          item.id === rant.id
+            ? {
+                ...item,
+                products: mergeProducts(item.products, productsFromReplies),
+              }
+            : item,
+        ),
+      );
+      setThreadRant((current) =>
+        current
+          ? {
+              ...current,
+              products: mergeProducts(current.products, productsFromReplies),
+            }
+          : current,
+      );
+    }
   }
 
   async function submitReply() {
@@ -263,13 +292,25 @@ export function RantExperience({
     setRants((current) =>
       current.map((rant) =>
         rant.id === threadRant.id
-          ? { ...rant, replies: payload.replyCount ?? rant.replies + 1 }
+          ? {
+              ...rant,
+              replies: payload.replyCount ?? rant.replies + 1,
+              products: payload.reply!.suggestedProduct
+                ? mergeProducts(rant.products, [payload.reply!.suggestedProduct])
+                : rant.products,
+            }
           : rant,
       ),
     );
     setThreadRant((current) =>
       current
-        ? { ...current, replies: payload.replyCount ?? current.replies + 1 }
+        ? {
+            ...current,
+            replies: payload.replyCount ?? current.replies + 1,
+            products: payload.reply!.suggestedProduct
+              ? mergeProducts(current.products, [payload.reply!.suggestedProduct])
+              : current.products,
+          }
         : current,
     );
     toast.success("Reply posted.");
