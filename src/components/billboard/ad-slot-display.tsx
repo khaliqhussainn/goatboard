@@ -72,16 +72,15 @@ function GoldSheen({ rounded = "rounded-[4rem]" }: { rounded?: string }) {
 /**
  * The advertiser's optional full-bleed background. Clipped to the banner's
  * own radius by its own wrapper rather than overflow-hidden on the banner,
- * which would also cut off the goat breaking past the edges. Held at a low
- * opacity, with a scrim that's heaviest behind the copy and clears toward
- * the goat, so any uploaded image stays readable underneath the text.
+ * which would also cut off the goat breaking past the edges. The artwork is
+ * kept at full strength; the copy supplies its own local frosted surface so
+ * the rest of the advertiser's banner remains clear and unobscured.
  */
 function AdSlotBackdrop({ src, rounded = "rounded-[4rem]" }: { src: string; rounded?: string }) {
   return (
     <span aria-hidden className={cn("pointer-events-none absolute inset-0 overflow-hidden", rounded)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" className="size-full object-cover opacity-25" />
-      <span className="absolute inset-0 bg-gradient-to-r from-[#fffdf4]/90 via-[#fffdf4]/45 to-transparent" />
+      <img src={src} alt="" className="size-full object-cover" />
     </span>
   );
 }
@@ -255,7 +254,13 @@ export function AdSlotDisplay({
             {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} rounded="rounded-2xl" />}
             <GoldSheen rounded="rounded-2xl" />
             {mascot && <CompactMascot src={mascot} />}
-            <div className="relative flex flex-col gap-1.5">
+            <div
+              className={cn(
+                "relative z-20 flex flex-col gap-1.5",
+                ad.backdrop_url &&
+                  "rounded-xl border border-white/70 bg-white/55 p-3 shadow-[0_10px_28px_-20px_rgba(0,0,0,0.6)] backdrop-blur-md",
+              )}
+            >
               {/* Extra right padding on this row alone, not on the card: the
                   "Book next" chip is pinned to the top-right corner and its
                   left edge lands just inside the card's own padding, so a name
@@ -309,7 +314,7 @@ export function AdSlotDisplay({
           {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} />}
           <GoldSheen />
           {mascot && <AdSlotMascot src={mascot} className="mx-auto mb-5 block h-24" />}
-          <div className="relative flex flex-col items-center gap-4 text-center sm:flex-row sm:pr-44 sm:text-left">
+          <div className="relative z-20 flex flex-col items-center gap-4 text-center sm:flex-row sm:pr-44 sm:text-left">
             <CampaignAvatar
               src={ad.image_url}
               name={ad.name}
@@ -321,7 +326,13 @@ export function AdSlotDisplay({
                 break-words is what stops a single long unbroken word (a URL
                 pasted into the name, say) pushing the row wider than the
                 banner instead of wrapping. */}
-            <div className="min-w-0 flex-1">
+            <div
+              className={cn(
+                "min-w-0 flex-1",
+                ad.backdrop_url &&
+                  "rounded-2xl border border-white/70 bg-white/55 px-4 py-3 shadow-[0_10px_28px_-20px_rgba(0,0,0,0.6)] backdrop-blur-md",
+              )}
+            >
               <p className="break-words text-lg font-black tracking-tight">{ad.name}</p>
               {/* Full-strength foreground rather than the muted grey: this sits on gold,
                   and often on top of an advertiser backdrop as well, where grey-on-
