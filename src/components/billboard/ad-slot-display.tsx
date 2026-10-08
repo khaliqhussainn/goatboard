@@ -28,7 +28,7 @@ function AdSlotMascot({ src, className }: { src: string; className?: string }) {
       alt=""
       aria-hidden
       className={cn(
-        "pointer-events-none w-auto drop-shadow-[0_14px_22px_rgba(146,105,16,0.32)] sm:absolute sm:left-auto sm:right-8 sm:top-1/2 sm:mx-0 sm:-mt-20 sm:mb-0 sm:h-40 sm:transition-transform sm:duration-300 sm:group-hover:-translate-y-1.5",
+        "pointer-events-none z-20 w-auto drop-shadow-[0_14px_22px_rgba(146,105,16,0.32)] sm:absolute sm:left-auto sm:right-8 sm:top-1/2 sm:mx-0 sm:-mt-20 sm:mb-0 sm:h-40 sm:transition-transform sm:duration-300 sm:group-hover:-translate-y-1.5",
         className,
       )}
     />
@@ -49,7 +49,7 @@ function CompactMascot({ src }: { src: string }) {
       src={src}
       alt=""
       aria-hidden
-      className="pointer-events-none absolute -bottom-1 right-2 h-24 w-auto drop-shadow-[0_14px_22px_rgba(146,105,16,0.32)] transition-transform duration-300 group-hover:-translate-y-1 sm:h-40"
+      className="pointer-events-none absolute -bottom-1 right-2 z-20 h-24 w-auto drop-shadow-[0_14px_22px_rgba(146,105,16,0.32)] transition-transform duration-300 group-hover:-translate-y-1 sm:h-40"
     />
   );
 }
@@ -253,14 +253,12 @@ export function AdSlotDisplay({
           <div className="gold-surface-soft relative flex h-full flex-col justify-center overflow-hidden rounded-2xl border-2 border-amber-300/80 px-5 py-4 pr-24 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70 sm:pr-40">
             {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} rounded="rounded-2xl" />}
             <GoldSheen rounded="rounded-2xl" />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 left-0 z-10 w-[76%] bg-black/35 shadow-[14px_0_38px_-24px_rgba(0,0,0,0.8)] backdrop-blur-2xl backdrop-saturate-150 sm:w-[70%]"
+            />
             {mascot && <CompactMascot src={mascot} />}
-            <div
-              className={cn(
-                "relative z-20 flex flex-col gap-1.5",
-                ad.backdrop_url &&
-                  "rounded-xl bg-white/40 p-3 shadow-[0_12px_32px_-22px_rgba(0,0,0,0.65)] backdrop-blur-xl backdrop-saturate-150",
-              )}
-            >
+            <div className="relative z-20 flex flex-col items-start gap-2">
               {/* Extra right padding on this row alone, not on the card: the
                   "Book next" chip is pinned to the top-right corner and its
                   left edge lands just inside the card's own padding, so a name
@@ -273,21 +271,20 @@ export function AdSlotDisplay({
                   name={ad.name}
                   className="size-10 shrink-0 rounded-xl text-sm shadow-sm ring-2 ring-white"
                 />
-                <p className="min-w-0 truncate text-lg font-black tracking-tight text-amber-950 sm:text-xl">
+                <p className="min-w-0 truncate text-lg font-black tracking-tight text-white sm:text-xl">
                   {ad.name}
                 </p>
               </div>
-              {/* Full-strength amber rather than muted grey, and a size up from
-                  the old caption: this sits on gold, often over an advertiser
-                  backdrop, where anything lighter stopped being legible. */}
-              <p className="line-clamp-2 text-sm font-medium leading-snug text-amber-950">
+              {/* Keep the message to three compact lines so the CTA remains
+                  visible inside this fixed-height placement. */}
+              <p className="line-clamp-3 text-sm font-medium leading-snug text-white/90">
                 {ad.description}
               </p>
               <a
                 href={ad.destination_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-0.5 inline-flex w-fit items-center gap-1.5 rounded-full bg-amber-950 px-3.5 py-1.5 text-xs font-bold text-amber-50 shadow-sm transition-colors hover:bg-amber-900"
+                className="mt-0.5 inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold text-black shadow-sm transition-colors hover:bg-white/90"
               >
                 Visit site <ExternalLink className="size-3" />
               </a>
@@ -313,37 +310,36 @@ export function AdSlotDisplay({
         <div className="gold-surface-soft relative rounded-[4rem] border-2 border-amber-300/80 px-6 py-8 shadow-[0_18px_50px_-24px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70 sm:px-10">
           {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} />}
           <GoldSheen />
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-full rounded-[4rem] bg-black/35 shadow-[16px_0_42px_-26px_rgba(0,0,0,0.85)] backdrop-blur-2xl backdrop-saturate-150 sm:w-[calc(100%-10rem)] sm:rounded-r-[2rem]"
+          />
           {mascot && <AdSlotMascot src={mascot} className="mx-auto mb-5 block h-24" />}
-          <div className="relative z-20 flex flex-col items-center gap-4 text-center sm:flex-row sm:pr-44 sm:text-left">
-            <CampaignAvatar
-              src={ad.image_url}
-              name={ad.name}
-              className="size-16 shrink-0 rounded-2xl text-xl shadow-sm ring-2 ring-white"
-            />
+          <div className="relative z-20 flex flex-col items-center gap-3 text-center sm:w-[calc(100%-10rem)] sm:items-start sm:pr-6 sm:text-left">
+            <div className="flex min-w-0 items-center gap-3">
+              <CampaignAvatar
+                src={ad.image_url}
+                name={ad.name}
+                className="size-14 shrink-0 rounded-2xl text-xl shadow-sm ring-2 ring-white"
+              />
+              <p className="min-w-0 break-words text-xl font-black tracking-tight text-white">
+                {ad.name}
+              </p>
+            </div>
             {/* Nothing is clipped here. The advertiser paid for this space and
                 the schema already caps them at 60 and 140 characters, so the
                 banner grows to fit rather than trailing off in an ellipsis.
                 break-words is what stops a single long unbroken word (a URL
                 pasted into the name, say) pushing the row wider than the
                 banner instead of wrapping. */}
-            <div
-              className={cn(
-                "min-w-0 flex-1",
-                ad.backdrop_url &&
-                  "rounded-2xl bg-white/40 px-4 py-3 shadow-[0_12px_32px_-22px_rgba(0,0,0,0.65)] backdrop-blur-xl backdrop-saturate-150",
-              )}
-            >
-              <p className="break-words text-lg font-black tracking-tight">{ad.name}</p>
-              {/* Full-strength foreground rather than the muted grey: this sits on gold,
-                  and often on top of an advertiser backdrop as well, where grey-on-
-                  gold stopped being comfortably legible. */}
-              <p className="break-words text-sm text-foreground">{ad.description}</p>
-            </div>
+            <p className="line-clamp-3 break-words text-sm leading-relaxed text-white/90">
+              {ad.description}
+            </p>
             <a
               href={ad.destination_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-950 px-4 py-2 text-sm font-bold text-amber-50 shadow-sm transition-colors hover:bg-amber-900"
+              className="inline-flex w-fit shrink-0 items-center gap-1 rounded-full bg-white px-4 py-2 text-sm font-bold text-black shadow-sm transition-colors hover:bg-white/90"
             >
               Visit <ExternalLink className="size-3.5" />
             </a>
