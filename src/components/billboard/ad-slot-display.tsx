@@ -168,6 +168,16 @@ export function AdSlotDisplay({
         ad ? (
           <div className="relative h-full min-h-[220px] overflow-hidden rounded-2xl bg-black shadow-[0_12px_32px_-18px_rgba(0,0,0,0.5)]">
             {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} rounded="rounded-2xl" />}
+            <span className="pointer-events-none absolute left-2 top-2 z-10 rounded-full bg-black/60 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/90 backdrop-blur-sm">
+              Sponsored
+            </span>
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+            >
+              Book next →
+            </button>
             <a
               href={ad.destination_url}
               target="_blank"
@@ -184,6 +194,16 @@ export function AdSlotDisplay({
       ) : ad ? (
         <div className="relative min-h-[300px] overflow-hidden rounded-[4rem] bg-black shadow-[0_18px_50px_-24px_rgba(0,0,0,0.55)] sm:min-h-[360px]">
           {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} />}
+          <span className="pointer-events-none absolute left-2 top-2 z-10 rounded-full bg-black/60 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/90 backdrop-blur-sm">
+            Sponsored
+          </span>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+          >
+            Book next →
+          </button>
           <a
             href={ad.destination_url}
             target="_blank"
