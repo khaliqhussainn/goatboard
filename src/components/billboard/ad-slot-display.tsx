@@ -237,7 +237,7 @@ export function AdSlotDisplay({
       {ad && (
         <span
           className={cn(
-            "gold-surface absolute z-10 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-950 shadow-[0_4px_12px_-4px_rgba(146,105,16,0.6)] ring-1 ring-inset ring-white/60",
+            "gold-surface absolute z-30 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-950 shadow-[0_4px_12px_-4px_rgba(146,105,16,0.6)] ring-1 ring-inset ring-white/60",
             compact ? "-top-3 left-5 sm:left-3 sm:top-3" : "-top-3 left-5",
           )}
         >
@@ -253,9 +253,13 @@ export function AdSlotDisplay({
           <div className="gold-surface-soft relative flex h-full flex-col justify-center overflow-hidden rounded-2xl border-2 border-amber-300/80 px-4 py-3 pr-20 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70 sm:pr-36">
             {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} rounded="rounded-2xl" />}
             <GoldSheen rounded="rounded-2xl" />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 left-0 z-10 w-[76%] bg-white/10 shadow-[12px_0_30px_-24px_rgba(0,0,0,0.65)] backdrop-blur-[6px] backdrop-saturate-150 sm:w-[70%]"
+            />
             {mascot && <CompactMascot src={mascot} />}
             <div className="relative z-20 flex flex-col items-start gap-2">
-              <div className="max-w-full rounded-2xl bg-white/10 px-3 py-2.5 shadow-[0_14px_34px_-24px_rgba(0,0,0,0.9)] backdrop-blur-lg backdrop-saturate-150">
+              <div className="max-w-full">
                 {/* Extra right padding on this row alone, not on the card: the
                     "Book next" chip is pinned to the top-right corner and its
                     left edge lands just inside the card's own padding, so a name
@@ -294,7 +298,7 @@ export function AdSlotDisplay({
             <button
               type="button"
               onClick={() => setOpen(true)}
-              className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-amber-950/85 px-2.5 py-1 text-[11px] font-bold text-amber-50 shadow-sm transition-colors hover:bg-amber-900"
+              className="absolute right-3 top-3 z-30 inline-flex items-center gap-1 rounded-full bg-amber-950/85 px-2.5 py-1 text-[11px] font-bold text-amber-50 shadow-sm transition-colors hover:bg-amber-900"
             >
               Book next →
             </button>
@@ -306,9 +310,13 @@ export function AdSlotDisplay({
         <div className="gold-surface-soft relative rounded-[4rem] border-2 border-amber-300/80 px-6 py-8 shadow-[0_18px_50px_-24px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70 sm:px-10">
           {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} />}
           <GoldSheen />
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-full rounded-[4rem] bg-white/10 shadow-[14px_0_34px_-26px_rgba(0,0,0,0.7)] backdrop-blur-[6px] backdrop-saturate-150 sm:w-[calc(100%-10rem)] sm:rounded-r-[2rem]"
+          />
           {mascot && <AdSlotMascot src={mascot} className="mx-auto mb-5 block h-24" />}
           <div className="relative z-20 flex flex-col items-center gap-3 text-center sm:w-[calc(100%-10rem)] sm:items-start sm:pr-6 sm:text-left">
-            <div className="max-w-full rounded-2xl bg-white/10 px-4 py-3 shadow-[0_14px_34px_-24px_rgba(0,0,0,0.9)] backdrop-blur-lg backdrop-saturate-150">
+            <div className="max-w-full">
               <div className="flex min-w-0 items-center gap-3">
                 <CampaignAvatar
                   src={ad.image_url}
