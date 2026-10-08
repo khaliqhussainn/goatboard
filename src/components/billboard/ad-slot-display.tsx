@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Sparkle, ExternalLink } from "lucide-react";
 import { AdSlotForm } from "@/components/billboard/ad-slot-form";
-import { CampaignAvatar } from "@/components/campaign/campaign-avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { CurrentAd } from "@/lib/types";
@@ -11,70 +10,9 @@ import type { CurrentAd } from "@/lib/types";
 const EMPTY_AD_MASCOT = "/mascots/goat-1.webp";
 
 /**
- * The goat stands on the banner's bottom edge and is deliberately taller
- * than the banner, so its head breaks out over the top — which only works
- * because neither banner state clips its overflow. Kept out of the content
- * row's flex flow (absolute) from sm up so the banner's height stays set by
- * its text, not by however tall this particular pose happens to be; on
- * mobile, where the banner stacks, it drops back into normal flow instead of
- * overlapping the stacked content. Not used in compact mode — there isn't
- * room for it once the banner is this narrow.
- */
-function AdSlotMascot({ src, className }: { src: string; className?: string }) {
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt=""
-      aria-hidden
-      className={cn(
-        "pointer-events-none z-20 w-auto drop-shadow-[0_14px_22px_rgba(146,105,16,0.32)] sm:absolute sm:left-auto sm:right-8 sm:top-1/2 sm:mx-0 sm:-mt-20 sm:mb-0 sm:h-40 sm:transition-transform sm:duration-300 sm:group-hover:-translate-y-1.5",
-        className,
-      )}
-    />
-  );
-}
-
-/**
- * The compact banner's goat, standing in the bottom-right corner. Unlike the
- * full-size AdSlotMascot it stays inside the card's bounds - the compact
- * banner is part of the board's collage, where anything breaking past an edge
- * lands in the gap between cards. Sized off the bottom edge so it reads as
- * standing on it, and clipped by the card's own overflow-hidden.
- */
-function CompactMascot({ src }: { src: string }) {
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt=""
-      aria-hidden
-      className="pointer-events-none absolute -bottom-1 right-2 z-20 h-24 w-auto drop-shadow-[0_14px_22px_rgba(146,105,16,0.32)] transition-transform duration-300 group-hover:-translate-y-1 sm:h-40"
-    />
-  );
-}
-
-/**
- * The highlight that travels across the metal, in its own rounded clip so the
- * banner itself never needs overflow-hidden - the goat breaks past its edges
- * and would be cut off. Decorative only; the global reduced-motion rule stops
- * it for anyone who asked for that. `rounded` matches whatever radius the
- * banner itself is using (the compact banner is a much gentler curve).
- */
-function GoldSheen({ rounded = "rounded-[4rem]" }: { rounded?: string }) {
-  return (
-    <span aria-hidden className={cn("pointer-events-none absolute inset-0 overflow-hidden", rounded)}>
-      <span className="absolute inset-y-0 -left-1/3 w-1/3 animate-[gold-sweep_6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/70 to-transparent" />
-    </span>
-  );
-}
-
-/**
  * The advertiser's optional full-bleed background. Clipped to the banner's
- * own radius by its own wrapper rather than overflow-hidden on the banner,
- * which would also cut off the goat breaking past the edges. The artwork is
- * kept at full strength; the copy supplies its own local frosted surface so
- * the rest of the advertiser's banner remains clear and unobscured.
+ * own radius and kept at full strength. A live placement intentionally shows
+ * only this artwork and its destination button.
  */
 function AdSlotBackdrop({ src, rounded = "rounded-[4rem]" }: { src: string; rounded?: string }) {
   return (
@@ -209,15 +147,13 @@ function EmptyAdSlot({ onClick, compact }: { onClick: () => void; compact?: bool
 
 export function AdSlotDisplay({
   ad,
-  mascot,
   className,
   compact,
 }: {
   ad: CurrentAd | null;
-  /** The ad slot's own goat, distinct from the sponsor's logo — rotates once
-   * per hour (see pickHourlyMascot in lib/mascots.ts). Null only if no
-   * mascot art exists at all. Ignored in compact mode. */
-  mascot: string | null;
+  /** Retained at the call site for the empty house creative, but deliberately
+   * ignored while a paid backdrop is live. */
+  mascot?: string | null;
   className?: string;
   /** A short, tight rectangle instead of the tall gold pill — for when the
    * banner is sharing a row with the video spot and doesn't have the width
@@ -228,124 +164,35 @@ export function AdSlotDisplay({
 
   return (
     <div className={cn("relative", compact ? "" : "mb-3 sm:mb-4", className)}>
-      {/* Compact tucks the badge inside the card's own bounds from sm up,
-          where the card is tall enough to clear the content: in the collage
-          this banner butts up against the spotlight above it, and a badge
-          poking into that gap breaks the block's edge. On a phone the card is
-          only as tall as its content, so it straddles the edge instead rather
-          than landing on top of the ad's own name. */}
-      {ad && (
-        <span
-          className={cn(
-            "gold-surface absolute z-30 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-950 shadow-[0_4px_12px_-4px_rgba(146,105,16,0.6)] ring-1 ring-inset ring-white/60",
-            compact ? "-top-3 left-5 sm:left-3 sm:top-3" : "-top-3 left-5",
-          )}
-        >
-          {ad ? "Sponsored" : "Ad space · 7 days"}
-        </span>
-      )}
-      {!compact && ad && (
-        <Sparkle className="absolute -top-4 left-0 z-10 size-5 fill-amber-400 text-amber-400 sm:-left-1" />
-      )}
-
       {compact ? (
         ad ? (
-          <div className="gold-surface-soft relative flex h-full flex-col justify-center overflow-hidden rounded-2xl border-2 border-amber-300/80 px-4 py-3 pr-20 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70 sm:pr-36">
+          <div className="relative h-full min-h-[220px] overflow-hidden rounded-2xl bg-black shadow-[0_12px_32px_-18px_rgba(0,0,0,0.5)]">
             {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} rounded="rounded-2xl" />}
-            <GoldSheen rounded="rounded-2xl" />
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 left-0 z-10 w-[76%] bg-white/10 shadow-[12px_0_30px_-24px_rgba(0,0,0,0.65)] backdrop-blur-[6px] backdrop-saturate-150 sm:w-[70%]"
-            />
-            {mascot && <CompactMascot src={mascot} />}
-            <div className="relative z-20 flex flex-col items-start gap-2">
-              <div className="max-w-full">
-                {/* Extra right padding on this row alone, not on the card: the
-                    "Book next" chip is pinned to the top-right corner and its
-                    left edge lands just inside the card's own padding, so a name
-                    long enough to truncate put its ellipsis under the chip. */}
-                <div className="flex items-center gap-2 pr-3 sm:pr-0">
-                  <CampaignAvatar
-                    src={ad.image_url}
-                    name={ad.name}
-                    className="size-10 shrink-0 rounded-xl text-sm shadow-sm ring-2 ring-white"
-                  />
-                  <p className="min-w-0 truncate text-lg font-black tracking-tight text-white sm:text-xl">
-                    {ad.name}
-                  </p>
-                </div>
-                {/* Keep the message to three compact lines so the CTA remains
-                    visible inside this fixed-height placement. */}
-                <p className="mt-2 line-clamp-3 max-w-[34ch] text-[13px] font-medium leading-[1.25] text-white/90 sm:text-sm">
-                  {ad.description}
-                </p>
-              </div>
-              <a
-                href={ad.destination_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-0.5 inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold text-black shadow-sm transition-colors hover:bg-white/90"
-              >
-                Visit site <ExternalLink className="size-3" />
-              </a>
-            </div>
-
-            {/* The way into the queue while the spot is taken. Deliberately a
-                small corner chip rather than a second CTA beside the
-                advertiser's own: they paid for this space, and the booking
-                dialog behind it already explains where in the queue a
-                purchase lands. */}
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              className="absolute right-3 top-3 z-30 inline-flex items-center gap-1 rounded-full bg-amber-950/85 px-2.5 py-1 text-[11px] font-bold text-amber-50 shadow-sm transition-colors hover:bg-amber-900"
+            <a
+              href={ad.destination_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Visit ${ad.name}`}
+              className="absolute bottom-4 left-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-bold text-black shadow-lg transition-transform hover:-translate-y-0.5"
             >
-              Book next →
-            </button>
+              Visit site <ExternalLink className="size-3.5" />
+            </a>
           </div>
         ) : (
           <EmptyAdSlot compact onClick={() => setOpen(true)} />
         )
       ) : ad ? (
-        <div className="gold-surface-soft relative rounded-[4rem] border-2 border-amber-300/80 px-6 py-8 shadow-[0_18px_50px_-24px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70 sm:px-10">
+        <div className="relative min-h-[300px] overflow-hidden rounded-[4rem] bg-black shadow-[0_18px_50px_-24px_rgba(0,0,0,0.55)] sm:min-h-[360px]">
           {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} />}
-          <GoldSheen />
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-full rounded-[4rem] bg-white/10 shadow-[14px_0_34px_-26px_rgba(0,0,0,0.7)] backdrop-blur-[6px] backdrop-saturate-150 sm:w-[calc(100%-10rem)] sm:rounded-r-[2rem]"
-          />
-          {mascot && <AdSlotMascot src={mascot} className="mx-auto mb-5 block h-24" />}
-          <div className="relative z-20 flex flex-col items-center gap-3 text-center sm:w-[calc(100%-10rem)] sm:items-start sm:pr-6 sm:text-left">
-            <div className="max-w-full">
-              <div className="flex min-w-0 items-center gap-3">
-                <CampaignAvatar
-                  src={ad.image_url}
-                  name={ad.name}
-                  className="size-14 shrink-0 rounded-2xl text-xl shadow-sm ring-2 ring-white"
-                />
-                <p className="min-w-0 break-words text-xl font-black tracking-tight text-white">
-                  {ad.name}
-                </p>
-              </div>
-              <p className="mt-2 line-clamp-3 max-w-[44ch] break-words text-sm leading-snug text-white/90">
-                {ad.description}
-              </p>
-            </div>
-            {/* Nothing is clipped here. The advertiser paid for this space and
-                the schema already caps them at 60 and 140 characters, so the
-                banner grows to fit rather than trailing off in an ellipsis.
-                break-words is what stops a single long unbroken word (a URL
-                pasted into the name, say) pushing the row wider than the
-                banner instead of wrapping. */}
-            <a
-              href={ad.destination_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex w-fit shrink-0 items-center gap-1 rounded-full bg-white px-4 py-2 text-sm font-bold text-black shadow-sm transition-colors hover:bg-white/90"
-            >
-              Visit <ExternalLink className="size-3.5" />
-            </a>
-          </div>
+          <a
+            href={ad.destination_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Visit ${ad.name}`}
+            className="absolute bottom-6 left-6 z-10 inline-flex items-center gap-1.5 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black shadow-lg transition-transform hover:-translate-y-0.5 sm:bottom-8 sm:left-8"
+          >
+            Visit site <ExternalLink className="size-3.5" />
+          </a>
         </div>
       ) : (
         <EmptyAdSlot onClick={() => setOpen(true)} />

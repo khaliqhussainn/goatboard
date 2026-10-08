@@ -4,14 +4,12 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ImagePicker, fetchSiteLogo } from "@/components/campaign/image-picker";
-import { AD_SLOT_PRICING, AD_SLOT_DURATIONS, isSafeUrl } from "@/lib/validation";
-import { formatMoney, cn } from "@/lib/utils";
-import type { AdSlot, AdSlotDuration } from "@/lib/types";
+import { ImagePicker } from "@/components/campaign/image-picker";
+import { formatMoney } from "@/lib/utils";
+import type { AdSlot } from "@/lib/types";
 
 function statusInfo(slot: AdSlot): { label: string; variant: "green" | "blue" | "outline" } {
   const now = Date.now();
@@ -27,32 +25,10 @@ function statusInfo(slot: AdSlot): { label: string; variant: "green" | "blue" | 
 export function AdSlotAdminPanel({ adSlots }: { adSlots: AdSlot[] }) {
   const router = useRouter();
   const [name, setName] = React.useState("");
-  const [description, setDescription] = React.useState("");
   const [destinationUrl, setDestinationUrl] = React.useState("");
-  const [xHandle, setXHandle] = React.useState("");
-  const [imageUrl, setImageUrl] = React.useState<string | null>(null);
-  const [imageSource, setImageSource] = React.useState<"upload" | "site" | null>(null);
   const [backdropUrl, setBackdropUrl] = React.useState<string | null>(null);
-  const [fetchingLogo, setFetchingLogo] = React.useState(false);
-  const lastAutoFetchedUrl = React.useRef<string | null>(null);
-  const [durationDays, setDurationDays] = React.useState<AdSlotDuration>(7);
   const [creating, setCreating] = React.useState(false);
   const [actingId, setActingId] = React.useState<string | null>(null);
-
-  async function handleDestinationBlur() {
-    const url = destinationUrl.trim();
-    if (!url || !isSafeUrl(url)) return;
-    if (imageSource === "upload" || lastAutoFetchedUrl.current === url) return;
-
-    lastAutoFetchedUrl.current = url;
-    setFetchingLogo(true);
-    const found = await fetchSiteLogo(url);
-    if (found) {
-      setImageUrl(found);
-      setImageSource("site");
-    }
-    setFetchingLogo(false);
-  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -63,12 +39,9 @@ export function AdSlotAdminPanel({ adSlots }: { adSlots: AdSlot[] }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
-          description,
           destination_url: destinationUrl,
-          image_url: imageUrl || null,
-          backdrop_url: backdropUrl || null,
-          duration_days: durationDays,
-          x_handle: xHandle,
+          backdrop_url: backdropUrl,
+          duration_days: 7,
         }),
       });
       const data = await res.json();
@@ -78,13 +51,8 @@ export function AdSlotAdminPanel({ adSlots }: { adSlots: AdSlot[] }) {
       }
       toast.success("Ad slot created for free. It is live now.");
       setName("");
-      setDescription("");
       setDestinationUrl("");
-      setXHandle("");
-      setImageUrl(null);
-      setImageSource(null);
       setBackdropUrl(null);
-      lastAutoFetchedUrl.current = null;
       router.refresh();
     } finally {
       setCreating(false);
@@ -130,7 +98,7 @@ export function AdSlotAdminPanel({ adSlots }: { adSlots: AdSlot[] }) {
         className="grid grid-cols-1 gap-3 rounded-xl border border-border p-4 sm:grid-cols-2"
       >
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="admin-ad-name">Product name</Label>
+          <Label htmlFor="admin-ad-name">Site name</Label>
           <Input
             id="admin-ad-name"
             value={name}
@@ -146,81 +114,20 @@ export function AdSlotAdminPanel({ adSlots }: { adSlots: AdSlot[] }) {
             type="url"
             value={destinationUrl}
             onChange={(e) => setDestinationUrl(e.target.value)}
-            onBlur={handleDestinationBlur}
             placeholder="https://…"
             required
           />
         </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="admin-ad-x">X account</Label>
-          <Input
-            id="admin-ad-x"
-            value={xHandle}
-            onChange={(e) => setXHandle(e.target.value)}
-            placeholder="yourhandle"
-            maxLength={15}
-            required
-          />
-        </div>
-
         <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <Label htmlFor="admin-ad-description">Description</Label>
-          <Textarea
-            id="admin-ad-description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            maxLength={140}
-            required
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="admin-ad-image">Logo</Label>
-          <ImagePicker
-            id="admin-ad-image"
-            value={imageUrl}
-            name={name || "?"}
-            caption={imageSource === "site" ? "Fetched from the site" : "Uploaded"}
-            busy={fetchingLogo}
-            busyLabel="Looking for the favicon…"
-            emptyLabel="Upload a logo"
-            onChange={(url) => {
-              setImageUrl(url);
-              setImageSource(url ? "upload" : null);
-              if (!url) lastAutoFetchedUrl.current = null;
-            }}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="admin-ad-backdrop">Backdrop image (optional)</Label>
+          <Label htmlFor="admin-ad-backdrop">Backdrop image</Label>
           <ImagePicker
             id="admin-ad-backdrop"
             value={backdropUrl}
             wide
-            caption="Shown faintly behind the ad"
+            caption="Displayed at full strength across the banner"
             emptyLabel="Upload a background image"
             onChange={setBackdropUrl}
           />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label>Duration</Label>
-          <div className="flex gap-1.5">
-            {AD_SLOT_DURATIONS.map((days) => (
-              <button
-                key={days}
-                type="button"
-                onClick={() => setDurationDays(days)}
-                className={cn(
-                  "flex-1 rounded-lg border px-2 py-1.5 text-xs font-semibold transition-colors",
-                  durationDays === days
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-border hover:border-hero-pink hover:text-hero-pink",
-                )}
-              >
-                {days}d · {formatMoney(AD_SLOT_PRICING[days])}
-              </button>
-            ))}
-          </div>
         </div>
         <Button type="submit" disabled={creating} className="sm:col-span-2">
           {creating ? "Creating…" : "Create for free (test)"}

@@ -152,8 +152,8 @@ export const adSlotSchema = z.object({
   description: z
     .string()
     .trim()
-    .min(4, "Tell people what this is.")
-    .max(140, "Keep it under 140 characters."),
+    .max(140, "Keep it under 140 characters.")
+    .default("Advertisement"),
   destination_url: z
     .string()
     .trim()
@@ -168,11 +168,10 @@ export const adSlotSchema = z.object({
   backdrop_url: z
     .string()
     .trim()
-    .refine((v) => v === "" || isSafeUrl(v), "Enter a valid image URL.")
-    .optional()
-    .nullable(),
-  duration_days: z.union([z.literal(7), z.literal(14), z.literal(30)]),
-  x_handle: xHandleSchema,
+    .min(1, "Upload a backdrop image.")
+    .refine(isSafeUrl, "Upload a valid backdrop image."),
+  duration_days: z.union([z.literal(7), z.literal(14), z.literal(30)]).default(7),
+  x_handle: xHandleSchema.optional().nullable().default(null),
 });
 
 export type AdSlotInput = z.infer<typeof adSlotSchema>;
