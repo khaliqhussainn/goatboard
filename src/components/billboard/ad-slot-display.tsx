@@ -250,7 +250,7 @@ export function AdSlotDisplay({
 
       {compact ? (
         ad ? (
-          <div className="gold-surface-soft relative flex h-full flex-col justify-center overflow-hidden rounded-2xl border-2 border-amber-300/80 px-5 py-4 pr-24 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70 sm:pr-40">
+          <div className="gold-surface-soft relative flex h-full flex-col justify-center overflow-hidden rounded-2xl border-2 border-amber-300/80 px-4 py-3 pr-20 shadow-[0_12px_32px_-18px_rgba(146,105,16,0.55)] ring-1 ring-inset ring-white/70 sm:pr-36">
             {ad.backdrop_url && <AdSlotBackdrop src={ad.backdrop_url} rounded="rounded-2xl" />}
             <GoldSheen rounded="rounded-2xl" />
             <span
@@ -277,7 +277,7 @@ export function AdSlotDisplay({
               </div>
               {/* Keep the message to three compact lines so the CTA remains
                   visible inside this fixed-height placement. */}
-              <p className="line-clamp-3 text-sm font-medium leading-snug text-white/90">
+              <p className="line-clamp-3 max-w-[34ch] text-[13px] font-medium leading-[1.25] text-white/90 sm:text-sm">
                 {ad.description}
               </p>
               <a
@@ -332,7 +332,7 @@ export function AdSlotDisplay({
                 break-words is what stops a single long unbroken word (a URL
                 pasted into the name, say) pushing the row wider than the
                 banner instead of wrapping. */}
-            <p className="line-clamp-3 break-words text-sm leading-relaxed text-white/90">
+            <p className="line-clamp-3 max-w-[44ch] break-words text-sm leading-snug text-white/90">
               {ad.description}
             </p>
             <a
