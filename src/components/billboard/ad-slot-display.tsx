@@ -258,7 +258,7 @@ export function AdSlotDisplay({
               className={cn(
                 "relative z-20 flex flex-col gap-1.5",
                 ad.backdrop_url &&
-                  "rounded-xl border border-white/70 bg-white/55 p-3 shadow-[0_10px_28px_-20px_rgba(0,0,0,0.6)] backdrop-blur-md",
+                  "rounded-xl bg-white/40 p-3 shadow-[0_12px_32px_-22px_rgba(0,0,0,0.65)] backdrop-blur-xl backdrop-saturate-150",
               )}
             >
               {/* Extra right padding on this row alone, not on the card: the
@@ -330,7 +330,7 @@ export function AdSlotDisplay({
               className={cn(
                 "min-w-0 flex-1",
                 ad.backdrop_url &&
-                  "rounded-2xl border border-white/70 bg-white/55 px-4 py-3 shadow-[0_10px_28px_-20px_rgba(0,0,0,0.6)] backdrop-blur-md",
+                  "rounded-2xl bg-white/40 px-4 py-3 shadow-[0_12px_32px_-22px_rgba(0,0,0,0.65)] backdrop-blur-xl backdrop-saturate-150",
               )}
             >
               <p className="break-words text-lg font-black tracking-tight">{ad.name}</p>
