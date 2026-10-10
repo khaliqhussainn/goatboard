@@ -65,8 +65,6 @@ async function handleBoostOrder(campaignId: string, orderId: string, amountUsd: 
     console.error("grant_purchase_power rejected", result);
     return false;
   }
-  const { error: achievementError } = await admin.rpc("sync_campaign_achievements");
-  if (achievementError) console.error("post-boost achievement sync failed", achievementError);
   return true;
 }
 
@@ -333,8 +331,6 @@ async function handleListingOrder(
     console.error("activate_listing_order rejected", result);
     return false;
   }
-  const { error: achievementError } = await admin.rpc("sync_campaign_achievements");
-  if (achievementError) console.error("post-listing achievement sync failed", achievementError);
   return true;
 }
 

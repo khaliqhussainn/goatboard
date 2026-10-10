@@ -14,8 +14,6 @@ import { PaidAmount } from "@/components/billboard/paid-amount";
 import { ordinal, getSiteUrl, votesLabel, cn } from "@/lib/utils";
 import { CampaignComments } from "@/components/campaign/campaign-comments";
 import { getCampaignBySlug, getCampaignRank, getCampaignComments } from "@/lib/queries/campaign";
-import { getCampaignAchievements } from "@/lib/queries/achievements";
-import { AchievementBadges } from "@/components/campaign/achievement-badges";
 
 export async function CampaignDetail({
   slug,
@@ -28,10 +26,9 @@ export async function CampaignDetail({
   const campaign = await getCampaignBySlug(slug);
   if (!campaign) notFound();
 
-  const [rank, comments, achievements] = await Promise.all([
+  const [rank, comments] = await Promise.all([
     getCampaignRank(campaign),
     getCampaignComments(campaign.id),
-    getCampaignAchievements(campaign.id),
   ]);
   const url = `${getSiteUrl()}/campaign/${campaign.slug}`;
   const images = campaign.image_urls?.length
@@ -130,18 +127,6 @@ export async function CampaignDetail({
           compact
         />
       </div>
-
-      {achievements.length > 0 && (
-        <div className="border-t border-border pt-4">
-          <AchievementBadges
-            achievements={achievements}
-            campaignName={campaign.name}
-            slug={campaign.slug}
-            siteUrl={getSiteUrl()}
-            compact={compact}
-          />
-        </div>
-      )}
 
       {/* Below the actions and above the report link: the feedback belongs
           with the campaign, but voting is still the primary thing to do. */}

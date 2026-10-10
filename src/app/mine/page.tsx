@@ -9,11 +9,8 @@ import { StreakBadge } from "@/components/billboard/streak-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { categoryAccent, categoryLabel } from "@/lib/categories";
-import { formatPower, getSiteUrl } from "@/lib/utils";
+import { formatPower } from "@/lib/utils";
 import { ResumeListingButton } from "@/components/campaign/resume-listing-button";
-import { AchievementBadges } from "@/components/campaign/achievement-badges";
-import { syncCampaignAchievements } from "@/lib/queries/achievements";
-import type { CampaignAchievement } from "@/lib/types";
 
 export const metadata: Metadata = {
   title: "My Campaigns",
@@ -46,27 +43,6 @@ export default async function MinePage() {
         .eq("created_by", visitorId)
         .order("created_at", { ascending: false })
     : { data: [] };
-
-  await syncCampaignAchievements();
-  const campaignIds = (campaigns ?? [])
-    .filter((campaign) => campaign.status === "active")
-    .map((campaign) => campaign.id);
-  const { data: achievementRows } = campaignIds.length
-    ? await admin
-        .from("campaign_achievements")
-        .select("*")
-        .in("campaign_id", campaignIds)
-        .order("awarded_at", { ascending: false })
-    : { data: [] };
-
-  const achievementsByCampaign = new Map<string, CampaignAchievement[]>();
-  for (const achievement of achievementRows ?? []) {
-    const existing = achievementsByCampaign.get(achievement.campaign_id) ?? [];
-    if (!existing.some((item) => item.achievement_type === achievement.achievement_type)) {
-      existing.push(achievement);
-      achievementsByCampaign.set(achievement.campaign_id, existing);
-    }
-  }
 
   return (
     <div className="on-backdrop mx-auto max-w-3xl px-4 py-10 sm:px-6">
@@ -137,27 +113,13 @@ export default async function MinePage() {
                 {inner}
               </div>
             ) : (
-              <div
-                key={c.id}
-                className="billboard-surface-sm rounded-2xl p-4"
-              >
+              <div key={c.id} className="billboard-surface-sm rounded-2xl p-4">
                 <Link
                   href={`/campaign/${c.slug}`}
                   className="flex items-center gap-4 transition-transform hover:-translate-y-0.5"
                 >
                   {inner}
                 </Link>
-                {(achievementsByCampaign.get(c.id)?.length ?? 0) > 0 && (
-                  <div className="mt-4 border-t border-border pt-4">
-                    <AchievementBadges
-                      achievements={achievementsByCampaign.get(c.id) ?? []}
-                      campaignName={c.name}
-                      slug={c.slug}
-                      siteUrl={getSiteUrl()}
-                      compact
-                    />
-                  </div>
-                )}
               </div>
             );
           })}
