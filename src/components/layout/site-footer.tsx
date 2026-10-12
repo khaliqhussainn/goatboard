@@ -5,77 +5,6 @@ import { XLogo } from "@/components/icons/x-logo";
 const FOUNDER = { name: "Maryam", xHandle: "mrymonx" };
 
 /**
- * Directories that have featured us, shown as their own badge artwork.
- *
- * The image is served from the lister rather than copied into public/ - it is
- * their mark, and they get to restyle it. It is fixed-size and lazy so a slow
- * third party can neither shift the footer nor hold up the page.
- */
-type FeaturedBadge = {
-  name: string;
-  href: string;
-  src: string;
-  alt?: string;
-  width?: number;
-  height: number;
-  rel?: string;
-};
-
-const FEATURED_ON: FeaturedBadge[] = [
-  {
-    name: "Nick Launches",
-    href: "https://nicklaunches.com/products/goatboard/?utm_source=goatboard.lol&utm_medium=badge&utm_campaign=featured",
-    // A 480x112 retina asset, rendered at 171x40 - comfortably above 1x.
-    src: "https://nicklaunches.com/badges/featured-dark.png",
-    width: 244,
-    height: 56,
-  },
-  {
-    name: "Indie Chains",
-    href: "https://indiechains.com",
-    // An SVG at exactly the rendered height, so the intrinsic size here is
-    // only reserving the box before it loads.
-    src: "https://api.indiechains.com/badge/7304bc433fcf589d5a3283e9c4be846d0dfe4f5594a6ce3a.svg?theme=dark",
-    width: 180,
-    height: 40,
-  },
-  {
-    name: "UdonBoost",
-    href: "https://udonboost.com/",
-    src: "https://udonboost.com/badges/featured-partner.png",
-    alt: "UdonBoost Featured Partner",
-    width: 183,
-    height: 54,
-    rel: "noopener noreferrer",
-  },
-  {
-    name: "PostYourStartup",
-    href: "https://postyourstartup.co/startup/goatboard?ref=badge",
-    src: "https://postyourstartup.co/api/badge/goatboard?theme=light",
-    alt: "Featured on PostYourStartup",
-    width: 212,
-    height: 55,
-    rel: "noopener noreferrer",
-  },
-  {
-    name: "AI X Collection",
-    href: "https://aixcollection.com/ai/goatboard",
-    src: "https://aixcollection.com/assets/images/badge-dark.png",
-    alt: "AI X Collection",
-    height: 54,
-    rel: "noopener noreferrer",
-  },
-  {
-    name: "App Hub List",
-    href: "https://apphublist.com/products/goatboard",
-    src: "https://apphublist.com/assets/images/badge.png",
-    alt: "App Hub List",
-    height: 54,
-    rel: "noopener noreferrer",
-  },
-];
-
-/**
  * Columns of the site footer. Internal routes use Link so navigation stays
  * client-side; anything that isn't a real route yet is deliberately absent
  * rather than linked to a page that 404s.
@@ -115,39 +44,6 @@ export function SiteFooter() {
               startup in front of the rest of the web.
             </p>
 
-            <div className="mt-2 flex flex-col gap-2">
-              <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
-                Goatboard is featured on
-              </h2>
-              {/* h-10 rather than something chunkier: at h-14 the two badges
-                  measured 240px and 252px against a 446px column and wrapped
-                  onto separate lines at every width. They still wrap on a
-                  phone, which is the right call down there. */}
-              <div className="flex flex-wrap items-center gap-3">
-                {FEATURED_ON.map((badge) => (
-                  <a
-                    key={badge.href}
-                    href={badge.href}
-                    target="_blank"
-                    // Existing listings count referrals; badges can override
-                    // this when their supplied embed explicitly requires it.
-                    rel={badge.rel ?? "noopener"}
-                    className="w-fit transition-opacity hover:opacity-80"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={badge.src}
-                      alt={badge.alt ?? `Goatboard on ${badge.name}`}
-                      width={badge.width}
-                      height={badge.height}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-10 w-auto max-w-full"
-                    />
-                  </a>
-                ))}
-              </div>
-            </div>
           </div>
 
           {COLUMNS.map((column) => (

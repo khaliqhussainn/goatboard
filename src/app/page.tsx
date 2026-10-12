@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { AbstractBackdrop } from "@/components/layout/abstract-backdrop";
 import { Leaderboard } from "@/components/billboard/leaderboard";
-import { UiReviewBanner } from "@/components/promo/ui-review-banner";
+import { FeaturedOnSlider } from "@/components/promo/featured-on-slider";
 import { AdPurchaseConfirmation } from "@/components/billboard/ad-purchase-confirmation";
 import { GetListedPromoModal } from "@/components/get-listed/get-listed-promo-modal";
 import { getVisitorStats } from "@/lib/queries/visitors";
@@ -67,7 +67,7 @@ export default async function Home() {
           promoMascot={promoMascot}
           visitorStats={visitorStats}
         />
-        <UiReviewBanner />
+        <FeaturedOnSlider />
       </div>
     </>
   );

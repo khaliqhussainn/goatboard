@@ -239,6 +239,28 @@ body {
   }
 }
 
+/* Two identical badge rows form one seamless loop. The animation never pauses
+   on hover; the second row takes the first row's place before the transform
+   resets, so there is no visible jump or empty stretch. */
+.featured-badge-viewport {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+}
+
+.featured-badge-track {
+  animation: featured-badges-scroll 30s linear infinite;
+  will-change: transform;
+}
+
+@keyframes featured-badges-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
 
 /* The splash screen, rendered by the root layout on every response.
 
