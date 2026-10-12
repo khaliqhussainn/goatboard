@@ -736,6 +736,25 @@ create table if not exists public.get_listed_submissions (
   updated_at timestamptz not null default now()
 );
 
+-- Public proof for the Get Listed service. These are manually maintained by
+-- the admin because Domain Rating is a third-party metric rather than data
+-- GoatBoard can calculate from its own submissions.
+create table if not exists public.get_listed_dr_projects (
+  key text primary key check (key in ('project_1', 'project_2', 'project_3')),
+  site_name text not null check (char_length(site_name) between 1 and 80),
+  domain text not null check (char_length(domain) between 3 and 253),
+  dr integer not null check (dr between 0 and 100),
+  sort_order integer not null check (sort_order between 1 and 3),
+  updated_at timestamptz not null default now()
+);
+
+insert into public.get_listed_dr_projects (key, site_name, domain, dr, sort_order)
+values
+  ('project_1', 'Nick Launches', 'nicklaunches.com', 76, 1),
+  ('project_2', 'PushUp Quest', 'pushup.quest', 37, 2),
+  ('project_3', 'XMetrix', 'xmetrix.space', 0, 3)
+on conflict (key) do nothing;
+
 alter table public.get_listed_campaigns
   add column if not exists report_share_token_hash text,
   add column if not exists report_share_enabled boolean not null default false,
@@ -833,7 +852,8 @@ create index if not exists get_listed_submissions_campaign_idx
 alter table public.get_listed_campaigns enable row level security;
 alter table public.get_listed_orders enable row level security;
 alter table public.get_listed_submissions enable row level security;
--- No public policies on any of the three. There is no logged-in database
+alter table public.get_listed_dr_projects enable row level security;
+-- No public policies on these Get Listed tables. There is no logged-in database
 -- role to scope a policy to - the owner is a cookie value the server knows
 -- and Postgres doesn't - so every access goes through server code holding
 -- the service role, which filters on owner_id itself.
@@ -853,6 +873,12 @@ create trigger get_listed_orders_touch_updated_at
 drop trigger if exists get_listed_submissions_touch_updated_at on public.get_listed_submissions;
 create trigger get_listed_submissions_touch_updated_at
   before update on public.get_listed_submissions
+  for each row
+  execute function public.touch_updated_at();
+
+drop trigger if exists get_listed_dr_projects_touch_updated_at on public.get_listed_dr_projects;
+create trigger get_listed_dr_projects_touch_updated_at
+  before update on public.get_listed_dr_projects
   for each row
   execute function public.touch_updated_at();
 

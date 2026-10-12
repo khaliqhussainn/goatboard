@@ -21,8 +21,12 @@ import {
 } from "@/lib/get-listed";
 import { PromoCountdown } from "@/components/get-listed/promo-countdown";
 import { PackageCard } from "@/components/get-listed/package-card";
+import { DrResultsGraph } from "@/components/get-listed/dr-results-graph";
+import { getGetListedDrProjects } from "@/lib/queries/get-listed-dr";
 import { MASCOT_IMAGES, pickHourlyMascot } from "@/lib/mascots";
 import { cn } from "@/lib/utils";
+
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Get Listed",
@@ -65,10 +69,11 @@ function mascotFor(index: number): string | null {
   return MASCOT_IMAGES[(start + index * 5 + MASCOT_IMAGES.length) % MASCOT_IMAGES.length];
 }
 
-export default function GetListedPage() {
+export default async function GetListedPage() {
   const popularKey = "big_goat";
   // Read once per render so every price on the page agrees with itself.
   const promo = isPromoActive();
+  const drProjects = await getGetListedDrProjects();
 
   return (
     <div className="on-backdrop">
@@ -191,6 +196,8 @@ export default function GetListedPage() {
           </ol>
         </div>
       </section>
+
+      <DrResultsGraph projects={drProjects} />
 
       {/* --------------------------------------------------------- Packages */}
       <section id="packages" className="mx-auto max-w-6xl scroll-mt-24 px-4 py-12 sm:px-6 sm:py-16">

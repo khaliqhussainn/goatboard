@@ -335,6 +335,15 @@ export type GetListedOrder = {
   updated_at: string;
 };
 
+export type GetListedDrProject = {
+  key: "project_1" | "project_2" | "project_3";
+  site_name: string;
+  domain: string;
+  dr: number;
+  sort_order: number;
+  updated_at: string;
+};
+
 export type GetListedSubmission = {
   id: string;
   campaign_id: string;
@@ -493,6 +502,13 @@ export interface Database {
         Insert: Partial<GetListedSubmission> &
           Pick<GetListedSubmission, "campaign_id" | "directory_name">;
         Update: Partial<GetListedSubmission>;
+        Relationships: [];
+      };
+      get_listed_dr_projects: {
+        Row: GetListedDrProject;
+        Insert: Pick<GetListedDrProject, "key" | "site_name" | "domain" | "dr" | "sort_order"> &
+          Partial<GetListedDrProject>;
+        Update: Partial<GetListedDrProject>;
         Relationships: [];
       };
     };

@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { listAllGetListedCampaigns } from "@/lib/queries/get-listed";
+import { getGetListedDrProjects } from "@/lib/queries/get-listed-dr";
 import { GetListedAdminPanel } from "@/components/admin/get-listed-admin-panel";
+import { GetListedDrAdminPanel } from "@/components/admin/get-listed-dr-admin-panel";
 
 export const metadata: Metadata = {
   title: "Get Listed admin",
@@ -13,7 +15,10 @@ export const dynamic = "force-dynamic";
 
 export default async function GetListedAdminPage() {
   await requireAdmin();
-  const rows = await listAllGetListedCampaigns();
+  const [rows, drProjects] = await Promise.all([
+    listAllGetListedCampaigns(),
+    getGetListedDrProjects(),
+  ]);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
@@ -29,6 +34,7 @@ export default async function GetListedAdminPage() {
         </Link>
       </div>
 
+      <GetListedDrAdminPanel initialProjects={drProjects} />
       <GetListedAdminPanel rows={rows} />
     </div>
   );
