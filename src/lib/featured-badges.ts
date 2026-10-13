@@ -122,4 +122,12 @@ export const FEATURED_BADGES: FeaturedBadge[] = [
     height: 54,
     rel: "noopener noreferrer",
   },
+  {
+    name: "SaaS Territory",
+    href: "https://saasterritory.com/products/goatboard",
+    src: "https://saasterritory.com/assets/images/badge.png",
+    alt: "SaaS Territory",
+    height: 54,
+    rel: "noopener noreferrer",
+  },
 ];
