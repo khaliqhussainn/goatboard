@@ -114,4 +114,12 @@ export const FEATURED_BADGES: FeaturedBadge[] = [
     height: 54,
     rel: "noopener noreferrer",
   },
+  {
+    name: "SaaS State",
+    href: "https://saasstate.com/products/goatboard",
+    src: "https://saasstate.com/assets/images/badge.png",
+    alt: "SaaS State",
+    height: 54,
+    rel: "noopener noreferrer",
+  },
 ];
