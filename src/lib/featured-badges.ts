@@ -106,4 +106,12 @@ export const FEATURED_BADGES: FeaturedBadge[] = [
     height: 54,
     rel: "noopener noreferrer",
   },
+  {
+    name: "SaaS Scanner",
+    href: "https://saasscanner.com/products/goatboard",
+    src: "https://saasscanner.com/assets/images/badge.png",
+    alt: "SaaS Scanner",
+    height: 54,
+    rel: "noopener noreferrer",
+  },
 ];
