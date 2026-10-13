@@ -98,4 +98,12 @@ export const FEATURED_BADGES: FeaturedBadge[] = [
     height: 54,
     rel: "noopener noreferrer",
   },
+  {
+    name: "SaaS Networker",
+    href: "https://saasnetworker.com/products/goatboard",
+    src: "https://saasnetworker.com/assets/images/badge.png",
+    alt: "SaaS Networker",
+    height: 54,
+    rel: "noopener noreferrer",
+  },
 ];
