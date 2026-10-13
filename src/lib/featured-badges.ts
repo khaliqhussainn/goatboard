@@ -8,6 +8,15 @@ export type FeaturedBadge = {
   rel?: string;
 };
 
+const directoryBadge = (name: string, href: string, src: string): FeaturedBadge => ({
+  name,
+  href,
+  src,
+  alt: name,
+  height: 54,
+  rel: "noopener noreferrer",
+});
+
 /** Directory badges shown in the homepage's continuously moving feature strip. */
 export const FEATURED_BADGES: FeaturedBadge[] = [
   {
@@ -226,4 +235,45 @@ export const FEATURED_BADGES: FeaturedBadge[] = [
     height: 54,
     rel: "noopener noreferrer",
   },
+  directoryBadge("Ash List", "https://ashlist.com/product/goatboard", "https://ashlist.com/assets/images/badge.png"),
+  directoryBadge("Beam Tools", "https://beamtools.com/tool/goatboard", "https://beamtools.com/assets/images/badge.png"),
+  directoryBadge("Best Tool Vault", "https://besttoolvault.com/tool/goatboard", "https://besttoolvault.com/assets/images/badge.png"),
+  directoryBadge("We Like Tools", "https://weliketools.com/tool/goatboard", "https://weliketools.com/assets/images/badge.png"),
+  directoryBadge("Unite List", "https://unitelist.com/product/goatboard", "https://unitelist.com/assets/images/badge.png"),
+  directoryBadge("Trustiner", "https://trustiner.com/product/goatboard", "https://trustiner.com/assets/images/badge.png"),
+  directoryBadge("Toshi List", "https://toshilist.com/product/goatboard", "https://toshilist.com/assets/images/badge.png"),
+  directoryBadge("Top Trend Tools", "https://toptrendtools.com/tool/goatboard", "https://toptrendtools.com/assets/images/badge.png"),
+  directoryBadge("Tools Under Radar", "https://toolsunderradar.com/tool/goatboard", "https://toolsunderradar.com/assets/images/badge.png"),
+  directoryBadge("Tools List HQ", "https://toolslisthq.com/tool/goatboard", "https://toolslisthq.com/assets/images/badge.png"),
+  directoryBadge("Tool Cosmos", "https://toolcosmos.com/tool/goatboard", "https://toolcosmos.com/assets/images/badge.png"),
+  directoryBadge("Tool Signal", "https://toolsignal.com/tool/goatboard", "https://toolsignal.com/assets/images/badge.png"),
+  directoryBadge("Tool Prism", "https://toolprism.com/ai/goatboard", "https://toolprism.com/assets/images/badge.png"),
+  directoryBadge("Tool Journey", "https://tooljourney.com/tool/goatboard", "https://tooljourney.com/assets/images/badge.png"),
+  directoryBadge("Tool Find Dir", "https://toolfinddir.com/ai/goatboard", "https://toolfinddir.com/assets/images/badge.png"),
+  directoryBadge("Tiny Tool Hub", "https://tinytoolhub.com/tool/goatboard", "https://tinytoolhub.com/assets/images/badge.png"),
+  directoryBadge("The Mega Tools", "https://themegatools.com/tool/goatboard", "https://themegatools.com/assets/images/badge.png"),
+  directoryBadge("The Key Tools", "https://thekeytools.com/ai/goatboard", "https://thekeytools.com/assets/images/badge.png"),
+  directoryBadge("The Core Tools", "https://thecoretools.com/tool/goatboard", "https://thecoretools.com/assets/images/badge.png"),
+  directoryBadge("The App Tools", "https://theapptools.com/ai/goatboard", "https://theapptools.com/assets/images/badge.png"),
+  directoryBadge("That App Show", "https://thatappshow.com/product/goatboard", "https://thatappshow.com/assets/images/badge.png"),
+  directoryBadge("Super AI Boom", "https://superaiboom.com/ai/goatboard", "https://superaiboom.com/assets/images/badge.png"),
+  directoryBadge("Startup Vessel", "https://startupvessel.com/product/goatboard", "https://startupvessel.com/assets/images/badge.png"),
+  directoryBadge("Startup Benchmarks", "https://startupbenchmarks.com/product/goatboard", "https://startupbenchmarks.com/assets/images/badge.png"),
+  directoryBadge("Startup AIdeas", "https://startupaideas.com/ai/goatboard", "https://startupaideas.com/assets/images/badge.png"),
+  directoryBadge("Stack Directory", "https://stackdirectory.com/product/goatboard", "https://stackdirectory.com/assets/images/badge.png"),
+  directoryBadge("Source Dir", "https://sourcedir.com/product/goatboard", "https://sourcedir.com/assets/images/badge.png"),
+  directoryBadge("Solver Tools", "https://solvertools.com/tool/goatboard", "https://solvertools.com/assets/images/badge.png"),
+  directoryBadge("Software Bolt", "https://softwarebolt.com/product/goatboard", "https://softwarebolt.com/assets/images/badge.png"),
+  directoryBadge("Smart Kit Hub", "https://smartkithub.com/product/goatboard", "https://smartkithub.com/assets/images/badge.png"),
+  directoryBadge("SaaS Wheel", "https://saaswheel.com/product/goatboard", "https://saaswheel.com/assets/images/badge.png"),
+  directoryBadge("SaaS Tools Dir", "https://saastoolsdir.com/product/goatboard", "https://saastoolsdir.com/assets/images/badge.png"),
+  directoryBadge("SaaS Roots", "https://saasroots.com/product/goatboard", "https://saasroots.com/assets/images/badge.png"),
+  directoryBadge("SaaS Field", "https://saasfield.com/ai/goatboard", "https://saasfield.com/assets/images/badge.png"),
+  directoryBadge("Product Wing", "https://productwing.com/product/goatboard", "https://productwing.com/assets/images/badge.png"),
+  directoryBadge("Product List Dir", "https://productlistdir.com/product/goatboard", "https://productlistdir.com/assets/images/badge.png"),
+  directoryBadge("Power Up Tools", "https://poweruptools.com/ai/goatboard", "https://poweruptools.com/assets/images/badge.png"),
+  directoryBadge("My Launch Stash", "https://mylaunchstash.com/product/goatboard", "https://mylaunchstash.com/assets/images/badge.png"),
+  directoryBadge("Launch Scroll", "https://launchscroll.com/product/goatboard", "https://launchscroll.com/assets/images/badge.png"),
+  directoryBadge("Latest AI Updates", "https://latestaiupdates.com/ai/goatboard", "https://latestaiupdates.com/assets/images/badge.png"),
+  directoryBadge("Hunt for Tools", "https://huntfortools.com/tool/goatboard", "https://huntfortools.com/assets/images/badge.png"),
 ];
