@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { CampaignStatusActions, ReportActions } from "@/components/admin/admin-actions";
 import { AdSlotAdminPanel } from "@/components/admin/ad-slot-admin-panel";
 import { VideoAdAdminPanel } from "@/components/admin/video-ad-admin-panel";
+import { CampaignCreationForm } from "@/components/campaign/campaign-creation-form";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { formatMoney, formatPower } from "@/lib/utils";
@@ -78,6 +79,23 @@ export default async function AdminPage({
           </button>
         </form>
       </div>
+
+      <section className="mb-12">
+        <details className="group rounded-2xl border border-border bg-card/70 p-4 sm:p-5">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-bold marker:content-none">
+            <span>
+              Create and submit a free listing
+              <span className="mt-1 block text-sm font-normal text-muted-foreground">
+                Publish directly to GoatBoard without payment.
+              </span>
+            </span>
+            <span className="text-xl leading-none transition-transform group-open:rotate-45">+</span>
+          </summary>
+          <div className="mt-6 border-t border-border pt-6">
+            <CampaignCreationForm adminMode />
+          </div>
+        </details>
+      </section>
 
       <section className="mb-12">
         <div className="mb-3 flex items-center justify-between">

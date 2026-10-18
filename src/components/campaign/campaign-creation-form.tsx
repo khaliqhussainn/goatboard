@@ -24,10 +24,13 @@ import type { CampaignPricingModel, Category } from "@/lib/types";
 
 export function CampaignCreationForm({
   onVoteRequired,
+  adminMode = false,
 }: {
   /** Called when the server rejects the listing for want of a vote, so the
    *  flow can put the visitor back on that step instead of stranding them. */
   onVoteRequired?: () => void;
+  /** Admin-created listings publish immediately without a checkout or vote gate. */
+  adminMode?: boolean;
 } = {}) {
   const router = useRouter();
 
@@ -154,7 +157,7 @@ export function CampaignCreationForm({
     setSubmitting(true);
 
     try {
-      const res = await fetch("/api/campaigns", {
+      const res = await fetch(adminMode ? "/api/admin/campaigns" : "/api/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(parsed.data),
@@ -180,7 +183,7 @@ export function CampaignCreationForm({
         return;
       }
 
-      toast.success("You're on the board.");
+      toast.success(adminMode ? "Free listing published." : "You're on the board.");
       router.push(`/campaign/${data.slug}`);
     } catch {
       toast.error("Couldn't publish your campaign. Try again.");
@@ -190,7 +193,7 @@ export function CampaignCreationForm({
 
   return (
     <>
-      {pendingCheckoutUrl && (
+      {!adminMode && pendingCheckoutUrl && (
         <GetListedPromoModal mode="post-submit" checkoutUrl={pendingCheckoutUrl} />
       )}
       <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
@@ -445,11 +448,18 @@ export function CampaignCreationForm({
 
         <div className="flex flex-col gap-1.5">
           <Button type="submit" size="lg" variant="abstract" disabled={submitting || uploading}>
-            {submitting ? "Opening checkout…" : `Continue to payment · $${LISTING_PRICE_USD}`}
+            {submitting
+              ? adminMode
+                ? "Publishing…"
+                : "Opening checkout…"
+              : adminMode
+                ? "Publish free listing"
+                : `Continue to payment · $${LISTING_PRICE_USD}`}
           </Button>
           <p className="text-center text-xs text-muted-foreground">
-            One-time ${LISTING_PRICE_USD} to put your campaign on the board. It goes live the
-            moment the payment clears.
+            {adminMode
+              ? "Admin listing: publishes immediately with no checkout or listing charge."
+              : `One-time $${LISTING_PRICE_USD} to put your campaign on the board. It goes live the moment the payment clears.`}
           </p>
         </div>
       </form>
