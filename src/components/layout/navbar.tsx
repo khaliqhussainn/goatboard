@@ -258,7 +258,7 @@ export function Navbar() {
           {!searchOpen && (
             <Link href="/create" className="shrink-0">
               <Button size="sm">
-                Create<span className="hidden sm:inline"> Campaign</span>
+                Launch<span className="hidden sm:inline"> Your Product</span>
               </Button>
             </Link>
           )}

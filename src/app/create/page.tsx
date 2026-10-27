@@ -6,8 +6,8 @@ import { CreateFlow } from "@/components/campaign/create-flow";
 import { LISTING_PRICE_USD } from "@/lib/listing";
 
 export const metadata: Metadata = {
-  title: "Create Campaign",
-  description: "Put something on the GOATBOARD. Create a campaign and start collecting Power.",
+  title: "Launch Your Product",
+  description: "Launch your product on GOATBOARD and start collecting Power.",
 };
 
 // Reads the visitor's vote state, so it can't be cached.

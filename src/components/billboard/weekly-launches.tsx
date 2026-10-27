@@ -187,7 +187,7 @@ export function WeeklyLaunches({
           href="/create"
           className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-accent-yellow px-5 font-rounded text-sm font-black text-black shadow-[0_8px_20px_-10px_rgba(238,180,22,0.9)] transition-transform hover:-translate-y-0.5"
         >
-          Create campaign <ArrowRight className="size-4" />
+          Launch Your Product <ArrowRight className="size-4" />
         </Link>
       </div>
     </aside>

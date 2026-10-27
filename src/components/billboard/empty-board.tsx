@@ -8,7 +8,7 @@ export function EmptyBoard() {
       <p className="text-sm text-muted-foreground">Put something on the board.</p>
       <Link href="/create">
         <Button size="lg" variant="abstract">
-          Create Campaign
+          Launch Your Product
         </Button>
       </Link>
     </div>

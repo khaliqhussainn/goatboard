@@ -68,7 +68,7 @@ export default async function MinePage() {
           </p>
           <Link href="/create">
             <Button size="lg" variant="abstract">
-              Create Campaign
+              Launch Your Product
             </Button>
           </Link>
         </div>

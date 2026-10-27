@@ -83,7 +83,7 @@ export default function HowItWorksPage() {
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link href="/create">
             <Button size="lg" variant="abstract">
-              Create Campaign
+              Launch Your Product
             </Button>
           </Link>
           <Link href="/explore">
