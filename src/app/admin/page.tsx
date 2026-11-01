@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CampaignStatusActions, ReportActions } from "@/components/admin/admin-actions";
+import { CampaignEditDialog } from "@/components/admin/campaign-edit-dialog";
 import { AdSlotAdminPanel } from "@/components/admin/ad-slot-admin-panel";
 import { VideoAdAdminPanel } from "@/components/admin/video-ad-admin-panel";
 import { CampaignCreationForm } from "@/components/campaign/campaign-creation-form";
@@ -132,7 +133,8 @@ export default async function AdminPage({
                 <span className="text-sm text-muted-foreground">
                   {formatPower(c.total_power)} Power
                 </span>
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-1.5">
+                  <CampaignEditDialog campaign={c} contact={contact} />
                   <CampaignStatusActions id={c.id} status={c.status} />
                 </div>
               </div>
