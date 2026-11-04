@@ -23,59 +23,59 @@ const DOTS = [
   "var(--hero-purple)",
 ];
 
+export function GoatboardLoader({ className }: { className: string }) {
+  return (
+    <div role="status" aria-live="polite" aria-label="Loading GOATBOARD" className={className}>
+      {/* Colour wash, pinned to the corners so it never sits behind the
+          wordmark - logo-gb.png has no alpha channel, and a blob passing
+          under it would turn its white backing into a visible rectangle. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <span
+          className="splash-blob absolute -left-28 -top-24 size-[24rem] rounded-full opacity-60 blur-3xl sm:size-[32rem]"
+          style={{ background: "var(--blob-coral)" }}
+        />
+        <span
+          className="splash-blob absolute -right-28 -top-16 size-[22rem] rounded-full opacity-55 blur-3xl sm:size-[30rem]"
+          style={{ background: "var(--blob-yellow)", animationDelay: "-3s" }}
+        />
+        <span
+          className="splash-blob absolute -bottom-28 -left-16 size-[22rem] rounded-full opacity-50 blur-3xl sm:size-[30rem]"
+          style={{ background: "var(--blob-teal)", animationDelay: "-6s" }}
+        />
+        <span
+          className="splash-blob absolute -bottom-24 -right-20 size-[22rem] rounded-full opacity-50 blur-3xl sm:size-[30rem]"
+          style={{ background: "var(--blob-purple)", animationDelay: "-4.5s" }}
+        />
+      </div>
+
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/logo-gb.png"
+        alt=""
+        width={2168}
+        height={725}
+        // multiply, because logo-gb.png has no alpha: over colour its white
+        // backing would otherwise read as a hard rectangle around the mark.
+        className="relative h-11 w-auto mix-blend-multiply sm:h-16"
+      />
+
+      <div aria-hidden className="relative flex items-end gap-2">
+        {DOTS.map((color, i) => (
+          <span
+            key={color}
+            className="splash-dot size-3 rounded-full sm:size-3.5"
+            style={{ background: color, animationDelay: `${i * 110}ms` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function SplashScreen() {
   return (
     <>
-      <div
-        role="status"
-        aria-live="polite"
-        className="splash-screen fixed inset-0 z-[100] flex flex-col items-center justify-center gap-7 bg-background"
-      >
-        {/* Colour wash, pinned to the corners so it never sits behind the
-            wordmark - logo-gb.png has no alpha channel, and a blob passing
-            under it would turn its white backing into a visible rectangle. */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-          <span
-            className="splash-blob absolute -left-28 -top-24 size-[24rem] rounded-full opacity-60 blur-3xl sm:size-[32rem]"
-            style={{ background: "var(--blob-coral)" }}
-          />
-          <span
-            className="splash-blob absolute -right-28 -top-16 size-[22rem] rounded-full opacity-55 blur-3xl sm:size-[30rem]"
-            style={{ background: "var(--blob-yellow)", animationDelay: "-3s" }}
-          />
-          <span
-            className="splash-blob absolute -bottom-28 -left-16 size-[22rem] rounded-full opacity-50 blur-3xl sm:size-[30rem]"
-            style={{ background: "var(--blob-teal)", animationDelay: "-6s" }}
-          />
-          <span
-            className="splash-blob absolute -bottom-24 -right-20 size-[22rem] rounded-full opacity-50 blur-3xl sm:size-[30rem]"
-            style={{ background: "var(--blob-purple)", animationDelay: "-4.5s" }}
-          />
-        </div>
-
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/logo-gb.png"
-          alt=""
-          width={2168}
-          height={725}
-          // multiply, because logo-gb.png has no alpha: over colour its white
-          // backing would otherwise read as a hard rectangle around the mark.
-          className="relative h-11 w-auto mix-blend-multiply sm:h-16"
-        />
-
-        <div className="relative flex items-end gap-2">
-          {DOTS.map((color, i) => (
-            <span
-              key={color}
-              className="splash-dot size-3 rounded-full sm:size-3.5"
-              style={{ background: color, animationDelay: `${i * 110}ms` }}
-            />
-          ))}
-        </div>
-
-        <span className="sr-only">Loading GOATBOARD</span>
-      </div>
+      <GoatboardLoader className="splash-screen fixed inset-0 z-[100] flex flex-col items-center justify-center gap-7 bg-background" />
 
       <SplashReady />
     </>
